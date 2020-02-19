@@ -1,1 +1,8 @@
+# Ignore vscode specificities
+.vs
+
+# Ignore database
 system/database
+
+# Ignore pycache
+*.pyc
