@@ -3,8 +3,9 @@
 .vscode
 
 # Ignore database
-system/database
+generation_system/database
 
 # Ignore pycache
 *.pyc
+generation_system/*/__pycache__
 
