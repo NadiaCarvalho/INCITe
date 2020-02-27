@@ -2,6 +2,9 @@
 .vs
 .vscode
 
+# Ignore MacOs .ds files
+.DS_Store
+
 # Ignore database
 generation_system/database
 
