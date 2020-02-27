@@ -9,15 +9,12 @@ import music21
 from music21 import *
 from music21 import corpus
 
+core_corpus = corpus.corpora.CoreCorpus()
 
-
-
-#core_corpus = corpus.corpora.CoreCorpus().all()
-''' 
 core_corpus.manualCoreCorpusPath = os.sep.join([os.sep.join(['database','music21']),''])
 core_corpus.rebuildMetadataCache(useMultiprocessing=True, verbose=True)
 print(core_corpus.metadataBundle)
-'''
+
 
 '''
 if os.name == 'nt':

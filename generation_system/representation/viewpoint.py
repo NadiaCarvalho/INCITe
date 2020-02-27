@@ -17,3 +17,6 @@ class Viewpoint: # τ
     
     def coversionSurfaceString(self, event): # Φ[τ](event)
         return self
+    
+    def toString(self):
+        return 'Viewpoint {}: {} \n'.format(self.name, self.info)    
