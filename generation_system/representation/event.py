@@ -9,6 +9,9 @@ class Event:
     def addViewpoint(self, viewpoint):
         self.viewpoints.append(viewpoint)
 
+    def getOffset(self):
+        return self.offset_time
+
     def toString(self):
         to_return = 'Event {} at offset {}: \n'.format(self.id, self.offset_time)
         for viewpoint in self.viewpoints:
