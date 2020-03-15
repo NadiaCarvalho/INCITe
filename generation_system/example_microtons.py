@@ -17,9 +17,10 @@ if __name__== "__main__":
 
     example = converter.parse(file_path)
 
-    #example.flat.show('text')
+    example.flat.show('text')
 
     stream_notes_rests = example.flat.notesAndRests.stream()
+    dynamics = example.flat.getElementsByClass(dynamics.Dynamic)
 
     events = []
 
@@ -56,10 +57,15 @@ if __name__== "__main__":
         #events[i].addViewpoint(Viewpoint('HD_contour', ))
 
         #events[i].addViewpoint(Viewpoint('keysig', note_or_rest.)) # Key Signature
-
-        #print(events[i].toString())
-
+    
     for event in events:
-        print(event.getOffset())
-        for element in example.flat.getElementsByOffset(event.getOffset()):
-            print(element)
+        event_offset = event.getOffset()
+
+        for dynamic in dynamics:
+            if dynamic.offset == event_offset:
+                event.addViewpoint(Viewpoint('dynamic', dynamic.value))
+        
+        #for element in example.flat.getElementsByOffset(event_offset):
+
+        #print(event.toString())
+    
