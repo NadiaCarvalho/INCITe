@@ -4,16 +4,22 @@ class Event:
     def __init__(self, id, offset):
         self.id = id
         self.offset_time = offset
-        self.viewpoints = []
+        self.viewpoints = {}
 
     def addViewpoint(self, viewpoint):
-        self.viewpoints.append(viewpoint)
+        self.viewpoints[viewpoint.getName()] = viewpoint
+
+    def getViewpoint(self, name):
+        return self.viewpoints[name]
 
     def getOffset(self):
         return self.offset_time
 
+    def isRest(self):
+        return self.viewpoints['is_rest'].getInfo()
+
     def toString(self):
         to_return = 'Event {} at offset {}: \n'.format(self.id, self.offset_time)
-        for viewpoint in self.viewpoints:
+        for key, viewpoint in self.viewpoints.items():
             to_return += viewpoint.toString()
         return to_return

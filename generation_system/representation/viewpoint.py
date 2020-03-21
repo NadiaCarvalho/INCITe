@@ -9,6 +9,9 @@ class Viewpoint: # τ
     def getName(self):
         return self.name
 
+    def getInfo(self):
+        return self.info
+
     def getStream(self):
         return self.stream
 
