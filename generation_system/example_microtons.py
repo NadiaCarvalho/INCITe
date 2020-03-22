@@ -27,7 +27,6 @@ if __name__== "__main__":
     for i in range(len(stream_notes_rests.elements)):
         note_or_rest = stream_notes_rests.elements[i]
         events.append(Event(i, note_or_rest.offset))
-        #print(example.containerInHierarchy(note_or_rest).id)
         
         # Basic Viewpoints
         if not note_or_rest.isRest:
@@ -119,11 +118,11 @@ if __name__== "__main__":
     for repeat in repeats:
         events_repeats = utils.getEventsAtOffset(events, repeat.offset)
         if len(events_repeats) == 0: 
-            events.append(Event(len(events), repeat.offset))
-
-        event = utils.getEventsAtOffset(events, repeat.offset)[0]
-        event.addViewpoint(Viewpoint('repeat_before', True))
-        event.addViewpoint(Viewpoint('repeat_direction', repeat.direction))
+            events[-1].addViewpoint(Viewpoint('repeat_after', True))
+            events[-1].addViewpoint(Viewpoint('repeat_direction', repeat.direction))
+        else:
+            events_repeats[0].addViewpoint(Viewpoint('repeat_before', True))
+            events_repeats[0].addViewpoint(Viewpoint('repeat_direction', repeat.direction))
 
     #ka = analysis.floatingKey.KeyAnalyzer(example)
     #ka.windowSize = 8 # int(len(measure_offsets)/100)
