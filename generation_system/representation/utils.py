@@ -33,3 +33,22 @@ def getLastEventThatIsNoteBeforeIndex(events, actual_index=None):
             return index
     
     return None
+
+def showSequenceOfViewpointWithOffset(events, viewpoint):
+    toPrint = 'Viewpoint ' + viewpoint + ' : '
+    for event in events:
+        if event.getViewpoint(viewpoint) is not None:
+            toPrint += 'Off ' + str(event.getOffset()) + ': ' + str(event.getViewpoint(viewpoint).getInfo()) + ', '
+    return toPrint
+
+def showSequenceOfViewpointWithoutOffset(events, viewpoint):
+    toPrint = 'Viewpoint ' + viewpoint + ': '
+    for event in events:
+        if event.getViewpoint(viewpoint) is not None:
+            toPrint += str(event.getViewpoint(viewpoint).getInfo()) + ' '
+        else:
+            toPrint += 'None '
+    return toPrint
+
+def getEventsAtOffset(events, offset):
+    return [event for event in events if event.getOffset() == offset]

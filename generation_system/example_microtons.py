@@ -48,7 +48,8 @@ if __name__== "__main__":
         else:
             events[i].addViewpoint(Viewpoint('is_rest', True))
         
-        events[i].addViewpoint(Viewpoint('duration', note_or_rest.duration.quarterLength))
+        events[i].addViewpoint(Viewpoint('duration_length', note_or_rest.duration.quarterLength))
+        events[i].addViewpoint(Viewpoint('duration_type', note_or_rest.duration.type))
         if note_or_rest.duration.isGrace:
             events[i].addViewpoint(Viewpoint('is_grace', True))
         else:
@@ -57,19 +58,10 @@ if __name__== "__main__":
         events[i].addViewpoint(Viewpoint('dots', note_or_rest.duration.dots))
         events[i].addViewpoint(Viewpoint('expression', note_or_rest.expressions))
 
-
-        
-
-
-        #events[i].addViewpoint(Viewpoint('keysig', note_or_rest.)) # Key Signature
-    
-    for event in events:
-        event_offset = event.getOffset()
-
         for dynamic in dynamics:
-            if dynamic.offset == event_offset:
+            for event in utils.getEventsAtOffset(events, dynamic.offset):
                 event.addViewpoint(Viewpoint('dynamic', dynamic.value))
         
-        #for element in example.flat.getElementsByOffset(event_offset):
+        #events[i].addViewpoint(Viewpoint('keysig', note_or_rest.)) # Key Signature
 
-        print(event.toString())
+    print(utils.showSequenceOfViewpointWithoutOffset(events, 'dynamic'))

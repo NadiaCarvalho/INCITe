@@ -10,7 +10,8 @@ class Event:
         self.viewpoints[viewpoint.getName()] = viewpoint
 
     def getViewpoint(self, name):
-        return self.viewpoints[name]
+        if name in self.viewpoints:
+            return self.viewpoints[name]
 
     def getOffset(self):
         return self.offset_time
