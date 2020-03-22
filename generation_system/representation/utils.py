@@ -2,6 +2,9 @@ from music21 import *
 
 sign = lambda x: x and (1, -1)[x < 0]
 
+def seqInt(midi_viewpoint_1, midi_viewpoint_2):
+    return (midi_viewpoint_1.getInfo() - midi_viewpoint_2.getInfo())
+
 def contour(midi_viewpoint_1, midi_viewpoint_2):
     return sign(midi_viewpoint_1.getInfo() - midi_viewpoint_2.getInfo())
 
@@ -52,3 +55,14 @@ def showSequenceOfViewpointWithoutOffset(events, viewpoint):
 
 def getEventsAtOffset(events, offset):
     return [event for event in events if event.getOffset() == offset]
+
+def getEventBetweenOffsetsIncluding(events, offset1, offset2=None):
+    if offset2 is None:
+        offset2 = events[-1].getOffset()
+    return [event for event in events if offset1 <= event.getOffset() <= offset2]
+
+def getRests(events):
+    return [event for event in events if event.isRest()]
+
+def getGraceNotes(events):
+    return [event for event in events if event.isGraceNote()]

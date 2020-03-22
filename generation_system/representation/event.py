@@ -19,6 +19,9 @@ class Event:
     def isRest(self):
         return self.viewpoints['is_rest'].getInfo()
 
+    def isGraceNote(self):
+        return self.viewpoints['is_grace'].getInfo()
+
     def toString(self):
         to_return = 'Event {} at offset {}: \n'.format(self.id, self.offset_time)
         for key, viewpoint in self.viewpoints.items():
