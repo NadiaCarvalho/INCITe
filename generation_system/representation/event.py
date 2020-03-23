@@ -1,6 +1,7 @@
 from music21 import stream
 
-class Event: 
+
+class Event:
     def __init__(self, id, offset):
         self.id = id
         self.offset_time = offset
@@ -23,7 +24,8 @@ class Event:
         return self.viewpoints['is_grace'].getInfo()
 
     def toString(self):
-        to_return = 'Event {} at offset {}: \n'.format(self.id, self.offset_time)
+        to_return = 'Event {} at offset {}: \n'.format(
+            self.id, self.offset_time)
         for key, viewpoint in self.viewpoints.items():
             to_return += viewpoint.toString()
         return to_return

@@ -3,7 +3,6 @@ import os
 from music21 import converter, corpus
 
 import representation.utils as utils
-
 from representation.parser import LineParser
 
 if __name__== "__main__":
