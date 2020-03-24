@@ -14,4 +14,4 @@ if __name__== "__main__":
     #example.flat.show('text')
     events = LineParser(example.parts[0]).parseLine()
     
-    print(utils.showSequenceOfViewpointWithoutOffset(events, 'duration_length'))
+    print(utils.showSequenceOfViewpointWithoutOffset(events, 'timesig'))

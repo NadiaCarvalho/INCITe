@@ -11,12 +11,17 @@ class LineParser:
         self.music_to_parse = music_to_parse
         self.events = []
 
+        # Get offsets of beginnings of measures
+        self.measure_offsets = [measure.offset for measure in self.music_to_parse.recurse(
+            classFilter='Measure')]
+        self.time_sigs = [timeSignature for timeSignature in self.music_to_parse.flat.getElementsByClass(
+            meter.TimeSignature)]
+
     def parseLine(self):
         self.noteAndRestsParsing()
         self.intfibGraceNotesParsing()
         self.dynamicsParsing()
         self.keySignsParsing()
-        self.timeSignsParsing()
         self.doubleBarlineParsing()
         self.repeatBarlineParsing()
 
@@ -67,7 +72,7 @@ class LineParser:
                 Viewpoint('expression', note_or_rest.expressions))
             self.fermataParsing(i)
 
-            self.fibRelatedInformationParsing(i, note_or_rest)
+            self.barAndMeasureRelatedInformationParsing(i, note_or_rest)
 
     def contoursParsing(self, index):
         # get index of last event that is a note and not a rest
@@ -86,37 +91,48 @@ class LineParser:
         else:
             self.events[index].addViewpoint(Viewpoint('fermata', False))
 
-    def fibRelatedInformationParsing(self, index, note_or_rest):
-        # Get offsets of beginnings of measures
-        measure_offsets = [measure.offset for measure in self.music_to_parse.recurse(
-            classFilter='Measure')]
+    def timeSigParsing(self, index, note_or_rest):
+        closest_offset_bar_index = self.time_sigs.index(min(self.time_sigs, key=lambda x: abs(x.offset - note_or_rest.offset)))
+        if note_or_rest.offset < self.time_sigs[closest_offset_bar_index].offset:
+            closest_offset_bar_index = closest_offset_bar_index - 1
+        self.events[index].addViewpoint(
+                Viewpoint('timesig', self.time_sigs[closest_offset_bar_index].ratioString))
 
-        if note_or_rest.offset in measure_offsets:
+    def getLastFibBeforeEvent(self, note_or_rest):
+        index = self.measure_offsets.index(note_or_rest.offset)
+        last_fibs = [event for event in utils.getEventsAtOffset(
+            self.events, self.measure_offsets[0 if index == 0 else (index - 1)]) if not (event.isGraceNote() or event.isRest())]
+        return last_fibs[0]
+
+    def firstElementInBar(self, index, note_or_rest):
+        self.events[index].addViewpoint(Viewpoint('fib', True))
+        self.events[index].addViewpoint(Viewpoint('intfib', 0.0))
+        self.events[index].addViewpoint(Viewpoint('posinbar', 0))
+        self.events[index].addViewpoint(Viewpoint('thrbar', utils.seqInt(
+            self.events[index].getViewpoint('midi_pitch'), self.getLastFibBeforeEvent(note_or_rest).getViewpoint('midi_pitch'))))
+
+    def barAndMeasureRelatedInformationParsing(self, index, note_or_rest):
+
+        self.timeSigParsing(index, note_or_rest)
+
+        if note_or_rest.offset in self.measure_offsets:
             if not note_or_rest.duration.isGrace:
-                self.events[index].addViewpoint(Viewpoint('fib', True))
-                self.events[index].addViewpoint(Viewpoint('intfib', 0.0))
-
-                last_fib_index = measure_offsets.index(note_or_rest.offset) - 1
-                if last_fib_index == -1:
-                    last_fib_index = 0
-
-                last_fibs = [event for event in utils.getEventsAtOffset(
-                    self.events, measure_offsets[last_fib_index]) if not (event.isGraceNote() or event.isRest())]
-                self.events[index].addViewpoint(Viewpoint('thrbar', utils.seqInt(
-                    self.events[index].getViewpoint('midi_pitch'), last_fibs[0].getViewpoint('midi_pitch'))))
+                self.firstElementInBar(index, note_or_rest)
         else:
             self.events[index].addViewpoint(Viewpoint('fib', False))
-            if not note_or_rest.isRest and not note_or_rest.duration.isGrace:
-                closest_offset_index = measure_offsets.index(
-                    min(measure_offsets, key=lambda x: abs(x - note_or_rest.offset)))
-                if note_or_rest.offset < measure_offsets[closest_offset_index]:
-                    closest_offset_index = closest_offset_index - 1
 
-                closest_fibs = [event for event in utils.getEventsAtOffset(
-                    self.events, measure_offsets[closest_offset_index]) if not (event.isGraceNote() or event.isRest())]
-                if len(closest_fibs) == 1:
-                    self.events[index].addViewpoint(Viewpoint('intfib', utils.seqInt(
-                        self.events[index].getViewpoint('midi_pitch'), closest_fibs[0].getViewpoint('midi_pitch'))))
+            closest_offset_index = self.measure_offsets.index(min(self.measure_offsets, key=lambda x: abs(x - note_or_rest.offset)))
+            if note_or_rest.offset < self.measure_offsets[closest_offset_index]:
+                closest_offset_index = closest_offset_index - 1
+
+            closest_fibs = [event for event in utils.getEventsAtOffset(
+                    self.events, self.measure_offsets[closest_offset_index]) if not event.isGraceNote()]
+
+            if len(closest_fibs) > 0:
+                print(self.events[index].getOffset() - closest_fibs[0].getOffset()) 
+
+            if not (note_or_rest.isRest or note_or_rest.duration.isGrace) and len(closest_fibs) > 0 and not closest_fibs[0].isRest():
+                self.events[index].addViewpoint(Viewpoint('intfib', utils.seqInt(self.events[index].getViewpoint('midi_pitch'), closest_fibs[0].getViewpoint('midi_pitch'))))
 
     def dynamicsParsing(self):
         for dynamic in self.music_to_parse.flat.getElementsByClass(dynamics.Dynamic):
@@ -138,17 +154,6 @@ class LineParser:
                 next_key_offset = keys[i+1].offset
             for event in utils.getEventBetweenOffsetsIncluding(self.events, keys[i].offset, next_key_offset):
                 event.addViewpoint(Viewpoint('keysig', keys[i].sharps))
-
-    def timeSignsParsing(self):
-        time_sigs = [timeSignature for timeSignature in self.music_to_parse.flat.getElementsByClass(
-            meter.TimeSignature)]
-        for i in range(len(time_sigs)):
-            next_time_sig_offset = None
-            if i != len(time_sigs) - 1:
-                next_time_sig_offset = time_sigs[i+1].offset
-            for event in utils.getEventBetweenOffsetsIncluding(self.events, time_sigs[i].offset, next_time_sig_offset):
-                event.addViewpoint(
-                    Viewpoint('timesig', time_sigs[i].ratioString))
 
     def doubleBarlineParsing(self):
         double_barlines = [barline.offset for barline in self.music_to_parse.flat.getElementsByClass(
@@ -174,7 +179,7 @@ class LineParser:
                     Viewpoint('repeat_direction', repeat.direction))
 
     #ka = analysis.floatingKey.KeyAnalyzer(to_parse)
-    # ka.windowSize = 8 # int(len(measure_offsets)/100)
+    # ka.windowSize = 8 # int(len(self.measure_offsets)/100)
     # print(ka.run())
     #k = to_parse.analyze('key')
     # print(k.tonalCertainty())
