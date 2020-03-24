@@ -11,4 +11,6 @@ generation_system/database
 # Ignore pycache
 *.pyc
 generation_system/*/__pycache__
+.pytest_cache
 
+Dissertation.code-workspace
