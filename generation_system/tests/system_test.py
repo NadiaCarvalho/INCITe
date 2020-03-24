@@ -1,7 +1,7 @@
 # content of system_test.py
 import pytest
 
-import example_microtons
+from .context import code
 
 def test_system_main():
     pass
