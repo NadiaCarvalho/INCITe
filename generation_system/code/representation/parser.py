@@ -140,7 +140,8 @@ class LineParser:
         keys = [keySignature for keySignature in self.music_to_parse.flat.getElementsByClass(
             music21.key.KeySignature)]
         for i in range(len(keys)):
-            for event in utils.getEventBetweenOffsetsIncluding(self.events, keys[i].offset, (None, keys[i+1].offset)[i == len(keys)-1]):
+            offset = None if i == (len(keys)-1) else keys[i+1].offset
+            for event in utils.getEventBetweenOffsetsIncluding(self.events, keys[i].offset, offset):
                 event.addViewpoint(Viewpoint('keysig', keys[i].sharps))
 
     def doubleBarlineParsing(self):
