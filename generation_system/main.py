@@ -1,27 +1,17 @@
 import os
-import pathlib
 
-import matplotlib as plot
-import numpy as np
-import scipy as sp
+from music21 import converter, corpus
 
-import music21
-from music21 import *
-from music21 import corpus
+import representation.utils as utils
+from representation.parser import LineParser
 
-core_corpus = corpus.corpora.CoreCorpus()
+if __name__== "__main__":
+    file_path = os.sep.join(['myexamples','MicrotonsExample.mxl'])
+    if os.path.realpath('.').find('generation_system') == -1:
+        file_path = os.sep.join(['generation_system', file_path]) 
 
-core_corpus.manualCoreCorpusPath = os.sep.join([os.sep.join(['database','music21']),''])
-core_corpus.rebuildMetadataCache(useMultiprocessing=True, verbose=True)
-print(core_corpus.metadataBundle)
-
-
-'''
-if os.name == 'nt':
-    posix_paths = []
-    for path in core_corpus.getPaths():
-        posix_paths.append(path.as_posix())
-    #corpus_paths = posix_paths
-
-#print(corpus_paths[0])
-'''
+    example = converter.parse(file_path)
+    #example.flat.show('text')
+    events = LineParser(example.parts[0]).parseLine()
+    
+    print(utils.showSequenceOfViewpointWithoutOffset(events, 'timesig'))
