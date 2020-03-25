@@ -6,7 +6,7 @@
 .DS_Store
 
 # Ignore database
-generation_system/database
+generation_system/data/database
 
 # Ignore pycache
 *.pyc
