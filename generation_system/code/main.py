@@ -15,4 +15,4 @@ if __name__ == "__main__":
     # example.flat.show('text')
     events = LineParser(example.parts[0]).parseLine()
 
-    print(utils.showSequenceOfViewpointWithoutOffset(events, 'timesig'))
+    print(utils.showSequenceOfViewpointWithoutOffset(events, 'posinbar'))

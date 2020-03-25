@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 import music21
 
 import representation.utils as utils
@@ -108,23 +110,31 @@ class LineParser:
         return[event for event in utils.getEventsAtOffset(
             self.events, self.measure_offsets[(index, index-1)[bool(note_or_rest.offset < self.measure_offsets[index])]]) if not event.isGraceNote()][0]
 
+    def processFirstElementInBar(self, index, note_or_rest):
+        self.events[index].addViewpoint(Viewpoint('fib', True))
+        self.events[index].addViewpoint(Viewpoint('intfib', 0.0))
+        self.events[index].addViewpoint(Viewpoint('thrbar', utils.seqInt(
+            self.events[index].getViewpoint('midi_pitch'), self.getLastFibBeforeFib(note_or_rest).getViewpoint('midi_pitch'))))
+
+    def processNonFirstElementInBar(self, index, note_or_rest):
+        self.events[index].addViewpoint(Viewpoint('fib', False))
+        last_fib = self.getLastFibBeforeNonFib(note_or_rest)
+        if not note_or_rest.isRest and not last_fib.isRest():
+            self.events[index].addViewpoint(Viewpoint('intfib', utils.seqInt(
+                self.events[index].getViewpoint('midi_pitch'), last_fib.getViewpoint('midi_pitch'))))
+
     def barAndMeasureRelatedInformationParsing(self, index, note_or_rest):
         self.timeSigParsing(index, note_or_rest)
-        if note_or_rest.offset in self.measure_offsets:
-            if not note_or_rest.duration.isGrace:
-                self.events[index].addViewpoint(Viewpoint('fib', True))
-                self.events[index].addViewpoint(Viewpoint('intfib', 0.0))
-                self.events[index].addViewpoint(Viewpoint('posinbar', 0))
-                self.events[index].addViewpoint(Viewpoint('thrbar', utils.seqInt(
-                    self.events[index].getViewpoint('midi_pitch'), self.getLastFibBeforeFib(note_or_rest).getViewpoint('midi_pitch'))))
-        else:
-            self.events[index].addViewpoint(Viewpoint('fib', False))
-            last_fib = self.getLastFibBeforeNonFib(note_or_rest)
-            if not (note_or_rest.isRest or note_or_rest.duration.isGrace) and not last_fib.isRest():
-                self.events[index].addViewpoint(Viewpoint('intfib', utils.seqInt(
-                    self.events[index].getViewpoint('midi_pitch'), last_fib.getViewpoint('midi_pitch'))))
 
-            print(self.events[index].getOffset() - last_fib.getOffset())
+        if not note_or_rest.duration.isGrace:
+            components = note_or_rest.beatStr.split(' ')
+            posinbar = int(components[0]) + (Fraction(components[1]) if len(components) > 1 else 0) - 1
+            self.events[index].addViewpoint(Viewpoint('posinbar', posinbar))
+
+            if note_or_rest.offset in self.measure_offsets:
+                self.processFirstElementInBar(index, note_or_rest)
+            else:
+                self.processNonFirstElementInBar(index, note_or_rest)
 
     def dynamicsParsing(self):
         for dynamic in self.music_to_parse.flat.getElementsByClass(music21.dynamics.Dynamic):
