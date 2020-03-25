@@ -16,7 +16,11 @@
 		"python.testing.unittestEnabled": true,
 		"python.linting.pylintArgs": [
 			"--init-hook",
-			"import sys; sys.path.append('generation_system/code/representation')"
-		]
+			"import sys; sys.path.append('generation_system/code/representation')",
+			"--reports",
+			"12",
+			"--enable=all"
+		],
+		"python.linting.pylintPath": "C:\\Python\\Python37\\Scripts\\pylint.exe"
 	}
 }

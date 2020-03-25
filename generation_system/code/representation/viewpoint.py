@@ -1,22 +1,44 @@
-from music21 import stream
+#!/usr/bin/env python3.7
+"""
+This script presents the class Viewpoint that represents a specific Viewpoint and its information
+"""
 
 
-class Viewpoint:  # τ
+class Viewpoint:
+    """
+    Class Viewpoint # τ
+    """
+
     def __init__(self, name, info):
         self.name = name
         self.info = info
 
-    def getName(self):
+    def get_name(self):
+        """
+        Returns the viewpoint's name
+        """
         return self.name
 
-    def getInfo(self):
+    def get_info(self):
+        """
+        Returns the viewpoint's information
+        """
         return self.info
 
-    def partialFunction(self, event):  # Ψ[τ](event)
+    def partial_function(self):  # , event):
+        """
+        Returns the viewpoint's partial_function # Ψ[τ](event)
+        """
         return self
 
-    def coversionSurfaceString(self, event):  # Φ[τ](event)
+    def coversion_surface_string(self):  # , event):
+        """
+        Returns the viewpoint's coversion_surface_string # Φ[τ](event)
+        """
         return self
 
-    def toString(self):
+    def __str__(self):
+        """
+        Overrides str function for Viewpoint
+        """
         return 'Viewpoint {}: {} \n'.format(self.name, self.info)
