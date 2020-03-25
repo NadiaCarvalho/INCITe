@@ -27,7 +27,7 @@ jobs:
     - name: Lint with pylint
       run: |
         pip install pylint
-        pylint **/*.py --rcfile=generation_system/.pylintrc --list-msgs --list-conf-levels
+        pylint **/*.py --list-msgs --list-conf-levels
     - name: Test with pytest
       run: |
         pip install pytest
