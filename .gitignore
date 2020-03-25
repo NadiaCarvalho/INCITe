@@ -1,6 +1,7 @@
 # Ignore vscode specificities
 .vs
 .vscode
+# Dissertation.code-workspace
 
 # Ignore MacOs .ds files
 .DS_Store
@@ -13,4 +14,3 @@ generation_system/data/database
 generation_system/*/__pycache__
 .pytest_cache
 
-Dissertation.code-workspace

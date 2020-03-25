@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"name": "Generation System",
+			"path": "./generation_system"
+		},
+		{
+			"name": "Plugin",
+			"path": "./plugin"
+		}
+	],
+	"extensions": {
+		
+	},
+	"settings": {
+		"python.testing.unittestEnabled": true,
+		"python.linting.pylintArgs": [
+			"--init-hook",
+			"import sys; sys.path.append('generation_system/code/representation')"
+		]
+	}
+}
