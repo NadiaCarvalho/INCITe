@@ -27,8 +27,9 @@ jobs:
     - name: Lint with pylint
       run: |
         pip install pylint
-        pylint **/*.py
+        pylint -r --rcfile=generation_system/.pylintrc --list-msgs --list-conf-levels **/*.py
     - name: Test with pytest
       run: |
-        pip install pytest, pytest-cov
-        pytest --cov-report term-missing --cov -q generation_system/tests/system_test.py
+        pip install pytest
+        pip install pytest-cov
+        pytest --cov-report=xml --cov -q generation_system/tests/system_test.py
