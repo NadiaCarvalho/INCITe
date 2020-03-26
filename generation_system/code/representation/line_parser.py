@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.7
 """
-This script presents the class Event that represents an event in a piece of music
+This script presents the class LineParser that processes the events of a single line
 """
 
 from fractions import Fraction
