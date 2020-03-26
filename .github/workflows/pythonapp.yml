@@ -32,9 +32,9 @@ jobs:
       run: |
         pip install pytest
         pip install pytest-cov
-        pytest --cov-report=xml --cov=./ -q generation_system/tests/system_test.py
+        pytest --cov=./generation_system/code --cov-report=html:./generation_system/docs/test-coverage  -q ./generation_system/tests/system_test.py
     - name: Archive code coverage results
       uses: actions/upload-artifact@v1
       with:
         name: code-coverage-report
-        path: ./coverage.xml  
+        path: ./generation_system/docs/test-coverage  
