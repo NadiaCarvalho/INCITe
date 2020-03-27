@@ -56,6 +56,8 @@ class LineParser:
                 self.events[i].add_viewpoint(
                     Viewpoint('midi_pitch', note_or_rest.pitch.ps))
                 self.events[i].add_viewpoint(
+                    Viewpoint('pitch_class', note_or_rest.pitchClass))
+                self.events[i].add_viewpoint(
                     Viewpoint('octave', note_or_rest.octave))
                 self.events[i].add_viewpoint(
                     Viewpoint('microtonal', note_or_rest.pitch.microtone.cents))
