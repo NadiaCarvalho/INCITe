@@ -5,9 +5,8 @@ This script presents the class LineParser that processes the vertical relations 
 from collections import defaultdict
 
 import music21
-import numpy as np
 
-#import representation.utils as utils
+import representation.utils as utils
 from representation.event import Event
 from representation.viewpoint import Viewpoint
 
@@ -22,12 +21,12 @@ class VerticalParser:
         self.events = []
 
         self.keys = defaultdict(list)
-        for k, v in list((key.offset, key) for key in music_to_parse.flat.getElementsByClass(
+        for k, val in list((key.offset, key) for key in music_to_parse.flat.getElementsByClass(
                 music21.key.KeySignature)):
-            self.keys[k].append(v)
+            self.keys[k].append(val)
 
         measures = self.music_to_parse.getElementsByClass('Measure')
-        self.measure_keys = dict(self.get_analysis_keys_measure(
+        self.measure_keys = dict(utils.get_analysis_keys_measure(
             measure) for measure in measures)
 
         key_offsets = list(self.keys) + [self.music_to_parse.highestTime]
@@ -38,7 +37,6 @@ class VerticalParser:
         """
         Returns the events from vertical relations between parts
         """
-
         # self.music_to_parse.show('text')
         chords = self.music_to_parse.flat.getElementsByClass('Chord')
         for i, chord in enumerate(chords):
@@ -151,19 +149,13 @@ class VerticalParser:
                                [bool(offset < key_offsets[index])]]
 
         uniq_keys_off = []
-        [uniq_keys_off.append(key) for key in self.keys[k_offset]
-         if key not in uniq_keys_off]
+        _ = [uniq_keys_off.append(key) for key in self.keys[k_offset]
+             if key not in uniq_keys_off]
 
         if len(uniq_keys_off) == 1:
             key = uniq_keys_off[0]
 
         return key
-
-    def harmonic_functions_key(self, chord, key):
-        """
-        Parses the harmonic key signatures information for a key
-        """
-        return music21.roman.romanNumeralFromChord(chord, key)
 
     def key_signatures_parsing(self, index, chord):
         """
@@ -175,10 +167,12 @@ class VerticalParser:
             Viewpoint('keysign', nearest_key_sign))
         self.events[index].add_viewpoint(
             Viewpoint('keyKS', self.ks_keys[nearest_key_sign.offset]))
-        harm_f_ks = self.harmonic_functions_key(
+        self.events[index].add_viewpoint(
+            Viewpoint('keyKS_TC', self.ks_keys[nearest_key_sign.offset].tonalCertainty()))
+        harm_f_ks = utils.harmonic_functions_key(
             chord, self.ks_keys[nearest_key_sign.offset])
         self.events[index].add_viewpoint(
-            Viewpoint('harmfuncKS', harm_f_ks))
+            Viewpoint('harmfuncKS', harm_f_ks.figure))
 
     def perceived_key_at_measure_parsing(self, index, chord):
         """
@@ -187,16 +181,11 @@ class VerticalParser:
         measure_key = self.measure_keys[chord.measureNumber]
         self.events[index].add_viewpoint(
             Viewpoint('keyMS', measure_key))
-        harm_f_ms = self.harmonic_functions_key(chord, measure_key)
         self.events[index].add_viewpoint(
-            Viewpoint('harmfuncMS', harm_f_ms))
-
-    def get_analysis_keys_measure(self, measure):
-        """
-        Gets an analysis of key for a measure
-        """
-        k = measure.analyze('key')
-        return (measure.number, k)
+            Viewpoint('keyMS_TC', measure_key.tonalCertainty()))
+        harm_f_ms = utils.harmonic_functions_key(chord, measure_key)
+        self.events[index].add_viewpoint(
+            Viewpoint('harmfuncMS', harm_f_ms.figure))
 
     def get_analysis_keys_stream_bet_offsets(self, off1, off2):
         """

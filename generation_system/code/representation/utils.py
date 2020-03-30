@@ -3,6 +3,8 @@
 This script presents utility functions for dealing with representations
 """
 
+import music21
+
 
 def sign(_x):
     """
@@ -99,11 +101,13 @@ def get_evs_bet_offs_inc(events, offset1, offset2=None):
         offset2 = events[-1].get_offset()
     return [event for event in events if offset1 <= event.get_offset() <= offset2]
 
+
 def not_rest_or_grace(event):
     """
     Returns True/False if event is not rest or grace note
     """
     return not (event.is_grace_note() or event.is_rest())
+
 
 def get_rests(events):
     """
@@ -117,3 +121,18 @@ def get_grace_notes(events):
     Returns all events that are grace notes
     """
     return [event for event in events if event.is_grace_note()]
+
+
+def get_analysis_keys_measure(measure):
+    """
+    Gets an analysis of key for a measure
+    """
+    k = measure.analyze('key')
+    return (measure.number, k)
+
+
+def harmonic_functions_key(chord, key):
+    """
+    Parses the harmonic key signatures information for a key
+    """
+    return music21.roman.romanNumeralFromChord(chord, key)
