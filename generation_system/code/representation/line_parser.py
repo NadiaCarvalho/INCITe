@@ -56,7 +56,7 @@ class LineParser:
                 self.events[i].add_viewpoint(
                     Viewpoint('midi_pitch', note_or_rest.pitch.ps))
                 self.events[i].add_viewpoint(
-                    Viewpoint('pitch_class', note_or_rest.pitchClass))
+                    Viewpoint('pitch_class', note_or_rest.pitch.pitchClass))
                 self.events[i].add_viewpoint(
                     Viewpoint('octave', note_or_rest.octave))
                 self.events[i].add_viewpoint(
@@ -137,7 +137,7 @@ class LineParser:
         fib_index = (
             index, index-1)[bool(note_or_rest.offset < self.measure_offsets[index])]
         return[event for event in utils.get_events_at_offset(
-            self.events, self.measure_offsets[fib_index]) if not event.is_grace_note()][0]
+            self.events, self.measure_offsets[fib_index]) if not event.is_grace_note()]
 
     def parsing_fib_element(self, index, note_or_rest):
         """
@@ -157,11 +157,13 @@ class LineParser:
         """
         self.events[index].add_viewpoint(Viewpoint('fib', False))
         last_fib = self.get_first_fib_before_non_fib(note_or_rest)
-        if not note_or_rest.isRest and utils.not_rest_or_grace(last_fib):
-            cur_midi = self.events[index].get_viewpoint('midi_pitch')
-            last_fib_midi = last_fib.get_viewpoint('midi_pitch')
-            self.events[index].add_viewpoint(Viewpoint('intfib', utils.seq_int(
-                cur_midi, last_fib_midi)))
+        if len(last_fib) > 1:
+            last_fib = last_fib[0]
+            if not note_or_rest.isRest and utils.not_rest_or_grace(last_fib):
+                cur_midi = self.events[index].get_viewpoint('midi_pitch')
+                last_fib_midi = last_fib.get_viewpoint('midi_pitch')
+                self.events[index].add_viewpoint(Viewpoint('intfib', utils.seq_int(
+                    cur_midi, last_fib_midi)))
 
     def measure_info_parsing(self, index, note_or_rest):
         """
@@ -174,6 +176,7 @@ class LineParser:
             posinbar = int(
                 components[0]) + (Fraction(components[1]) if len(components) > 1 else 0) - 1
             self.events[index].add_viewpoint(Viewpoint('posinbar', posinbar))
+            self.events[index].add_viewpoint(Viewpoint('beatstrength', note_or_rest.beatStrength))
 
         if note_or_rest.offset in self.measure_offsets and not note_or_rest.duration.isGrace:
             self.parsing_fib_element(index, note_or_rest)

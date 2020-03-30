@@ -15,7 +15,8 @@ def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    file_path = os.sep.join(['data', 'myexamples', 'bwv1.6.mxl'])
+    name = 'bwv1.6.2.mxl' #'MicrotonsExample.mxl' 
+    file_path = os.sep.join(['data', 'myexamples', name])
     if os.path.realpath('.').find('code') != -1:
         file_path.replace('code', '')
         file_path = os.sep.join(['..', file_path])
@@ -23,15 +24,23 @@ def main():
     bach = converter.parse(file_path)
     # bach.flat.show('text')
 
-    voice_events = {}
+    part_events = {}
 
     for i, part in enumerate(bach.parts):
-        voice_events[i] = LineParser(part).parse_line()
+        if part.isSequence():
+            print('Processing part {}'.format(str(i)))
+            part_events[i] = LineParser(part).parse_line()
+        else:
+            pass # Process part with more
 
-    #print(utils.show_sequence_of_viewpoint_without_offset(voice_events[4], 'intfib'))
+    #print(utils.show_sequence_of_viewpoint_without_offset(part_events[4], 'intfib'))
 
-    vertical_events = VerticalParser(bach).parse_music()
-    #[print(str(ev)) for ev in vertical_events]
+    if (len(bach.parts) > 1 or bach.parts[0].hasVoices() or len(bach.parts[0].getOverlaps()) > 0):
+        print('Processing Vertical Events')
+        vertical_events = VerticalParser(bach).parse_music()
+        print(utils.show_sequence_of_viewpoint_without_offset(vertical_events, 'harmfuncKS'))
+        print(utils.show_sequence_of_viewpoint_without_offset(vertical_events, 'harmfuncMS'))
+        #[print(str(ev)) for ev in vertical_events]
 
 
 if __name__ == "__main__":
@@ -48,3 +57,8 @@ if __name__ == "__main__":
     # Ver código para tonalCertainty
     # magnitude do 5º coeficiente (ver com value de tonalCertainty)
     # passar segmentos no espaço para um único ponto e calcular a magnitude
+
+    # Fechar descritores + harmonic functions
+    # VMO
+    # ver o passível de implementar as redes bayesianas
+    # segmentação de Pearce
