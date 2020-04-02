@@ -6,8 +6,9 @@ This script is the main script of the generation system
 import os
 
 from music21 import converter
+from vmo import VMO
 
-#import representation.utils as utils
+import representation.utils as utils
 from representation.line_parser import LineParser
 from representation.vertical_parser import VerticalParser
 
@@ -30,16 +31,40 @@ def main():
         if part.isSequence():
             print('Processing part {}'.format(str(i)))
             part_events[i] = LineParser(part).parse_line()
+            print('End of Processing part {}'.format(str(i)))
         else:
             pass # Process part with more
 
     #print(utils.show_sequence_of_viewpoint_without_offset(part_events[4], 'intfib'))
 
+    """     
     if (len(bach.parts) > 1 or bach.parts[0].hasVoices() or len(bach.parts[0].getOverlaps()) > 0):
         print('Processing Vertical Events')
         vertical_events = VerticalParser(bach).parse_music()
-        [print(str(ev)) for ev in vertical_events]
-        #print(utils.show_sequence_of_viewpoint_without_offset(vertical_events, ''))
+        print('End of Processing {} Vertical Events'.format(len(vertical_events)))
+        #[print(str(ev)) for ev in vertical_events]
+        #print(utils.show_sequence_of_viewpoint_without_offset(vertical_events, '')) 
+    """
+    
+    weights = {
+        'midi_pitch': 0.3,
+        'pitch_class':0.15,
+        'contour':0.4,
+        'intfib': 0.2,
+        'thrbar': 0.1,
+        'posinbar': 0.5,
+        'beatstrength': 0.5,
+        'duration_length': 0.6,
+        'duration_type':0.4
+    }
+    similar = utils.get_all_events_similar_to_event(part_events[0], part_events[0][6], weights, 0.4, 1.5)
+    similarity_matrix = utils.create_similarity_matrix(part_events[0][:5], weights)
+    print(similarity_matrix)
+    [print(str(ev[0].get_offset()) + ' : ' + str(ev[1])) for ev in similar]
+
+
+    oracle = VMO.oracle.build_oracle(part_events[0], flag='a')
+    #print(oracle.get_alphabet())
 
 
 if __name__ == "__main__":

@@ -51,6 +51,24 @@ class Event:
         """
         return self.viewpoints['is_grace'].get_info()
 
+    def weighted_comparision(self, other, weights=None):
+        """
+        Defines an equal function for Event with weighted attributes
+        Return a float in interval [0, 1] in which 0 means that the 
+        two events are totally non-equal and 1, totally equal.
+        """
+        if weights is None:
+            return float(self == other)
+
+        score = 0
+        for key, weight in weights.items():
+            #viewpoint = self.viewpoints[key]
+            #other_view = other.get_viewpoint(key)
+            if self.get_viewpoint(key) == other.get_viewpoint(key):
+                score += weight
+    
+        return (score/sum(weights.values()))
+
     def __str__(self):
         """
         Overrides str function for Event
@@ -59,3 +77,19 @@ class Event:
         to_return += ''.join([str(viewpoint)
                               for key, viewpoint in self.viewpoints.items()])
         return to_return
+
+    def __eq__(self, other):
+        """
+        Overrides equal function for Event
+        """
+        for key, viewpoint in self.viewpoints.items():
+            other_view = other.get_viewpoint(key)
+            if other_view is None or viewpoint != other_view:
+                return False
+        return True
+
+    def __ne__(self, other):
+        """
+        Overrides non-equal function for Event
+        """
+        return not self == other

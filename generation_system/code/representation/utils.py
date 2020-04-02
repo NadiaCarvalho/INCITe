@@ -5,6 +5,9 @@ This script presents utility functions for dealing with representations
 
 import music21
 
+import numpy as np
+from scipy.spatial.distance import pdist, squareform
+
 
 def sign(_x):
     """
@@ -136,3 +139,31 @@ def harmonic_functions_key(chord, key):
     Parses the harmonic key signatures information for a key
     """
     return music21.roman.romanNumeralFromChord(chord, key)
+
+def get_all_events_similar_to_event(events, event, weights=None, threshold=0.5, offset_thresh=None):
+    """
+    Get all events that are similar to an event in a certain threshold
+    """
+    res = [(ev, event.weighted_comparision(ev, weights)) for ev in events]
+    return [ev for ev in res if cond_sim(ev, event.get_offset(), threshold, offset_thresh)]
+
+
+def cond_sim(ev, offset, threshold, offset_thresh):
+    """
+    cond func for get_all_events_similar_to_event
+    """
+    res = False
+    if ev[1] >= threshold:
+        if offset_thresh is not None:
+            if offset - offset_thresh <= ev[0].get_offset() <= offset + offset_thresh:
+                res = True
+        else:
+            res = True
+
+    return res
+
+def create_similarity_matrix(events, weights=None):
+    matrix = []
+    for i, event in enumerate(events): 
+        matrix.append([event.weighted_comparision(ev, weights) for ev in events])
+    return np.array(matrix)

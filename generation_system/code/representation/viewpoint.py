@@ -42,3 +42,15 @@ class Viewpoint:
         Overrides str function for Viewpoint
         """
         return 'Viewpoint {}: {} \n'.format(self.name, self.info)
+    
+    def __eq__(self, other):
+        """
+        Overrides equal function for Viewpoint
+        """
+        return (other is not None and self.name == other.get_name() and self.info == other.get_info())
+
+    def __ne__(self, other):
+        """
+        Overrides non-equal function for Viewpoint
+        """
+        return not self == other
