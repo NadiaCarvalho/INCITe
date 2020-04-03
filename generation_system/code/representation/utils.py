@@ -144,7 +144,7 @@ def get_all_events_similar_to_event(events, event, weights=None, threshold=0.5, 
     """
     Get all events that are similar to an event in a certain threshold
     """
-    res = [(ev, event.weighted_comparision(ev, weights)) for ev in events]
+    res = [(ev, event.weighted_comparison(ev, weights)) for ev in events]
     return [ev for ev in res if cond_sim(ev, event.get_offset(), threshold, offset_thresh)]
 
 
@@ -165,5 +165,5 @@ def cond_sim(ev, offset, threshold, offset_thresh):
 def create_similarity_matrix(events, weights=None):
     matrix = []
     for i, event in enumerate(events): 
-        matrix.append([event.weighted_comparision(ev, weights) for ev in events])
+        matrix.append([event.weighted_comparison(ev, weights) for ev in events])
     return np.array(matrix)

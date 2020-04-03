@@ -6,17 +6,20 @@ This script is the main script of the generation system
 import os
 
 from music21 import converter
-from vmo import VMO
 
-import representation.utils as utils
+import generation.utils as gen_utils
+import representation.utils as rep_utils
 from representation.line_parser import LineParser
 from representation.vertical_parser import VerticalParser
+
+#from vmo import VMO
+
 
 def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    name = 'bwv1.6.2.mxl' #'MicrotonsExample.mxl'
+    name = 'bwv1.6.2.mxl'  # 'MicrotonsExample.mxl'
     file_path = os.sep.join(['data', 'myexamples', name])
     if os.path.realpath('.').find('code') != -1:
         file_path.replace('code', '')
@@ -33,7 +36,7 @@ def main():
             part_events[i] = LineParser(part).parse_line()
             print('End of Processing part {}'.format(str(i)))
         else:
-            pass # Process part with more
+            pass  # Process part with more
 
     #print(utils.show_sequence_of_viewpoint_without_offset(part_events[4], 'intfib'))
 
@@ -45,26 +48,27 @@ def main():
         #[print(str(ev)) for ev in vertical_events]
         #print(utils.show_sequence_of_viewpoint_without_offset(vertical_events, '')) 
     """
-    
+
     weights = {
         'midi_pitch': 0.3,
-        'pitch_class':0.15,
-        'contour':0.4,
+        'pitch_class': 0.15,
+        'contour': 0.4,
         'intfib': 0.2,
         'thrbar': 0.1,
         'posinbar': 0.5,
         'beatstrength': 0.5,
         'duration_length': 0.6,
-        'duration_type':0.4
+        'duration_type': 0.4
     }
-    similar = utils.get_all_events_similar_to_event(part_events[0], part_events[0][6], weights, 0.4, 1.5)
-    similarity_matrix = utils.create_similarity_matrix(part_events[0][:5], weights)
+    similar = rep_utils.get_all_events_similar_to_event(
+        part_events[0], part_events[0][6], weights, 0.4, 1.5)
+    similarity_matrix = rep_utils.create_similarity_matrix(
+        part_events[0][:5], weights)
     print(similarity_matrix)
     [print(str(ev[0].get_offset()) + ' : ' + str(ev[1])) for ev in similar]
 
-
-    oracle = VMO.oracle.build_oracle(part_events[0], flag='a')
-    #print(oracle.get_alphabet())
+    # oracle = gen_utils.build_oracle(part_events[0], flag='a')
+    # print(oracle.get_alphabet())
 
 
 if __name__ == "__main__":

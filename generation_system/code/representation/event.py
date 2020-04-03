@@ -51,7 +51,7 @@ class Event:
         """
         return self.viewpoints['is_grace'].get_info()
 
-    def weighted_comparision(self, other, weights=None):
+    def weighted_comparison(self, other, weights=None):
         """
         Defines an equal function for Event with weighted attributes
         Return a float in interval [0, 1] in which 0 means that the 
