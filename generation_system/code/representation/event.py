@@ -54,7 +54,7 @@ class Event:
     def weighted_comparison(self, other, weights=None):
         """
         Defines an equal function for Event with weighted attributes
-        Return a float in interval [0, 1] in which 0 means that the 
+        Return a float in interval [0, 1] in which 0 means that the
         two events are totally non-equal and 1, totally equal.
         """
         if weights is None:
@@ -62,12 +62,22 @@ class Event:
 
         score = 0
         for key, weight in weights.items():
-            #viewpoint = self.viewpoints[key]
-            #other_view = other.get_viewpoint(key)
             if self.get_viewpoint(key) == other.get_viewpoint(key):
                 score += weight
-    
-        return (score/sum(weights.values()))
+
+        return score/sum(weights.values())
+
+    def to_feature_list(self, features=None):
+        """
+        Transforms event in a list of features
+        """
+        if features is None:
+            features = self.viewpoints
+
+        features_list = [self.viewpoints[feat].get_info(
+        ) if feat in self.viewpoints else None for feat in features]
+        return [self.offset_time] + features_list
+
 
     def __str__(self):
         """

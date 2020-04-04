@@ -60,14 +60,22 @@ def main():
         'duration_length': 0.6,
         'duration_type': 0.4
     }
+    '''
     similar = rep_utils.get_all_events_similar_to_event(
         part_events[0], part_events[0][6], weights, 0.4, 1.5)
     similarity_matrix = rep_utils.create_similarity_matrix(
         part_events[0][:5], weights)
     print(similarity_matrix)
     [print(str(ev[0].get_offset()) + ' : ' + str(ev[1])) for ev in similar]
+    '''
 
-    # oracle = gen_utils.build_oracle(part_events[0], flag='a')
+    events_part_0 = [event.to_feature_list(weights) for event in part_events[0]]
+
+    list_feat = ['offset'] + list(weights)
+    weight_feat = weights
+    weight_feat['offset'] = 0
+
+    oracle = gen_utils.build_oracle(events_part_0, flag='f', features=list_feat, weights=weights, dim=10)
     # print(oracle.get_alphabet())
 
 
