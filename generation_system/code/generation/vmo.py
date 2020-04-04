@@ -7,7 +7,6 @@ based on the code in https://github.com/wangsix/vmo/blob/master/vmo/VMO/oracle.p
 import numpy as np
 import scipy.spatial.distance as dist
 
-import generation.utils as utils
 from generation.factor_oracle import FactorOracle
 
 
@@ -19,8 +18,9 @@ class VMO(FactorOracle):
     def __init__(self, **kwargs):
         super(VMO, self).__init__(**kwargs)
         self.kind = 'a'
-        self.f_array = utils.feature_array(self.params['dim'])
-        self.f_array.add(np.zeros(self.params['dim'], ))
+        self.f_array = []
+        #self.f_array = utils.feature_array(self.params['dim'])
+        #self.f_array.add(np.zeros(self.params['dim'], ))
         self.basic_attributes['data'][0] = None
         self.latent = []
 
@@ -28,9 +28,9 @@ class VMO(FactorOracle):
         super(VMO, self).reset(**kwargs)
 
         self.kind = 'a'
-        # self.f_array = [0]
-        self.f_array = utils.feature_array(self.params['dim'])
-        self.f_array.add(np.zeros(self.params['dim'], ))
+        self.f_array = []
+        #self.f_array = utils.feature_array(self.params['dim'])
+        #self.f_array.add(np.zeros(self.params['dim'], ))
         self.basic_attributes['data'][0] = None
         self.latent = []
 
@@ -109,7 +109,7 @@ class VMO(FactorOracle):
         self.basic_attributes['lrs'].append(0)
 
         # Experiment with pointer-based
-        self.f_array.add(new_symbol)
+        self.f_array.append(new_symbol)
 
         self.statistics['n_states'] += 1
         i = self.statistics['n_states'] - 1

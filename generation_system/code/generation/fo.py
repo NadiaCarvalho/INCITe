@@ -17,7 +17,7 @@ class FO(FactorOracle):
         super(FO, self).__init__(**kwargs)
         self.kind = 'r'
 
-    def add_state(self, new_symbol):
+    def add_state(self, new_symbol, method=None):
         """
         :type self: oracle
         """
