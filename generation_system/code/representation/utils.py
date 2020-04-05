@@ -8,6 +8,7 @@ import music21
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction import DictVectorizer
+from sklearn.impute import SimpleImputer
 
 
 def sign(_x):
@@ -191,6 +192,9 @@ def create_feature_array_events(events, weights):
     vec = DictVectorizer()
     features = vec.fit_transform(events_dict).toarray()
     features_names = vec.get_feature_names()
+
+    imp = SimpleImputer(missing_values=np.nan, strategy='constant', fill_value=10000)
+    features = imp.fit_transform(features)
 
     if len(features_names) == 1:
         features = [x for [x] in features]

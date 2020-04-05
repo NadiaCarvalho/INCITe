@@ -42,9 +42,14 @@ class VMO(FactorOracle):
             return dist.cdist([new_symbol],
                               self.f_array[self.basic_attributes['trn'][k]],
                               metric=self.params['dfunc_handle'], w=self.params['weights'])[0]
-        return dist.cdist([new_symbol],
-                          self.f_array[self.basic_attributes['trn'][k]],
-                          metric=self.params['dfunc'])[0]
+        if len(self.params['weights']) != 0:
+            return dist.cdist([new_symbol],
+                              self.f_array[self.basic_attributes['trn'][k]],
+                              metric=self.params['dfunc'], w=self.params['weights'])[0]
+        else:
+            return dist.cdist([new_symbol],
+                              self.f_array[self.basic_attributes['trn'][k]],
+                              metric=self.params['dfunc'])[0]
 
     def _complete_method(self, i, pi_1, suffix_candidate):
         """docstring"""
@@ -125,6 +130,9 @@ class VMO(FactorOracle):
 
         while k is not None:
             dvec = self._dvec(new_symbol, k)
+
+            print('DVEC_1: ' + str(dvec[0]))
+
             suffix = np.where(dvec < self.params['threshold'])[0]
 
             if len(suffix) == 0:  # if no transition from suffix

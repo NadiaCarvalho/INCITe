@@ -47,10 +47,11 @@ def build_oracle(input_data, flag,
                  dfunc_handle=None, dim=1):
     """docstring"""
     # initialize weights if needed
-    if weights is None and features is not None:
-        weights = {}
-        _ = [weights.setdefault(feature, 1.0) for feature in features]
-            
+    if weights is None:
+        if features is not None:
+            weights = [1.0 for feature in features]
+        else:
+            weights = []
 
     if 'f' or 'v' in flag:
         oracle = _create_oracle(flag, threshold=threshold, dfunc=dfunc,
@@ -65,19 +66,19 @@ def build_oracle(input_data, flag,
 
 
 def find_threshold(input_data, _r=(0, 1, 0.1), method='ir', flag='a',
-                   suffix_method='inc', alpha=1.0, features=None, ir_type='cum',
+                   suffix_method='inc', alpha=1.0, features=None, weights=None, ir_type='cum',
                    dfunc='cosine', dfunc_handle=None, dim=1,
                    verbose=False, entropy=False):
     """docstring"""
     if method == 'ir':
         return find_threshold_ir(input_data, _r, flag, suffix_method, alpha,
-                                 features, ir_type, dfunc, dfunc_handle, dim,
+                                 features, weights, ir_type, dfunc, dfunc_handle, dim,
                                  verbose, entropy)
     return None
 
 
 def find_threshold_ir(input_data, _r=(0, 1, 0.1), flag='a', suffix_method='inc',
-                      alpha=1.0, features=None, ir_type='cum',
+                      alpha=1.0, features=None, weights=None, ir_type='cum',
                       dfunc='cosine', dfunc_handle=None, dim=1,
                       verbose=False, entropy=False):
     """docstring"""
@@ -93,8 +94,8 @@ def find_threshold_ir(input_data, _r=(0, 1, 0.1), flag='a', suffix_method='inc',
             print('Testing threshold:', _t)
         tmp_oracle = build_oracle(input_data, flag=flag, threshold=_t,
                                   suffix_method=suffix_method, features=features,
-                                  dfunc=dfunc, dfunc_handle=dfunc_handle, dim=dim)
-        tmp_ir, h_0, h_1 = tmp_oracle.IR(ir_type=ir_type, alpha=alpha)
+                                  dfunc=dfunc, dfunc_handle=dfunc_handle, dim=dim, weights=weights)
+        tmp_ir, h_0, h_1 = tmp_oracle.i_r(ir_type=ir_type, alpha=alpha)
         irs.append(tmp_ir.sum())
         if entropy:
             h0_vec.append(h_0.sum())

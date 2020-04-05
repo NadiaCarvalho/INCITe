@@ -51,28 +51,29 @@ def main():
     """
 
     weights = {
-        'midi_pitch': 1,
-        'pitch_class': 0.15,
-        'contour': 0.4,
-        'intfib': 0.2,
-        'thrbar': 0.1,
+        'midi_pitch': 0.5,
+        'pitch_class': 0.5,
+        'contour': 0.5,
+        'intfib': 0.5,
+        'thrbar': 0.5,
         'posinbar': 0.5,
         'beatstrength': 0.5,
-        'duration_length': 0.6,
-        'duration_type': 0.4
+        'duration_length': 0.5,
+        'duration_type': 0.5
     }
 
     event_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
         part_events[0], weights)
 
-    euc_handle = lambda u, v, w: np.sqrt(((w*(u-v))**2).sum())
+    thresh = gen_utils.find_threshold(event_features[:15], weights=weighted_fit, dim=len(features_names), entropy=True)
+
 
     oracle = gen_utils.build_oracle(
-        event_features[:5], flag='a', features=features_names, weights=weighted_fit, dim=len(features_names), dfunc='other', dfunc_handle=euc_handle, threshold=2)
+        event_features[:15], flag='a', features=features_names, weights=weighted_fit, dim=len(features_names), dfunc='hamming', threshold=thresh[0][1])
     gen_plot.start_draw(oracle).show()
 
     oracle2 = VMO.oracle.build_oracle(
-        event_features[:5], flag='a', feature=features_names, weights=weighted_fit, dim=len(features_names), threshold=2)
+        event_features[:15], flag='a', feature=features_names, weights=weighted_fit, dim=len(features_names), dfunc='hamming', threshold=thresh[0][1])
     plot.start_draw(oracle2).show()
 
 if __name__ == "__main__":

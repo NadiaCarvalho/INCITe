@@ -212,7 +212,7 @@ class FactorOracle:
             j = i
         return self.comp_attributes['seg']
 
-    def _i_r(self, alpha=1.0):
+    def _ir(self, alpha=1.0):
         """docstring"""
         code, _ = self.encode()
         c_w = np.zeros(len(code))  # Number of code words
@@ -231,7 +231,7 @@ class FactorOracle:
 
         return i_r, h_0, h_1
 
-    def _i_r_fixed(self, alpha=1.0):
+    def _ir_fixed(self, alpha=1.0):
         """docstring"""
         code, _ = self.encode()
 
@@ -257,7 +257,7 @@ class FactorOracle:
         i_r[i_r < 0] = 0
         return i_r, h_0, h_1
 
-    def _i_r_cum(self, alpha=1.0):
+    def _ir_cum(self, alpha=1.0):
         """docstring"""
         code, _ = self.encode()
         states = self.statistics['n_states']
@@ -290,7 +290,7 @@ class FactorOracle:
 
         return i_r, h_0, h_1
 
-    def _i_r_cum2(self, alpha=1.0):
+    def _ir_cum2(self, alpha=1.0):
         """docstring"""
         code, _ = self.encode()
         states = self.statistics['n_states']
@@ -317,7 +317,7 @@ class FactorOracle:
         i_r[i_r < 0] = 0  # Really a HACK here!!!!!
         return i_r, h_0, h_1
 
-    def _i_r_cum3(self, alpha=1.0):
+    def _ir_cum3(self, alpha=1.0):
         """docstring"""
         h_0 = np.log2(
             np.cumsum([1.0 if sfx == 0 else 0.0 for sfx in self.basic_attributes['sfx'][1:]]))
@@ -328,18 +328,18 @@ class FactorOracle:
         i_r[i_r < 0] = 0  # Really a HACK here!!!!!
         return i_r, h_0, h_1
 
-    def i_r(self, alpha=1.0, i_r_type='cum'):
+    def i_r(self, alpha=1.0, ir_type='cum'):
         """docstring"""
-        if i_r_type == 'cum':
-            return self._i_r_cum(alpha)
-        if i_r_type == 'all':
-            return self._i_r(alpha)
-        if i_r_type == 'fixed':
-            return self._i_r_fixed(alpha)
-        if i_r_type == 'cum2':
-            return self._i_r_cum2(alpha)
-        if i_r_type == 'cum3':
-            return self._i_r_cum3(alpha)
+        if ir_type == 'cum':
+            return self._ir_cum(alpha)
+        if ir_type == 'all':
+            return self._ir(alpha)
+        if ir_type == 'fixed':
+            return self._ir_fixed(alpha)
+        if ir_type == 'cum2':
+            return self._ir_cum2(alpha)
+        if ir_type == 'cum3':
+            return self._ir_cum3(alpha)
 
         return None
 
