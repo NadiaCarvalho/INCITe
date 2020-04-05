@@ -4,6 +4,7 @@ This script defines the Factor Oracle class
 based on the code in https://github.com/wangsix/vmo/blob/master/vmo/VMO/oracle.py
 """
 
+import numpy as np
 import vmo.VMO.utility.misc as utl
 
 from generation.factor_oracle import FactorOracle
@@ -39,8 +40,7 @@ class FO(FactorOracle):
         while k is not None:
             _symbols = [self.basic_attributes['data'][state]
                         for state in self.basic_attributes['trn'][k]]
-            print(_symbols)
-            if self.basic_attributes['data'][i] not in _symbols:
+            if self.basic_attributes['data'][i] not in _symbols: # change here to use weights in checking if event is in 
                 self.basic_attributes['trn'][k].append(i)
                 pi_1 = k
                 k = self.basic_attributes['sfx'][k]

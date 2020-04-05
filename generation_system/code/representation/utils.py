@@ -7,6 +7,7 @@ import music21
 
 import numpy as np
 from scipy.spatial.distance import pdist, squareform
+from sklearn.feature_extraction import DictVectorizer
 
 
 def sign(_x):
@@ -140,6 +141,7 @@ def harmonic_functions_key(chord, key):
     """
     return music21.roman.romanNumeralFromChord(chord, key)
 
+
 def get_all_events_similar_to_event(events, event, weights=None, threshold=0.5, offset_thresh=None):
     """
     Get all events that are similar to an event in a certain threshold
@@ -162,8 +164,43 @@ def cond_sim(ev, offset, threshold, offset_thresh):
 
     return res
 
+
 def create_similarity_matrix(events, weights=None):
+    """
+    Create Similarity Matrix for events with weights
+    Usage:
+    similar = rep_utils.get_all_events_similar_to_event(
+        part_events[0], part_events[0][6], weights, 0.4, 1.5)
+    similarity_matrix = rep_utils.create_similarity_matrix(
+        part_events[0][:5], weights)
+    print(similarity_matrix)
+    [print(str(ev[0].get_offset()) + ' : ' + str(ev[1])) for ev in similar]
+    """
     matrix = []
-    for i, event in enumerate(events): 
-        matrix.append([event.weighted_comparison(ev, weights) for ev in events])
+    for i, event in enumerate(events):
+        matrix.append([event.weighted_comparison(ev, weights)
+                       for ev in events])
     return np.array(matrix)
+
+
+def create_feature_array_events(events, weights):
+    """
+    Creating Feature Array and Weights for Oracle
+    """
+    events_dict = [event.to_feature_dict(weights) for event in events]
+    vec = DictVectorizer()
+    features = vec.fit_transform(events_dict).toarray()
+    features_names = vec.get_feature_names()
+
+    if len(features_names) == 1:
+        features = [x for [x] in features]
+
+    weighted_fit = np.zeros(len(features_names))
+    for i, feat in enumerate(features_names):
+        w_feat = [key for key in weights if feat.find(key) != -1]
+        if len(w_feat) == 0:
+            weighted_fit[i] = 0
+        else:
+            weighted_fit[i] = weights[w_feat[0]]
+
+    return features, features_names, weighted_fit

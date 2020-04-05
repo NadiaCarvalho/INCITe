@@ -26,6 +26,7 @@ def create_oracle(flag, threshold=0, dfunc='euclidean',
 
 def _build_oracle(flag, oracle, input_data, suffix_method='inc'):
     """A routine for building a factor oracle."""
+
     if not isinstance(input_data, np.ndarray) or not isinstance(input_data[0], np.ndarray):
         input_data = np.array(input_data)
 
@@ -48,16 +49,16 @@ def build_oracle(input_data, flag,
     # initialize weights if needed
     if weights is None and features is not None:
         weights = {}
-        for feature in features:
-            weights.setdefault(feature, 1.0)
+        _ = [weights.setdefault(feature, 1.0) for feature in features]
+            
 
     if 'f' or 'v' in flag:
         oracle = _create_oracle(flag, threshold=threshold, dfunc=dfunc,
-                                dfunc_handle=dfunc_handle, dim=dim)
+                                dfunc_handle=dfunc_handle, dim=dim, weights=weights)
         oracle = _build_oracle(flag, oracle, input_data)
     else:
         oracle = _create_oracle('a', threshold=threshold, dfunc=dfunc,
-                                dfunc_handle=dfunc_handle, dim=dim)
+                                dfunc_handle=dfunc_handle, dim=dim, weights=weights)
         oracle = _build_oracle(flag, oracle, input_data, suffix_method)
 
     return oracle

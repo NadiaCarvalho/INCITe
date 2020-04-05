@@ -8,12 +8,13 @@ import os
 from music21 import converter
 
 import generation.utils as gen_utils
+import generation.plot_fo as gen_plot
 import representation.utils as rep_utils
 from representation.line_parser import LineParser
 from representation.vertical_parser import VerticalParser
 
-#from vmo import VMO
-
+import numpy as np
+from vmo import VMO, plot
 
 def main():
     """
@@ -50,7 +51,7 @@ def main():
     """
 
     weights = {
-        'midi_pitch': 0.3,
+        'midi_pitch': 1,
         'pitch_class': 0.15,
         'contour': 0.4,
         'intfib': 0.2,
@@ -60,24 +61,19 @@ def main():
         'duration_length': 0.6,
         'duration_type': 0.4
     }
-    '''
-    similar = rep_utils.get_all_events_similar_to_event(
-        part_events[0], part_events[0][6], weights, 0.4, 1.5)
-    similarity_matrix = rep_utils.create_similarity_matrix(
-        part_events[0][:5], weights)
-    print(similarity_matrix)
-    [print(str(ev[0].get_offset()) + ' : ' + str(ev[1])) for ev in similar]
-    '''
 
-    events_part_0 = [event.to_feature_list(weights) for event in part_events[0]]
+    event_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
+        part_events[0], weights)
 
-    list_feat = ['offset'] + list(weights)
-    weight_feat = weights
-    weight_feat['offset'] = 0
+    euc_handle = lambda u, v, w: np.sqrt(((w*(u-v))**2).sum())
 
-    oracle = gen_utils.build_oracle(events_part_0, flag='f', features=list_feat, weights=weights, dim=10)
-    # print(oracle.get_alphabet())
+    oracle = gen_utils.build_oracle(
+        event_features[:5], flag='a', features=features_names, weights=weighted_fit, dim=len(features_names), dfunc='other', dfunc_handle=euc_handle, threshold=2)
+    gen_plot.start_draw(oracle).show()
 
+    oracle2 = VMO.oracle.build_oracle(
+        event_features[:5], flag='a', feature=features_names, weights=weighted_fit, dim=len(features_names), threshold=2)
+    plot.start_draw(oracle2).show()
 
 if __name__ == "__main__":
     main()

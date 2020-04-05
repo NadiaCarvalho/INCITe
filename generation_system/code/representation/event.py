@@ -74,9 +74,27 @@ class Event:
         if features is None:
             features = self.viewpoints
 
-        features_list = [self.viewpoints[feat].get_info(
-        ) if feat in self.viewpoints else None for feat in features]
+        features_list = [self.viewpoints[feat].get_info()
+         if feat in self.viewpoints else None for feat in features]
         return [self.offset_time] + features_list
+    
+    def to_feature_dict(self, features=None):
+        """
+        Transforms event in a list of features
+        """
+        if features is None:
+            features = self.viewpoints
+
+        features_dict = {}
+        #features_dict['offset'] = self.offset_time
+        
+        for feat in features:
+            if feat in self.viewpoints:
+                features_dict[feat] = self.viewpoints[feat].get_info()
+            else:
+                features_dict[feat] = None
+
+        return features_dict
 
 
     def __str__(self):
