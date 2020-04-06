@@ -20,6 +20,7 @@ class LineParser:
     def __init__(self, music_to_parse):
         self.music_to_parse = music_to_parse
         self.events = []
+        self.part_name = music_to_parse.partName
 
         # Get offsets of beginnings of measures
         self.measure_offsets = [measure.offset for measure in self.music_to_parse.recurse(
@@ -48,6 +49,7 @@ class LineParser:
 
         for i, note_or_rest in enumerate(stream_notes_rests.elements):
             self.events.append(Event(note_or_rest.offset))
+            self.events[i].add_viewpoint(Viewpoint('part_name', self.part_name))
 
             if not note_or_rest.isRest:
                 # Basic Viewpoints

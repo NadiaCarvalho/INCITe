@@ -90,7 +90,11 @@ class Event:
         
         for feat in features:
             if feat in self.viewpoints:
-                features_dict[feat] = self.viewpoints[feat].get_info()
+                if feat in ['articulation', 'expression']: #add features that are arrays
+                    for a_feat in enumerate(self.viewpoints[feat].get_info()):
+                        features_dict[feat + '_' + a_feat] = True
+                else:
+                    features_dict[feat] = self.viewpoints[feat].get_info()
             else:
                 features_dict[feat] = None
 

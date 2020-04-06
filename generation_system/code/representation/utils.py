@@ -184,7 +184,7 @@ def create_similarity_matrix(events, weights=None):
     return np.array(matrix)
 
 
-def create_feature_array_events(events, weights):
+def create_feature_array_events(events, weights=None):
     """
     Creating Feature Array and Weights for Oracle
     """
@@ -199,12 +199,14 @@ def create_feature_array_events(events, weights):
     if len(features_names) == 1:
         features = [x for [x] in features]
 
-    weighted_fit = np.zeros(len(features_names))
-    for i, feat in enumerate(features_names):
-        w_feat = [key for key in weights if feat.find(key) != -1]
-        if len(w_feat) == 0:
-            weighted_fit[i] = 0
-        else:
-            weighted_fit[i] = weights[w_feat[0]]
+    weighted_fit = None
+    if weights is not None:
+        weighted_fit = np.zeros(len(features_names))
+        for i, feat in enumerate(features_names):
+                w_feat = [key for key in weights if feat.find(key) != -1]
+                if len(w_feat) == 0:
+                    weighted_fit[i] = 0
+                else:
+                    weighted_fit[i] = weights[w_feat[0]]        
 
     return features, features_names, weighted_fit

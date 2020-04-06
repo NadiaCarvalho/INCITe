@@ -42,7 +42,7 @@ class VMO(FactorOracle):
             return dist.cdist([new_symbol],
                               self.f_array[self.basic_attributes['trn'][k]],
                               metric=self.params['dfunc_handle'], w=self.params['weights'])[0]
-        if len(self.params['weights']) != 0:
+        if self.params['weights'] is not None:
             return dist.cdist([new_symbol],
                               self.f_array[self.basic_attributes['trn'][k]],
                               metric=self.params['dfunc'], w=self.params['weights'])[0]

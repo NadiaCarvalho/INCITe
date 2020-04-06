@@ -49,9 +49,7 @@ def build_oracle(input_data, flag,
     # initialize weights if needed
     if weights is None:
         if features is not None:
-            weights = [1.0 for feature in features]
-        else:
-            weights = []
+            weights = np.array([1.0 for feature in features])
 
     if 'f' or 'v' in flag:
         oracle = _create_oracle(flag, threshold=threshold, dfunc=dfunc,

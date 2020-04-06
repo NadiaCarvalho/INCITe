@@ -85,7 +85,7 @@ class FactorOracle:
             'dfunc': 'cosine',
             'dfunc_handle': None,
             'dim': 1,
-            'weights': []
+            'weights': None
         }
         self.update_params(**kwargs)
 
