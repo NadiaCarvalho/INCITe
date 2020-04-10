@@ -4,9 +4,7 @@ This script presents utility functions for dealing with representations
 """
 
 import music21
-
 import numpy as np
-from scipy.spatial.distance import pdist, squareform
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.impute import SimpleImputer
 
@@ -90,6 +88,14 @@ def show_sequence_of_viewpoint_without_offset(events, viewpoint):
                          if event.check_viewpoint(viewpoint) else 'None ' for event in events])
     return to_print
 
+def show_part_viewpoint(viewpoint, part, offset=False):
+    """
+    Shows only a viewpoint for a specific part
+    """
+    if offset:
+        print(show_sequence_of_viewpoint_with_offset(part, viewpoint))
+    else:
+        print(show_sequence_of_viewpoint_without_offset(part, viewpoint))
 
 def get_events_at_offset(events, offset):
     """
@@ -151,14 +157,14 @@ def get_all_events_similar_to_event(events, event, weights=None, threshold=0.5, 
     return [ev for ev in res if cond_sim(ev, event.get_offset(), threshold, offset_thresh)]
 
 
-def cond_sim(ev, offset, threshold, offset_thresh):
+def cond_sim(event, offset, threshold, offset_thresh):
     """
     cond func for get_all_events_similar_to_event
     """
     res = False
-    if ev[1] >= threshold:
+    if event[1] >= threshold:
         if offset_thresh is not None:
-            if offset - offset_thresh <= ev[0].get_offset() <= offset + offset_thresh:
+            if offset - offset_thresh <= event[0].get_offset() <= offset + offset_thresh:
                 res = True
         else:
             res = True
@@ -178,7 +184,7 @@ def create_similarity_matrix(events, weights=None):
     [print(str(ev[0].get_offset()) + ' : ' + str(ev[1])) for ev in similar]
     """
     matrix = []
-    for i, event in enumerate(events):
+    for event in events:
         matrix.append([event.weighted_comparison(ev, weights)
                        for ev in events])
     return np.array(matrix)
@@ -193,7 +199,8 @@ def create_feature_array_events(events, weights=None):
     features = vec.fit_transform(events_dict).toarray()
     features_names = vec.get_feature_names()
 
-    imp = SimpleImputer(missing_values=np.nan, strategy='constant', fill_value=10000)
+    imp = SimpleImputer(missing_values=np.nan,
+                        strategy='constant', fill_value=10000)
     features = imp.fit_transform(features)
 
     if len(features_names) == 1:
@@ -203,10 +210,41 @@ def create_feature_array_events(events, weights=None):
     if weights is not None:
         weighted_fit = np.zeros(len(features_names))
         for i, feat in enumerate(features_names):
-                w_feat = [key for key in weights if feat.find(key) != -1]
-                if len(w_feat) == 0:
-                    weighted_fit[i] = 0
-                else:
-                    weighted_fit[i] = weights[w_feat[0]]        
+            w_feat = [key for key in weights if feat.find(key) != -1]
+            if len(w_feat) == 0:
+                weighted_fit[i] = 0
+            else:
+                weighted_fit[i] = weights[w_feat[0]]
 
     return features, features_names, weighted_fit
+
+
+def part_name_parser(music_to_parse):
+    """
+    Return the name and voice of the part
+    """
+    part_name_voice = [music_to_parse.partName, 'v0']
+    if music_to_parse.partName is None:
+        part_name_voice = music_to_parse.id.split('-')
+    return part_name_voice
+
+
+def get_analysis_keys_stream_bet_offsets(music_to_parse, off1, off2):
+    """
+    Gets an analysis of key for a stream
+    """
+    k = music_to_parse.getElementsByOffset(
+        off1, off2).stream().analyze('key')
+    return (off1, k)
+
+
+def has_value_viewpoint_events(events, viewpoint):
+    """
+    For a sequence of events, evaluate
+    if all None (False) or not (True)
+    """
+    for event in events:
+        view = event.get_viewpoint(viewpoint)
+        if not (view is None or view.get_info() is None):
+            return True
+    return False

@@ -30,8 +30,9 @@ class VerticalParser:
             measure) for measure in measures)
 
         key_offsets = list(self.keys) + [self.music_to_parse.highestTime]
-        self.ks_keys = dict(self.get_analysis_keys_stream_bet_offsets(
-            offset, key_offsets[key+1]) for key, offset in enumerate(key_offsets[:-1]))
+        self.ks_keys = dict(utils.get_analysis_keys_stream_bet_offsets(
+            self.music_to_parse, offset, key_offsets[key+1])
+            for key, offset in enumerate(key_offsets[:-1]))
 
     def parse_music(self):
         """
@@ -100,8 +101,8 @@ class VerticalParser:
             Viewpoint('pitches', [p.ps for p in chord.pitches]))
         self.events[index].add_viewpoint(
             Viewpoint('quality', chord.quality))
-        self.events[index].add_viewpoint(
-            Viewpoint('scale_degrees', chord.scaleDegrees))
+        #self.events[index].add_viewpoint(
+        #    Viewpoint('scale_degrees', chord.scaleDegrees))
         self.events[index].add_viewpoint(
             Viewpoint('root', chord.root()))
 
@@ -186,11 +187,3 @@ class VerticalParser:
         harm_f_ms = utils.harmonic_functions_key(chord, measure_key)
         self.events[index].add_viewpoint(
             Viewpoint('harmfuncMS', harm_f_ms.figure))
-
-    def get_analysis_keys_stream_bet_offsets(self, off1, off2):
-        """
-        Gets an analysis of key for a stream
-        """
-        k = self.music_to_parse.getElementsByOffset(
-            off1, off2).stream().analyze('key')
-        return (off1, k)
