@@ -8,8 +8,7 @@ from fractions import Fraction
 import music21
 
 import representation.utils as utils
-from representation.event import Event
-from representation.viewpoint import Viewpoint
+from representation.events.linear_event import LinearEvent
 
 
 class LineParser:
@@ -77,60 +76,77 @@ class LineParser:
 
         for i, note_or_rest in enumerate(stream_notes_rests.elements):
 
-            self.events.append(Event(note_or_rest.offset))
-            self.events[i].add_viewpoint(
-                Viewpoint('part_name', self.part_name))
-            self.events[i].add_viewpoint(
-                Viewpoint('voice', self.voice))
+            self.events.append(LinearEvent(offset=note_or_rest.offset))
 
+            # Basic Part/Voice Names
+            self.events[i].add_viewpoint('part', self.part_name)
+            self.events[i].add_viewpoint('voice', self.voice)
+
+            # Basic Rest/Grace Notes Information
+            self.events[i].add_viewpoint('rest', note_or_rest.isRest)
             self.events[i].add_viewpoint(
-                Viewpoint('is_rest', note_or_rest.isRest))
+                'grace', note_or_rest.duration.isGrace)
+
+            # If note is not a rest, parse pitch information
             if not note_or_rest.isRest:
                 self.note_basic_info_parsing(i, note_or_rest)
                 self.contours_parsing(i)
 
+            # Duration Parsing
             self.duration_info_parsing(i, note_or_rest)
-            self.events[i].add_viewpoint(
-                Viewpoint('is_grace', note_or_rest.duration.isGrace))
 
-            self.events[i].add_viewpoint(
-                Viewpoint('expression', note_or_rest.expressions))
-            self.fermata_parsing(i)
+            # Expression Parsing
+            self.expression_parsing(i, note_or_rest.expressions)
+
+            # Measure Related Information Parsing
             self.measure_info_parsing(i, note_or_rest)
 
     def note_basic_info_parsing(self, index, note_or_rest):
         """
         Parses the basic info for a note (not rest) event
         """
+        self.events[index].add_viewpoint('pitch', note_or_rest.pitch.ps)
+        self.events[index].add_viewpoint('dnote', note_or_rest.step)
+        self.events[index].add_viewpoint('octave', note_or_rest.octave)
+
+        if note_or_rest.pitch.accidental is not None:
+            self.events[index].add_viewpoint(
+                'accidental', note_or_rest.pitch.accidental.modifier)
+
         self.events[index].add_viewpoint(
-            Viewpoint('pitch_name', note_or_rest.name))
+            'microtonal', note_or_rest.pitch.microtone.cents)
         self.events[index].add_viewpoint(
-            Viewpoint('midi_pitch', note_or_rest.pitch.ps))
+            'pitch_class', note_or_rest.pitch.pitchClass)
+
+        self.events[index].add_viewpoint('notehead', note_or_rest.notehead)
+
+        if note_or_rest.noteheadFill is not None:
+            self.events[index].add_viewpoint(
+                'noteheadfill', note_or_rest.noteheadFill)
+
+        if note_or_rest.noteheadParenthesis is not None:
+            self.events[index].add_viewpoint(
+                'noteheadparenthesis', note_or_rest.noteheadParenthesis)
+
+        for art in note_or_rest.articulations:
+            self.events[index].add_viewpoint('articulation', art.name)
+
         self.events[index].add_viewpoint(
-            Viewpoint('pitch_class', note_or_rest.pitch.pitchClass))
-        self.events[index].add_viewpoint(
-            Viewpoint('octave', note_or_rest.octave))
-        self.events[index].add_viewpoint(
-            Viewpoint('microtonal', note_or_rest.pitch.microtone.cents))
-        self.events[index].add_viewpoint(
-            Viewpoint('notehead', note_or_rest.notehead))
-        self.events[index].add_viewpoint(
-            Viewpoint('noteheadfill', note_or_rest.noteheadFill))
-        self.events[index].add_viewpoint(
-            Viewpoint('articulation', note_or_rest.articulations))
-        self.events[index].add_viewpoint(
-            Viewpoint('volume', note_or_rest.volume.getRealized()))
+            'volume', note_or_rest.volume.getRealized())
+
+        if note_or_rest.tie is not None:
+            self.events[index].add_viewpoint('tie', note_or_rest.tie)
 
     def duration_info_parsing(self, index, note_or_rest):
         """
         Parses the duration info for an event
         """
         self.events[index].add_viewpoint(
-            Viewpoint('duration_length', note_or_rest.duration.quarterLength))
+            'dur_length', note_or_rest.duration.quarterLength)
         self.events[index].add_viewpoint(
-            Viewpoint('duration_type', note_or_rest.duration.type))
+            'dur_type', note_or_rest.duration.type)
         self.events[index].add_viewpoint(
-            Viewpoint('dots', note_or_rest.duration.dots))
+            'dots', note_or_rest.duration.dots)
 
     def contours_parsing(self, index):
         """
@@ -140,26 +156,44 @@ class LineParser:
         last_note_index = utils.get_first_event_that_is_note_before_index(
             self.events)
         if last_note_index is not None:
-            midi_pitch_note = self.events[index].get_viewpoint(
-                'midi_pitch')
-            midi_pitch_last_note = self.events[last_note_index].get_viewpoint(
-                'midi_pitch')
+            pitch_note = self.events[index].get_viewpoint('pitch')
+            pitch_last_note = self.events[last_note_index].get_viewpoint(
+                'pitch')
             self.events[index].add_viewpoint(
-                Viewpoint('seqInt', utils.seq_int(midi_pitch_note, midi_pitch_last_note)))
+                'seq_int', utils.seq_int(pitch_note, pitch_last_note))
             self.events[index].add_viewpoint(
-                Viewpoint('contour', utils.contour(midi_pitch_note, midi_pitch_last_note)))
-            self.events[index].add_viewpoint(Viewpoint(
-                'HD_contour', utils.contour_hd(midi_pitch_note, midi_pitch_last_note)))
+                'contour', utils.contour(pitch_note, pitch_last_note))
+            self.events[index].add_viewpoint(
+                'contour_hd', utils.contour_hd(pitch_note, pitch_last_note))
 
-    def fermata_parsing(self, index):
+    def expression_parsing(self, index, expressions):
         """
         Parses the existence of a fermata in an event
         """
-        expressions = self.events[index].get_viewpoint('expression').get_info()
-        if any(isinstance(note, music21.expressions.Fermata) for note in expressions):
-            self.events[index].add_viewpoint(Viewpoint('fermata', True))
-        else:
-            self.events[index].add_viewpoint(Viewpoint('fermata', False))
+        for expression in expressions:
+            if type(expression) is music21.expressions.Fermata:
+                self.events[index].add_viewpoint('fermata', True)
+            elif type(expression) is music21.expressions.RehearsalMark:
+                self.events[index].add_viewpoint('rehearsal', True)
+            elif type(expression) is music21.expressions.Turn:
+                self.events[index].add_viewpoint(
+                    'ornamentation', 'turn_' + expression.name)
+            elif type(expression) is music21.expressions.Trill:
+                self.events[index].add_viewpoint(
+                    'ornamentation', 'trill_' + expression.placement + '_' + expression.size.name)
+            elif type(expression) is music21.expressions.Tremolo:
+                self.events[index].add_viewpoint(
+                    'ornamentation', 'tremolo_' + str(expression.measured) + '_' + str(expression.numberOfMarks))
+            elif type(expression) is music21.expressions.Schleifer:
+                self.events[index].add_viewpoint('ornamentation', 'schleifer')
+            elif 'GeneralMordent' in expression.classes:
+                self.events[index].add_viewpoint(
+                    'ornamentation', 'mordent_' + expression.direction + '_' + expression.size.name)
+            elif 'GeneralAppoggiatura' in expression.classes:
+                self.events[index].add_viewpoint(
+                    'ornamentation', 'appogiatura_' + expression.name)
+            else:
+                self.events[index].add_viewpoint('expression', expression)
 
     def get_first_fib_before_fib(self, note_or_rest):
         """
@@ -185,27 +219,27 @@ class LineParser:
         """
         Parses the information for an event that is the first element in bar
         """
-        self.events[index].add_viewpoint(Viewpoint('fib', True))
-        self.events[index].add_viewpoint(Viewpoint('intfib', 0.0))
-        cur_fib_midi = self.events[index].get_viewpoint('midi_pitch')
+        self.events[index].add_viewpoint('fib', True)
+        self.events[index].add_viewpoint('intfib', 0.0)
+        cur_fib_midi = self.events[index].get_viewpoint('pitch')
         last_fib_midi = self.get_first_fib_before_fib(
-            note_or_rest).get_viewpoint('midi_pitch')
-        self.events[index].add_viewpoint(Viewpoint('thrbar', utils.seq_int(
-            cur_fib_midi, last_fib_midi)))
+            note_or_rest).get_viewpoint('pitch')
+        self.events[index].add_viewpoint('thrbar', utils.seq_int(
+            cur_fib_midi, last_fib_midi))
 
     def parsing_non_fib_element(self, index, note_or_rest):
         """
         Parses the information for an event that is not the first element in bar
         """
-        self.events[index].add_viewpoint(Viewpoint('fib', False))
+        self.events[index].add_viewpoint('fib', False)
         last_fib = self.get_first_fib_before_non_fib(note_or_rest)
         if len(last_fib) > 1:
             last_fib = last_fib[0]
             if not note_or_rest.isRest and utils.not_rest_or_grace(last_fib):
-                cur_midi = self.events[index].get_viewpoint('midi_pitch')
-                last_fib_midi = last_fib.get_viewpoint('midi_pitch')
-                self.events[index].add_viewpoint(Viewpoint('intfib', utils.seq_int(
-                    cur_midi, last_fib_midi)))
+                cur_midi = self.events[index].get_viewpoint('pitch')
+                last_fib_midi = last_fib.get_viewpoint('pitch')
+                self.events[index].add_viewpoint('intfib', utils.seq_int(
+                    cur_midi, last_fib_midi))
 
     def measure_info_parsing(self, index, note_or_rest):
         """
@@ -215,20 +249,20 @@ class LineParser:
         """
         key_anal = self.measure_keys[note_or_rest.measureNumber]
         self.events[index].add_viewpoint(
-            Viewpoint('keyMS', key_anal))
+            'key_ms', key_anal)
 
         if not note_or_rest.isRest:
             sc_deg = key_anal.getScaleDegreeFromPitch(note_or_rest.pitch.name)
             self.events[index].add_viewpoint(
-                Viewpoint('scale_degreeMS', sc_deg))
+                'scale_degree_ms', sc_deg)
 
         if not note_or_rest.duration.isGrace:
             components = note_or_rest.beatStr.split(' ')
             posinbar = int(
                 components[0]) + (Fraction(components[1]) if len(components) > 1 else 0) - 1
-            self.events[index].add_viewpoint(Viewpoint('posinbar', posinbar))
+            self.events[index].add_viewpoint('posinbar', posinbar)
             self.events[index].add_viewpoint(
-                Viewpoint('beatstrength', note_or_rest.beatStrength))
+                'beat_strength', note_or_rest.beatStrength)
 
         if note_or_rest.offset in self.measure_offsets and not note_or_rest.duration.isGrace:
             self.parsing_fib_element(index, note_or_rest)
@@ -245,7 +279,7 @@ class LineParser:
             next_dyn_offset = (self.music_to_parse.highestTime if i == (len(dynamics)-1)
                                else dynamics[i+1].offset)
             for event in utils.get_evs_bet_offs_inc(self.events, dynamic.offset, next_dyn_offset):
-                event.add_viewpoint(Viewpoint('dynamic', dynamic.value))
+                event.add_viewpoint('dynamic', dynamic.value)
 
     def intfib_grace_notes_parsing(self):
         """
@@ -254,9 +288,9 @@ class LineParser:
         """
         for grace_note in utils.get_grace_notes(self.events):
             fib_midi = self.events[self.events.index(
-                grace_note) + 1].get_viewpoint('midi_pitch')
-            grace_note.add_viewpoint(Viewpoint('intfib', utils.seq_int(
-                fib_midi, grace_note.get_viewpoint('midi_pitch'))))
+                grace_note) + 1].get_viewpoint('pitch')
+            grace_note.add_viewpoint('intfib', utils.seq_int(
+                fib_midi, grace_note.get_viewpoint('pitch')))
 
     def key_signatures_parsing(self):
         """
@@ -272,12 +306,13 @@ class LineParser:
                 self.music_to_parse, key.offset, next_key_offset)[1]
 
             for event in utils.get_evs_bet_offs_inc(self.events, key.offset, next_key_offset):
-                event.add_viewpoint(Viewpoint('keysig', key.sharps))
-                event.add_viewpoint(Viewpoint('keyKS', key_anal))
+                event.add_viewpoint('keysig', key.sharps)
+                event.add_viewpoint('key_ks', key_anal)
                 if not event.is_rest():
                     sc_deg = key_anal.getScaleDegreeFromPitch(
-                        event.get_viewpoint('pitch_name').get_info())
-                    event.add_viewpoint(Viewpoint('scale_degreeKS', sc_deg))
+                        event.get_viewpoint('dnote') +
+                        event.get_viewpoint('accidental'))
+                    event.add_viewpoint('scale_degree_ks', sc_deg)
 
     def time_signatures_parsing(self):
         """
@@ -290,7 +325,7 @@ class LineParser:
                       else time_sigs[i+1].offset)
             for event in utils.get_evs_bet_offs_inc(self.events, sig.offset, offset):
                 event.add_viewpoint(
-                    Viewpoint('timesig', sig.ratioString))
+                    'timesig', sig.ratioString)
 
     def metronome_marks_parsing(self, part=None, events=None):
         """
@@ -308,13 +343,13 @@ class LineParser:
                       else metro_marks[i+1].offset)
             for event in utils.get_evs_bet_offs_inc(events, metro.offset, offset):
                 event.add_viewpoint(
-                    Viewpoint('metronome', metro.number))
+                    'metronome', metro.number)
                 event.add_viewpoint(
-                    Viewpoint('metronome_sounding', metro.numberSounding))
+                    'metro_sound', metro.numberSounding)
                 event.add_viewpoint(
-                    Viewpoint('metro_referent_value', metro.referent.quarterLength))
+                    'metro_ref_value', metro.referent.quarterLength)
                 event.add_viewpoint(
-                    Viewpoint('metro_referent_type', metro.referent.type))
+                    'metro_ref_type', metro.referent.type)
 
     def metro_marks_parsing(self):
         """
@@ -329,7 +364,7 @@ class LineParser:
         for d_bar_off in [barline.offset for barline in self.music_to_parse.flat.getElementsByClass(
                 music21.bar.Barline) if barline.type == 'double']:
             utils.get_events_at_offset(self.events, d_bar_off)[
-                0].add_viewpoint(Viewpoint('double_bar_before', True))
+                0].add_viewpoint('double_bar', True)
 
     def repeat_barline_parsing(self):
         """
@@ -340,11 +375,17 @@ class LineParser:
             events_repeats = utils.get_events_at_offset(
                 self.events, repeat.offset)
             if len(events_repeats) == 0:
-                self.events[-1].add_viewpoint(Viewpoint('repeat_after', True))
-                self.events[-1].add_viewpoint(Viewpoint('repeat_direction',
-                                                        repeat.direction))
+                self.events[-1].add_viewpoint('end_repeat', True)
+                self.events[-1].add_viewpoint('repeat_direction',
+                                              repeat.direction)
             else:
                 events_repeats[0].add_viewpoint(
-                    Viewpoint('repeat_before', True))
+                    'repeat_before', True)
                 events_repeats[0].add_viewpoint(
-                    Viewpoint('repeat_direction', repeat.direction))
+                    'repeat_direction', repeat.direction)
+
+    def local_boundary_detection_model(self, i):
+        """
+        LBDM
+        """
+        pass

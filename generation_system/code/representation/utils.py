@@ -8,26 +8,30 @@ import numpy as np
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.impute import SimpleImputer
 
-
-def sign(_x):
+def flatten(newlist):
     """
-    Returns the sign of a number
+    flatten a list with strings
     """
-    return _x and (1, -1)[_x < 0]
+    rt = []
+    for item in newlist:
+        if isinstance(item, list): rt.extend(flatten(item))
+        else: rt.append(item)
+    return rt
 
+sign = lambda x: x and (1, -1)[x < 0]
 
 def seq_int(midi_viewpoint_1, midi_viewpoint_2):
     """
     Returns the difference between two midi values
     """
-    return midi_viewpoint_1.get_info() - midi_viewpoint_2.get_info()
+    return midi_viewpoint_1 - midi_viewpoint_2
 
 
 def contour(midi_viewpoint_1, midi_viewpoint_2):
     """
     Returns the signal between two midi values
     """
-    return sign(midi_viewpoint_1.get_info() - midi_viewpoint_2.get_info())
+    return sign(midi_viewpoint_1 - midi_viewpoint_2)
 
 
 def contour_hd(midi_viewpoint_1, midi_viewpoint_2):
@@ -35,7 +39,7 @@ def contour_hd(midi_viewpoint_1, midi_viewpoint_2):
     Returns a quantized difference between two midi values
     Defined in (Mullensiefen and Frieler, 2004a)
     """
-    result = midi_viewpoint_1.get_info() - midi_viewpoint_2.get_info()
+    result = midi_viewpoint_1 - midi_viewpoint_2
     values = [1, 3, 5, 8]
     for count, ele in enumerate(values):
         if result < ele:
@@ -64,7 +68,7 @@ def offset_info(event, viewpoint):
     Returns a string of offset : specific viewpoint for an event
     """
     to_print = 'Off ' + str(event.get_offset()) + ': '
-    to_print += str(event.get_viewpoint(viewpoint).get_info()) + '; '
+    to_print += str(event.get_viewpoint(viewpoint)) + '; '
     return to_print
 
 
@@ -84,9 +88,10 @@ def show_sequence_of_viewpoint_without_offset(events, viewpoint):
     Returns a string of a specific viewpoint for all events with no offset
     """
     to_print = 'Viewpoint ' + viewpoint + ': '
-    to_print += ''.join([(str(event.get_viewpoint(viewpoint).get_info()) + ' ')
+    to_print += ''.join([(str(event.get_viewpoint(viewpoint)) + ' ')
                          if event.check_viewpoint(viewpoint) else 'None ' for event in events])
     return to_print
+
 
 def show_part_viewpoint(viewpoint, part, offset=False):
     """
@@ -96,6 +101,7 @@ def show_part_viewpoint(viewpoint, part, offset=False):
         print(show_sequence_of_viewpoint_with_offset(part, viewpoint))
     else:
         print(show_sequence_of_viewpoint_without_offset(part, viewpoint))
+
 
 def get_events_at_offset(events, offset):
     """
@@ -199,6 +205,8 @@ def create_feature_array_events(events, weights=None):
     features = vec.fit_transform(events_dict).toarray()
     features_names = vec.get_feature_names()
 
+    # Normalizar com Soma 1, Média 0
+
     imp = SimpleImputer(missing_values=np.nan,
                         strategy='constant', fill_value=10000)
     features = imp.fit_transform(features)
@@ -245,6 +253,6 @@ def has_value_viewpoint_events(events, viewpoint):
     """
     for event in events:
         view = event.get_viewpoint(viewpoint)
-        if not (view is None or view.get_info() is None):
+        if not (view is None or view is None):
             return True
     return False

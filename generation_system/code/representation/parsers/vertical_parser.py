@@ -7,8 +7,7 @@ from collections import defaultdict
 import music21
 
 import representation.utils as utils
-from representation.event import Event
-from representation.viewpoint import Viewpoint
+from representation.events.vertical_event import VerticalEvent
 
 
 class VerticalParser:
@@ -41,7 +40,7 @@ class VerticalParser:
         # self.music_to_parse.show('text')
         chords = self.music_to_parse.flat.getElementsByClass('Chord')
         for i, chord in enumerate(chords):
-            self.events.append(Event(chord.offset))
+            self.events.append(VerticalEvent(chord.offset))
 
             # self.extract_
             self.extract_duration(i, chord)
@@ -59,85 +58,85 @@ class VerticalParser:
         Processes the duration information for a chord
         """
         self.events[index].add_viewpoint(
-            Viewpoint('duration_length', chord.duration.quarterLength))
+           'duration_length', chord.duration.quarterLength)
         self.events[index].add_viewpoint(
-            Viewpoint('duration_type', chord.duration.type))
+           'duration_type', chord.duration.type)
         self.events[index].add_viewpoint(
-            Viewpoint('dots', chord.duration.dots))
+           'dots', chord.duration.dots)
         self.events[index].add_viewpoint(
-            Viewpoint('tied', chord.tie))
+           'tied', chord.tie)
 
     def extract_chord_table_info(self, index, chord):
         """
         Processes the table information for a chord
         """
         self.events[index].add_viewpoint(
-            Viewpoint('cardinality', chord.chordTablesAddress.cardinality))
+           'cardinality', chord.chordTablesAddress.cardinality)
         self.events[index].add_viewpoint(
-            Viewpoint('forteClass', chord.forteClass))
+           'forteClass', chord.forteClass)
         self.events[index].add_viewpoint(
-            Viewpoint('forteClassNumber', chord.chordTablesAddress.forteClass))
+           'forteClassNumber', chord.chordTablesAddress.forteClass)
         self.events[index].add_viewpoint(
-            Viewpoint('inversion', chord.chordTablesAddress.inversion))
+           'inversion', chord.chordTablesAddress.inversion)
 
     def pitch_class_info(self, index, chord):
         """
         Processes the pitch class information for a chord
         """
         self.events[index].add_viewpoint(
-            Viewpoint('pc_cardinality', chord.pitchClassCardinality))
+           'pc_cardinality', chord.pitchClassCardinality)
         self.events[index].add_viewpoint(
-            Viewpoint('pitch_class', chord.pitchClasses))
+           'pitch_class', chord.pitchClasses)
         self.events[index].add_viewpoint(
-            Viewpoint('prime_form', chord.primeForm))
+           'prime_form', chord.primeForm)
         self.events[index].add_viewpoint(
-            Viewpoint('pcOriginal', chord.chordTablesAddress.pcOriginal))
+           'pcOriginal', chord.chordTablesAddress.pcOriginal)
 
     def chord_info(self, index, chord):
         """
         Processes the information for a chord
         """
         self.events[index].add_viewpoint(
-            Viewpoint('pitches', [p.ps for p in chord.pitches]))
+           'pitches', [p.ps for p in chord.pitches])
         self.events[index].add_viewpoint(
-            Viewpoint('quality', chord.quality))
+           'quality', chord.quality)
         #self.events[index].add_viewpoint(
-        #    Viewpoint('scale_degrees', chord.scaleDegrees))
+        #   'scale_degrees', chord.scaleDegrees)
         self.events[index].add_viewpoint(
-            Viewpoint('root', chord.root()))
+           'root', chord.root())
 
     def chord_elements_info(self, index, chord):
         """
         Processes the information for the elements of a chord
         """
         self.events[index].add_viewpoint(
-            Viewpoint('is_consonant', chord.isConsonant()))
+           'is_consonant', chord.isConsonant())
         self.events[index].add_viewpoint(
-            Viewpoint('is_major_triad', chord.isMajorTriad()))
+           'is_major_triad', chord.isMajorTriad())
         self.events[index].add_viewpoint(
-            Viewpoint('is_incomplete_major_triad', chord.isIncompleteMajorTriad()))
+           'is_incomplete_major_triad', chord.isIncompleteMajorTriad())
         self.events[index].add_viewpoint(
-            Viewpoint('is_minor_triad', chord.isMinorTriad()))
+           'is_minor_triad', chord.isMinorTriad())
         self.events[index].add_viewpoint(
-            Viewpoint('is_incomplete_minor_triad', chord.isIncompleteMinorTriad()))
+           'is_incomplete_minor_triad', chord.isIncompleteMinorTriad())
         self.events[index].add_viewpoint(
-            Viewpoint('is_augmented_sixth', chord.isAugmentedSixth()))
+           'is_augmented_sixth', chord.isAugmentedSixth())
         self.events[index].add_viewpoint(
-            Viewpoint('is_french_augmented_sixth', chord.isFrenchAugmentedSixth()))
+           'is_french_augmented_sixth', chord.isFrenchAugmentedSixth())
         self.events[index].add_viewpoint(
-            Viewpoint('is_german_augmented_sixth', chord.isGermanAugmentedSixth()))
+           'is_german_augmented_sixth', chord.isGermanAugmentedSixth())
         self.events[index].add_viewpoint(
-            Viewpoint('is_italian_augmented_sixth', chord.isItalianAugmentedSixth()))
+           'is_italian_augmented_sixth', chord.isItalianAugmentedSixth())
         self.events[index].add_viewpoint(
-            Viewpoint('is_swiss_augmented_sixth', chord.isItalianAugmentedSixth()))
+           'is_swiss_augmented_sixth', chord.isItalianAugmentedSixth())
         self.events[index].add_viewpoint(
-            Viewpoint('is_augmented_triad', chord.isAugmentedTriad()))
+           'is_augmented_triad', chord.isAugmentedTriad())
         self.events[index].add_viewpoint(
-            Viewpoint('is_half_diminished_seventh', chord.isHalfDiminishedSeventh()))
+           'is_half_diminished_seventh', chord.isHalfDiminishedSeventh())
         self.events[index].add_viewpoint(
-            Viewpoint('is_diminished_seventh', chord.isDiminishedSeventh()))
+           'is_diminished_seventh', chord.isDiminishedSeventh())
         self.events[index].add_viewpoint(
-            Viewpoint('is_dominant_seventh', chord.isDominantSeventh()))
+           'is_dominant_seventh', chord.isDominantSeventh())
 
     def get_key_sign_at_offset(self, offset):
         """
@@ -165,15 +164,15 @@ class VerticalParser:
         nearest_key_sign = self.get_key_sign_at_offset(
             self.events[index].get_offset())
         self.events[index].add_viewpoint(
-            Viewpoint('keysign', nearest_key_sign))
+           'keysign', nearest_key_sign)
         self.events[index].add_viewpoint(
-            Viewpoint('keyKS', self.ks_keys[nearest_key_sign.offset]))
+           'keyKS', self.ks_keys[nearest_key_sign.offset])
         self.events[index].add_viewpoint(
-            Viewpoint('keyKS_TC', self.ks_keys[nearest_key_sign.offset].tonalCertainty()))
+           'keyKS_TC', self.ks_keys[nearest_key_sign.offset].tonalCertainty())
         harm_f_ks = utils.harmonic_functions_key(
             chord, self.ks_keys[nearest_key_sign.offset])
         self.events[index].add_viewpoint(
-            Viewpoint('harmfuncKS', harm_f_ks.figure))
+           'harmfuncKS', harm_f_ks.figure)
 
     def perceived_key_at_measure_parsing(self, index, chord):
         """
@@ -181,9 +180,9 @@ class VerticalParser:
         """
         measure_key = self.measure_keys[chord.measureNumber]
         self.events[index].add_viewpoint(
-            Viewpoint('keyMS', measure_key))
+           'keyMS', measure_key)
         self.events[index].add_viewpoint(
-            Viewpoint('keyMS_TC', measure_key.tonalCertainty()))
+           'keyMS_TC', measure_key.tonalCertainty())
         harm_f_ms = utils.harmonic_functions_key(chord, measure_key)
         self.events[index].add_viewpoint(
-            Viewpoint('harmfuncMS', harm_f_ms.figure))
+           'harmfuncMS', harm_f_ms.figure)

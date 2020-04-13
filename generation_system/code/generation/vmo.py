@@ -130,9 +130,6 @@ class VMO(FactorOracle):
 
         while k is not None:
             dvec = self._dvec(new_symbol, k)
-
-            print('DVEC_1: ' + str(dvec[0]))
-
             suffix = np.where(dvec < self.params['threshold'])[0]
 
             if len(suffix) == 0:  # if no transition from suffix

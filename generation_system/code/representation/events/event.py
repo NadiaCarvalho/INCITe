@@ -3,21 +3,33 @@
 This script presents the class Event that represents an event in a piece of music
 """
 
+import representation.utils as utils
+
 
 class Event:
     """
     Class Event
     """
 
-    def __init__(self, offset):
+    def __init__(self, offset=None, from_dict=None, from_list=None, features=None):
         self.offset_time = offset
         self.viewpoints = {}
 
-    def add_viewpoint(self, viewpoint):
+        if from_dict is not None:
+            self.from_feature_dict(from_dict, features)
+        elif (from_list is not None) and (features is not None):
+            self.from_feature_list(from_list, features)
+
+    def add_viewpoint(self, name, info):
         """
         Adds a viewpoint to event
         """
-        self.viewpoints[viewpoint.get_name()] = viewpoint
+        if (name in self.viewpoints and
+                isinstance(self.viewpoints[name], list)):
+            self.viewpoints[name].append(info)
+            self.viewpoints[name] = utils.flatten(self.viewpoints[name])
+        else:
+            self.viewpoints[name] = info
 
     def get_viewpoint(self, name):
         """
@@ -38,18 +50,12 @@ class Event:
         Returns offset value of event
         """
         return self.offset_time
-
+    
     def is_rest(self):
         """
-        Returns value of 'is_rest' viewpoint for event
+        Returns value of 'rest' viewpoint for event
         """
-        return self.viewpoints['is_rest'].get_info()
-
-    def is_grace_note(self):
-        """
-        Returns value of 'is_grace' viewpoint for event
-        """
-        return self.viewpoints['is_grace'].get_info()
+        return self.viewpoints['rest']
 
     def weighted_comparison(self, other, weights=None):
         """
@@ -72,41 +78,62 @@ class Event:
         Transforms event in a list of features
         """
         if features is None:
-            features = self.viewpoints
+            features = list(self.viewpoints)
 
-        features_list = [self.viewpoints[feat].get_info()
-         if feat in self.viewpoints else None for feat in features]
+        features_list = [self.viewpoints[feat]
+                         if feat in self.viewpoints else None for feat in features]
         return [self.offset_time] + features_list
-    
+
+    def from_feature_list(self, from_list, features):
+        """
+        Transforms list of features in an event
+        """
+        for i, feat in enumerate(features):
+            if feat == 'offset':
+                self.offset_time = from_list[i]
+            elif from_list[i] == 1000:
+                self.viewpoints[feat] = None
+            elif feat in ['rest', 'is_grace', 'repeat_after', 'repeat_before', 'double_bar_before', 'fib']:
+                self.viewpoints[feat] = bool(from_list[i])
+            else:
+                self.viewpoints[feat] = from_list[i]
+
     def to_feature_dict(self, features=None):
         """
-        Transforms event in a list of features
+        Transforms event in a dict of features
         """
         if features is None:
-            features = self.viewpoints
-
+            features = list(self.viewpoints)
         features_dict = {}
-        #features_dict['offset'] = self.offset_time
-        
+        features_dict['offset'] = self.offset_time
         for feat in features:
-            if feat in self.viewpoints:
-                if feat in ['articulation', 'expression']: #add features that are arrays
-                    for a_feat in enumerate(self.viewpoints[feat].get_info()):
-                        features_dict[feat + '_' + a_feat] = True
-                else:
-                    features_dict[feat] = self.viewpoints[feat].get_info()
+            if feat in ['articulation', 'expression']:  # add features that are arrays
+                for a_feat in enumerate(self.viewpoints[feat]):
+                    features_dict[feat + '_' + a_feat] = True
             else:
-                features_dict[feat] = None
-
+                features_dict[feat] = self.get_viewpoint(feat)
         return features_dict
 
+    def from_feature_dict(self, from_dict, features):
+        """
+        Transforms dict of features in an event
+        """
+        if features is None:
+            for key, value in from_dict.items():
+                self.viewpoints[key] = value
+        else:
+            for feat in features:
+                if feat == 'offset':
+                    self.offset_time = from_dict[i]
+                else:
+                    self.viewpoints[feat] = from_dict[i]
 
     def __str__(self):
         """
         Overrides str function for Event
         """
         to_return = 'Event at offset {}: \n'.format(self.offset_time)
-        to_return += ''.join([str(viewpoint)
+        to_return += ''.join([str(key) + ': ' + str(viewpoint) + '; '
                               for key, viewpoint in self.viewpoints.items()])
         return to_return
 

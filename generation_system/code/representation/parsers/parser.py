@@ -8,8 +8,8 @@ import os
 from music21 import converter
 
 import representation.utils as utils
-from representation.line_parser import LineParser
-from representation.vertical_parser import VerticalParser
+from representation.parsers.line_parser import LineParser
+from representation.parsers.vertical_parser import VerticalParser
 
 
 class Parser:
@@ -108,22 +108,22 @@ class Parser:
         Show all viewpoints
         """
         if events == 'one part':
-            _ = [print(str(ev)) for ev in self.part_events[part_number]]
+            _ = [print(str(ev) + '\n') for ev in self.part_events[part_number]]
         elif events == 'some parts':
             for part in parts:
                 print('Part ' + str(part))
-                _ = [print(str(ev)) for ev in self.part_events[part]]
+                _ = [print(str(ev) + '\n') for ev in self.part_events[part]]
                 print('')
             print('')
         if events in ('all parts', 'all'):
             for part, part_events in self.part_events.items():
                 print('Part ' + str(part))
-                _ = [print(str(ev)) for ev in part_events]
+                _ = [print(str(ev) + '\n') for ev in part_events]
                 print('')
             print('')
         if events in ('vertical', 'all'):
             print('Vertical Events ')
-            _ = [print(str(ev)) for ev in self.vertical_events]
+            _ = [print(str(ev) + '\n') for ev in self.vertical_events]
 
     def show_single_viewpoints(self, viewpoint, events='all parts', part_number=0, parts=[], offset=False):
         """
