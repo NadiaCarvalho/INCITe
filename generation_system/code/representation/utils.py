@@ -8,17 +8,22 @@ import numpy as np
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.impute import SimpleImputer
 
+
 def flatten(newlist):
     """
     flatten a list with strings
     """
     rt = []
     for item in newlist:
-        if isinstance(item, list): rt.extend(flatten(item))
-        else: rt.append(item)
+        if isinstance(item, list):
+            rt.extend(flatten(item))
+        else:
+            rt.append(item)
     return rt
 
-sign = lambda x: x and (1, -1)[x < 0]
+
+def sign(x): return x and (1, -1)[x < 0]
+
 
 def seq_int(midi_viewpoint_1, midi_viewpoint_2):
     """

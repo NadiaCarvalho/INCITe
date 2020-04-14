@@ -30,16 +30,20 @@ class ScoreConversor:
             stream = music21.stream.Part()
 
         for event in events:
+            print(str(event))
             note = None
             if event.is_rest():
                 note = music21.note.Rest(
                     quarterLength=event.get_viewpoint('dur_length'))
             else:
-                pitch = music21.pitch.Pitch(event.get_viewpoint('dnote'))
+                print(event.get_viewpoint('dnote') + str(int(event.get_viewpoint('octave'))))
+                pitch = music21.pitch.Pitch(event.get_viewpoint('dnote') + str(int(event.get_viewpoint('octave'))))
                 pitch.ps = event.get_viewpoint('pitch')
 
-                if event.get_viewpoint('accidental') is not None:
-                    pitch.accidental = music21.pitch.Accidental(event.get_viewpoint('accidental'))
+                if event.get_viewpoint('accidental') is not music21.pitch.Accidental('natural').modifier:
+                    acc = music21.pitch.Accidental('natural')
+                    acc.modifier = event.get_viewpoint('accidental')
+                    pitch.accidental = acc
 
                 note = music21.note.Note(pitch, quarterLength=event.get_viewpoint('dur_length'))
             stream.append(note)

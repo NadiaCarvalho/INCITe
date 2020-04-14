@@ -14,7 +14,9 @@ class Event:
     def __init__(self, offset=None, from_dict=None, from_list=None, features=None):
         self.offset_time = offset
         self.viewpoints = {}
+        self._init_from_list_or_dict(offset, from_dict, from_list, features)
 
+    def _init_from_list_or_dict(self, offset=None, from_dict=None, from_list=None, features=None):
         if from_dict is not None:
             self.from_feature_dict(from_dict, features)
         elif (from_list is not None) and (features is not None):
@@ -50,7 +52,7 @@ class Event:
         Returns offset value of event
         """
         return self.offset_time
-    
+
     def is_rest(self):
         """
         Returns value of 'rest' viewpoint for event
@@ -82,19 +84,18 @@ class Event:
 
         features_list = [self.viewpoints[feat]
                          if feat in self.viewpoints else None for feat in features]
-        return [self.offset_time] + features_list
 
-    def from_feature_list(self, from_list, features):
+        return [self.offset_time] + features_list, features
+
+    def from_feature_list(self, from_list, features, nan_value=1000):
         """
         Transforms list of features in an event
         """
         for i, feat in enumerate(features):
             if feat == 'offset':
                 self.offset_time = from_list[i]
-            elif from_list[i] == 1000:
+            elif from_list[i] == nan_value:
                 self.viewpoints[feat] = None
-            elif feat in ['rest', 'is_grace', 'repeat_after', 'repeat_before', 'double_bar_before', 'fib']:
-                self.viewpoints[feat] = bool(from_list[i])
             else:
                 self.viewpoints[feat] = from_list[i]
 
@@ -104,14 +105,11 @@ class Event:
         """
         if features is None:
             features = list(self.viewpoints)
+
         features_dict = {}
         features_dict['offset'] = self.offset_time
         for feat in features:
-            if feat in ['articulation', 'expression']:  # add features that are arrays
-                for a_feat in enumerate(self.viewpoints[feat]):
-                    features_dict[feat + '_' + a_feat] = True
-            else:
-                features_dict[feat] = self.get_viewpoint(feat)
+            features_dict[feat] = self.get_viewpoint(feat)
         return features_dict
 
     def from_feature_dict(self, from_dict, features):

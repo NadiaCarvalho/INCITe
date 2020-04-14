@@ -135,7 +135,8 @@ class LineParser:
             'volume', note_or_rest.volume.getRealized())
 
         if note_or_rest.tie is not None:
-            self.events[index].add_viewpoint('tie', note_or_rest.tie)
+            self.events[index].add_viewpoint('tie_type', note_or_rest.tie.type)
+            self.events[index].add_viewpoint('tie_style', note_or_rest.tie.style)
 
     def duration_info_parsing(self, index, note_or_rest):
         """
@@ -249,7 +250,7 @@ class LineParser:
         """
         key_anal = self.measure_keys[note_or_rest.measureNumber]
         self.events[index].add_viewpoint(
-            'key_ms', key_anal)
+            'key_ms', str(key_anal))
 
         if not note_or_rest.isRest:
             sc_deg = key_anal.getScaleDegreeFromPitch(note_or_rest.pitch.name)
@@ -307,7 +308,7 @@ class LineParser:
 
             for event in utils.get_evs_bet_offs_inc(self.events, key.offset, next_key_offset):
                 event.add_viewpoint('keysig', key.sharps)
-                event.add_viewpoint('key_ks', key_anal)
+                event.add_viewpoint('key_ks', str(key_anal))
                 if not event.is_rest():
                     sc_deg = key_anal.getScaleDegreeFromPitch(
                         event.get_viewpoint('dnote') +

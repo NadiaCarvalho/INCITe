@@ -21,9 +21,10 @@ class VMO(FactorOracle):
     def __init__(self, **kwargs):
         super(VMO, self).__init__(**kwargs)
         self.kind = 'a'
-        # self.f_array = [0]
+
         self.f_array = FeatureArray(self.params['dim'])
-        self.f_array.add(np.zeros(self.params['dim'], ))
+        self.f_array.add(np.zeros(self.params['dim'], )) 
+
         self.basic_attributes['data'][0] = None
         self.latent = []
 
@@ -31,8 +32,10 @@ class VMO(FactorOracle):
         super(VMO, self).reset(**kwargs)
 
         self.kind = 'a'
+
         self.f_array = FeatureArray(self.params['dim'])
         self.f_array.add(np.zeros(self.params['dim'], ))
+
         self.basic_attributes['data'][0] = None
         self.latent = []
 

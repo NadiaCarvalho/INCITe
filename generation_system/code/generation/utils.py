@@ -108,3 +108,13 @@ def find_threshold_ir(input_data, _r=(0, 1, 0.1), flag='a', suffix_method='inc',
     if entropy:
         return ir_thresh_pairs[0], pairs_return, h0_vec, h1_vec
     return ir_thresh_pairs[0], pairs_return
+
+
+def normalize(feat_list, x_min, x_max):
+    """
+    Get Normalization for 
+    """
+    nom = (feat_list-feat_list.min(axis=0))*(x_max-x_min)
+    denom = feat_list.max(axis=0) - feat_list.min(axis=0)
+    denom[denom == 0] = 1
+    return x_min + nom/denom
