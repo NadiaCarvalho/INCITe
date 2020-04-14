@@ -13,19 +13,31 @@ import representation.utils as rep_utils
 
 from representation.events.linear_event import LinearEvent
 
-from representation.parsers.parser import Parser
+from representation.parsers.music_parser import MusicParser
 from representation.parsers.score_conversor import ScoreConversor
 
+import os
 
 def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    name = 'bwv1.6.2.mxl'  # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl'
-    parser = Parser(name)
-    parser.parse(vertical=False)
-    #parser.show_events(events='one part', parts=0, viewpoints='all')
-    #parser.show_events(events='all parts', viewpoints='all')
+
+    music = {}
+    folder = r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\music21\bach'
+    if os.path.isdir(folder):
+        for _, _, files in os.walk(folder):
+            for filename in files:
+                print(filename)
+                music_parser = MusicParser(filename, ['data', 'database', 'music21', 'bach'])
+                music_parser.parse(vertical=False)
+                music[filename] = music_parser
+
+
+    # name = 'bwv1.6.2.mxl'  # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl'
+    # parser = MusicParser(name)
+    # parser.parse(vertical=False)
+    # parser.to_pickle('MicrotonsExample')
 
     # weights = {
     #     'pitch': 5,
@@ -42,13 +54,13 @@ def main():
     #     # 'dur_type': 0.5
     # }
 
-    events = parser.get_part_events()[1] + parser.get_part_events()[2] + parser.get_part_events()[3]
-    sequenced_events_0 = oracle_and_generator(
-        events, 20)
+    # events = parser.get_part_events()[1] + parser.get_part_events()[2] + parser.get_part_events()[3]
+    # sequenced_events_0 = oracle_and_generator(
+    #     events, 20)
 
-    score = ScoreConversor()
-    score.parse_events(sequenced_events_0, True)
-    score.stream.show()
+    # score = ScoreConversor()
+    # score.parse_events(sequenced_events_0, True)
+    # score.stream.show()
 
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):

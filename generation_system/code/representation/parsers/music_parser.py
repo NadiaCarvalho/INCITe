@@ -4,6 +4,7 @@ This script presents the class Parser that tries different approaches to segment
 """
 
 import os
+import pickle
 
 from music21 import converter
 
@@ -12,7 +13,7 @@ from representation.parsers.line_parser import LineParser
 from representation.parsers.vertical_parser import VerticalParser
 
 
-class Parser:
+class MusicParser:
     """
     A class used to parse a musical file.
 
@@ -20,16 +21,25 @@ class Parser:
     ----------
     """
 
-    def __init__(self, filename):
-        file_path = os.sep.join(['data', 'myexamples', filename])
-        if os.path.realpath('.').find('code') != -1:
-            file_path.replace('code', '')
-            file_path = os.sep.join(['..', file_path])
+    def __init__(self, filename=None, folders=['data', 'myexamples']):
 
-        self.music = converter.parse(file_path)
-        self.music_parts = self.music.parts
-        self.part_events = {}
-        self.vertical_events = []
+        self.music = None
+        self.music_parts = []
+
+        self.music_events = {
+            'part_events': {},
+            'vertical_events': []
+        }
+
+        if filename is not None:
+            file_path = os.sep.join(folders + [filename])
+            if os.path.realpath('.').find('code') != -1:
+                file_path.replace('code', '')
+                file_path = os.sep.join(['..', file_path])
+
+            self.music = converter.parse(file_path)
+            self.music_parts = self.music.parts
+
 
     def parse(self, parts=True, vertical=True):
         """
@@ -41,16 +51,16 @@ class Parser:
 
             for i, part in enumerate(self.music_parts):
                 if part.isSequence():
-                    self.part_events[i] = self.parse_sequence_part(
+                    self.music_events['part_events'][i] = self.parse_sequence_part(
                         part, name=str(i), first=(False, True)[i == 0])
                 else:
                     self.process_voiced_part(part, i)
 
         if vertical and len(self.music.getOverlaps()) > 0 and len(self.music_parts) > 1:
             print('Processing Vertical Events')
-            self.vertical_events = VerticalParser(self.music).parse_music()
+            self.music_events['vertical_events'] = VerticalParser(self.music).parse_music()
             print('End of Processing {} Vertical Events'.format(
-                len(self.vertical_events)))
+                len(self.music_events['vertical_events'])))
 
     def parse_sequence_part(self, part, name=None, first=False, verbose=True):
         """
@@ -79,18 +89,18 @@ class Parser:
         """
         part.makeVoices(inPlace=True, fillGaps=True)
         for j, voice in enumerate(part.voices):
-            self.part_events[i] = {}
+            self.music_events['part_events'][i] = {}
             if not voice.isSequence():
                 voice.makeVoices(inPlace=True)
-                self.part_events[i][j] = {}
+                self.music_events['part_events'][i][j] = {}
                 for k, voc in voice.voices:
                     name = str(i) + ', voice ' + str(j) + \
                         ', internal voice ' + str(k)
-                    self.part_events[i][j][k] = self.parse_sequence_part(
+                    self.music_events['part_events'][i][j][k] = self.parse_sequence_part(
                         voc, name=name, first=(False, True)[i == 0])
             else:
                 name = str(i) + ', voice ' + str(j)
-                self.part_events[i][j] = self.parse_sequence_part(
+                self.music_events['part_events'][i][j] = self.parse_sequence_part(
                     voice, name=name, first=(False, True)[i == 0])
 
     def show_events(self, events='all parts', part_number=0, parts=[], viewpoints='all', offset=False):
@@ -108,22 +118,22 @@ class Parser:
         Show all viewpoints
         """
         if events == 'one part':
-            _ = [print(str(ev) + '\n') for ev in self.part_events[part_number]]
+            _ = [print(str(ev) + '\n') for ev in self.music_events['part_events'][part_number]]
         elif events == 'some parts':
             for part in parts:
                 print('Part ' + str(part))
-                _ = [print(str(ev) + '\n') for ev in self.part_events[part]]
+                _ = [print(str(ev) + '\n') for ev in self.music_events['part_events'][part]]
                 print('')
             print('')
         if events in ('all parts', 'all'):
-            for part, part_events in self.part_events.items():
+            for part, part_events in self.music_events['part_events'].items():
                 print('Part ' + str(part))
                 _ = [print(str(ev) + '\n') for ev in part_events]
                 print('')
             print('')
         if events in ('vertical', 'all'):
             print('Vertical Events ')
-            _ = [print(str(ev) + '\n') for ev in self.vertical_events]
+            _ = [print(str(ev) + '\n') for ev in self.music_events['vertical_events']]
 
     def show_single_viewpoints(self, viewpoint, events='all parts', part_number=0, parts=[], offset=False):
         """
@@ -131,28 +141,52 @@ class Parser:
         """
         if events == 'one part':
             utils.show_part_viewpoint(
-                viewpoint, self.part_events[part_number], offset)
+                viewpoint, self.music_events['part_events'][part_number], offset)
         elif events == 'some parts':
             for part in parts:
                 print('Part ' + str(part))
                 utils.show_part_viewpoint(
-                    viewpoint, self.part_events[part], offset)
+                    viewpoint, self.music_events['part_events'][part], offset)
                 print('')
             print('')
         if events in ('all parts', 'all'):
             _ = [utils.show_part_viewpoint(viewpoint, part, offset)
-                 for key, part in self.part_events.items()]
+                 for key, part in self.music_events['part_events'].items()]
         if events in ('vertical', 'all'):
-            utils.show_part_viewpoint(viewpoint, self.vertical_events, offset)
+            utils.show_part_viewpoint(viewpoint, self.music_events['vertical_events'], offset)
 
     def get_part_events(self):
         """
         Returns the parts events
         """
-        return self.part_events
+        return self.music_events['part_events']
 
     def get_vertical_events(self):
         """
         Returns the vertical events
         """
-        return self.vertical_events
+        return self.music_events['vertical_events']
+
+    def to_pickle(self, filename, folders=['data', 'myexamples']):
+        """
+        Parses Music To cpickle object
+        """
+        file_path = os.sep.join(folders + [filename])
+        if os.path.realpath('.').find('code') != -1:
+            file_path.replace('code', '')
+            file_path = os.sep.join(['..', file_path])
+
+        with open(file_path + '.pickle', 'wb') as handle:
+            pickle.dump(self.music_events, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def from_pickle(self, filename, folders=['data', 'myexamples']):
+        """
+        Parses Music To cpickle object
+        """
+        file_path = os.sep.join(folders + [filename])
+        if os.path.realpath('.').find('code') != -1:
+            file_path.replace('code', '')
+            file_path = os.sep.join(['..', file_path])
+
+        with open(file_path + '.pickle', 'rb') as handle:
+            self.music_events = pickle.load(handle)
