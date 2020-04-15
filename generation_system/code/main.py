@@ -23,21 +23,31 @@ def main():
     Main function for extracting the viewpoints for examples
     """
 
-    music = {}
-    folder = r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\music21\bach'
-    if os.path.isdir(folder):
-        for _, _, files in os.walk(folder):
-            for filename in files:
-                print(filename)
-                music_parser = MusicParser(filename, ['data', 'database', 'music21', 'bach'])
-                music_parser.parse(vertical=False)
-                music[filename] = music_parser
+    # music = {}
+    # folder = r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\music21\bach'
+    # if os.path.isdir(folder):
+    #     for _, _, files in os.walk(folder):
+    #         for filename in files:
+    #             if '.mxl' in filename:
+    #                 print(filename)
+    #                 music_parser = MusicParser(filename, ['data', 'database', 'music21', 'bach'])
+    #                 music_parser.parse()
+                    
+    #                 name = '.'.join(filename.split('.')[:-1])
+    #                 music_parser.to_pickle(name, ['data', 'database', 'parsed', 'bach'])
+    #                 music_parser.to_json(name, ['data', 'database', 'parsed', 'bach'])
+    #                 music[name] = music_parser
 
 
-    # name = 'bwv1.6.2.mxl'  # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl'
-    # parser = MusicParser(name)
-    # parser.parse(vertical=False)
-    # parser.to_pickle('MicrotonsExample')
+    name = 'to.mxl'  # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl'
+    parser = MusicParser(name)
+    parser.parse()
+    parser.to_pickle('to')
+
+    new_parser = MusicParser()
+    new_parser.from_pickle('to')
+    new_parser.show_events(events='one part', part_number=0, viewpoints=['pitch'])
+    
 
     # weights = {
     #     'pitch': 5,

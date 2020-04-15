@@ -4,13 +4,18 @@ This script presents the class Parser that tries different approaches to segment
 """
 
 import os
+import bz2
 import pickle
+import json
 
 from music21 import converter
 
 import representation.utils as utils
 from representation.parsers.line_parser import LineParser
 from representation.parsers.vertical_parser import VerticalParser
+
+from representation.events.linear_event import LinearEvent
+from representation.events.vertical_event import VerticalEvent
 
 
 class MusicParser:
@@ -40,7 +45,6 @@ class MusicParser:
             self.music = converter.parse(file_path)
             self.music_parts = self.music.parts
 
-
     def parse(self, parts=True, vertical=True):
         """
         Parse music
@@ -58,7 +62,8 @@ class MusicParser:
 
         if vertical and len(self.music.getOverlaps()) > 0 and len(self.music_parts) > 1:
             print('Processing Vertical Events')
-            self.music_events['vertical_events'] = VerticalParser(self.music).parse_music()
+            self.music_events['vertical_events'] = VerticalParser(
+                self.music).parse_music()
             print('End of Processing {} Vertical Events'.format(
                 len(self.music_events['vertical_events'])))
 
@@ -118,11 +123,13 @@ class MusicParser:
         Show all viewpoints
         """
         if events == 'one part':
-            _ = [print(str(ev) + '\n') for ev in self.music_events['part_events'][part_number]]
+            _ = [print(str(ev) + '\n')
+                 for ev in self.music_events['part_events'][part_number]]
         elif events == 'some parts':
             for part in parts:
                 print('Part ' + str(part))
-                _ = [print(str(ev) + '\n') for ev in self.music_events['part_events'][part]]
+                _ = [print(str(ev) + '\n')
+                     for ev in self.music_events['part_events'][part]]
                 print('')
             print('')
         if events in ('all parts', 'all'):
@@ -133,7 +140,8 @@ class MusicParser:
             print('')
         if events in ('vertical', 'all'):
             print('Vertical Events ')
-            _ = [print(str(ev) + '\n') for ev in self.music_events['vertical_events']]
+            _ = [print(str(ev) + '\n')
+                 for ev in self.music_events['vertical_events']]
 
     def show_single_viewpoints(self, viewpoint, events='all parts', part_number=0, parts=[], offset=False):
         """
@@ -153,7 +161,8 @@ class MusicParser:
             _ = [utils.show_part_viewpoint(viewpoint, part, offset)
                  for key, part in self.music_events['part_events'].items()]
         if events in ('vertical', 'all'):
-            utils.show_part_viewpoint(viewpoint, self.music_events['vertical_events'], offset)
+            utils.show_part_viewpoint(
+                viewpoint, self.music_events['vertical_events'], offset)
 
     def get_part_events(self):
         """
@@ -167,6 +176,47 @@ class MusicParser:
         """
         return self.music_events['vertical_events']
 
+    def to_json(self, filename, folders=['data', 'myexamples'], indent=2):
+        """
+        Parses Music To json object
+        """
+        file_path = os.sep.join(folders + [filename])
+        if os.path.realpath('.').find('code') != -1:
+            file_path.replace('code', '')
+            file_path = os.sep.join(['..', file_path])
+
+        to_dump = {
+            'part_events': {},
+            'vertical_events': [
+                dict(event) for event in self.music_events['vertical_events']]
+        }
+
+        for num, part in self.music_events['part_events'].items():
+            to_dump['part_events'][num] = [dict(event) for event in part]
+
+        with open(file_path + '.json', 'w') as handle:
+            json.dump(to_dump, handle, indent = indent)
+            handle.close()
+
+    def from_json(self, filename, folders=['data', 'myexamples']):
+        """
+        Parses Music from json object
+        """
+        file_path = os.sep.join(folders + [filename])
+        if os.path.realpath('.').find('code') != -1:
+            file_path.replace('code', '')
+            file_path = os.sep.join(['..', file_path])
+
+        with open(file_path + '.json', 'rb') as handle:
+            to_load = json.load(handle)
+            print(to_load['vertical_events'])
+            self.music_events['vertical_events'] = [
+                VerticalEvent(from_dict=event) for event in to_load['vertical_events']]
+            for key, part in to_load['part_events'].items():
+                self.music_events['part_events'][int(key)] = [
+                    LinearEvent(from_dict=event) for event in part]
+            handle.close()
+
     def to_pickle(self, filename, folders=['data', 'myexamples']):
         """
         Parses Music To cpickle object
@@ -175,9 +225,12 @@ class MusicParser:
         if os.path.realpath('.').find('code') != -1:
             file_path.replace('code', '')
             file_path = os.sep.join(['..', file_path])
-
-        with open(file_path + '.pickle', 'wb') as handle:
-            pickle.dump(self.music_events, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        
+        # .pbz2 is even better for compression
+        with bz2.BZ2File(file_path + '.pbz2', 'wb') as handle: 
+            pickle.dump(self.music_events, handle,
+                        protocol=pickle.HIGHEST_PROTOCOL)
+            handle.close()
 
     def from_pickle(self, filename, folders=['data', 'myexamples']):
         """
@@ -188,5 +241,6 @@ class MusicParser:
             file_path.replace('code', '')
             file_path = os.sep.join(['..', file_path])
 
-        with open(file_path + '.pickle', 'rb') as handle:
+        with bz2.BZ2File(file_path + '.pbz2', 'rb') as handle:
             self.music_events = pickle.load(handle)
+            handle.close()

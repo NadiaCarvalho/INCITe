@@ -117,14 +117,13 @@ class Event:
         Transforms dict of features in an event
         """
         if features is None:
-            for key, value in from_dict.items():
-                self.viewpoints[key] = value
-        else:
-            for feat in features:
-                if feat == 'offset':
-                    self.offset_time = from_dict[i]
-                else:
-                    self.viewpoints[feat] = from_dict[i]
+            features = list(from_dict)
+
+        for feat in features:
+            if feat == 'offset':
+                self.offset_time = from_dict[feat]
+            else:
+                self.viewpoints[feat] = from_dict[feat]
 
     def __str__(self):
         """
@@ -134,6 +133,14 @@ class Event:
         to_return += ''.join([str(key) + ': ' + str(viewpoint) + '; '
                               for key, viewpoint in self.viewpoints.items()])
         return to_return
+
+    def __iter__(self):
+        yield('offset', self.offset_time)
+        for key in self.viewpoints:
+            if key == 'posinbar':
+                yield(key, str(self.viewpoints[key]))
+            else:    
+                yield(key, self.viewpoints[key])
 
     def __eq__(self, other):
         """

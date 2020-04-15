@@ -24,9 +24,8 @@ class VerticalParser:
                 music21.key.KeySignature)):
             self.keys[k].append(val)
 
-        measures = self.music_to_parse.getElementsByClass('Measure')
-        self.measure_keys = dict(utils.get_analysis_keys_measure(
-            measure) for measure in measures)
+        ka = music21.analysis.floatingKey.KeyAnalyzer(music_to_parse)
+        self.measure_keys = ka.getRawKeyByMeasure()
 
         key_offsets = list(self.keys) + [self.music_to_parse.highestTime]
         self.ks_keys = dict(utils.get_analysis_keys_stream_bet_offsets(
@@ -58,85 +57,88 @@ class VerticalParser:
         Processes the duration information for a chord
         """
         self.events[index].add_viewpoint(
-           'dur_length', chord.duration.quarterLength)
+            'dur_length', chord.duration.quarterLength)
         self.events[index].add_viewpoint(
-           'dur_type', chord.duration.type)
+            'dur_type', chord.duration.type)
         self.events[index].add_viewpoint(
-           'dots', chord.duration.dots)
-        self.events[index].add_viewpoint(
-           'tied', chord.tie)
+            'dots', chord.duration.dots)
+
+        if chord.tie is not None:
+            self.events[index].add_viewpoint('tie_type', chord.tie.type)
+            self.events[index].add_viewpoint(
+                'tie_style', chord.tie.style)
 
     def extract_chord_table_info(self, index, chord):
         """
         Processes the table information for a chord
         """
         self.events[index].add_viewpoint(
-           'cardinality', chord.chordTablesAddress.cardinality)
+            'cardinality', chord.chordTablesAddress.cardinality)
         self.events[index].add_viewpoint(
-           'forteClass', chord.forteClass)
+            'forteClass', chord.forteClass)
         self.events[index].add_viewpoint(
-           'forteClassNumber', chord.chordTablesAddress.forteClass)
+            'forteClassNumber', chord.chordTablesAddress.forteClass)
         self.events[index].add_viewpoint(
-           'inversion', chord.chordTablesAddress.inversion)
+            'inversion', chord.chordTablesAddress.inversion)
 
     def pitch_class_info(self, index, chord):
         """
         Processes the pitch class information for a chord
         """
         self.events[index].add_viewpoint(
-           'pc_cardinality', chord.pitchClassCardinality)
+            'pc_cardinality', chord.pitchClassCardinality)
         self.events[index].add_viewpoint(
-           'pitch_class', chord.pitchClasses)
+            'pitch_class', chord.pitchClasses)
         self.events[index].add_viewpoint(
-           'prime_form', chord.primeForm)
+            'prime_form', chord.primeForm)
         self.events[index].add_viewpoint(
-           'pc_original', chord.chordTablesAddress.pcOriginal)
+            'pc_original', chord.chordTablesAddress.pcOriginal)
 
     def chord_info(self, index, chord):
         """
         Processes the information for a chord
         """
         self.events[index].add_viewpoint(
-           'pitches', [p.ps for p in chord.pitches])
+            'pitches', [p.ps for p in chord.pitches])
         self.events[index].add_viewpoint(
-           'quality', chord.quality)
-        #self.events[index].add_viewpoint(
+            'quality', chord.quality)
+        # self.events[index].add_viewpoint(
         #   'scale_degrees', chord.scaleDegrees)
         self.events[index].add_viewpoint(
-           'root', chord.root())
+            'root', chord.root().ps)
 
     def chord_elements_info(self, index, chord):
         """
         Processes the information for the elements of a chord
         """
         self.events[index].add_viewpoint(
-           'is_consonant', chord.isConsonant())
+            'is_consonant', chord.isConsonant())
         self.events[index].add_viewpoint(
-           'is_major_triad', chord.isMajorTriad())
+            'is_major_triad', chord.isMajorTriad())
         self.events[index].add_viewpoint(
-           'is_incomplete_major_triad', chord.isIncompleteMajorTriad())
+            'is_incomplete_major_triad', chord.isIncompleteMajorTriad())
         self.events[index].add_viewpoint(
-           'is_minor_triad', chord.isMinorTriad())
+            'is_minor_triad', chord.isMinorTriad())
         self.events[index].add_viewpoint(
-           'is_incomplete_minor_triad', chord.isIncompleteMinorTriad())
+            'is_incomplete_minor_triad', chord.isIncompleteMinorTriad())
         self.events[index].add_viewpoint(
-           'is_augmented_sixth', chord.isAugmentedSixth())
+            'is_augmented_sixth', chord.isAugmentedSixth())
         self.events[index].add_viewpoint(
-           'is_french_augmented_sixth', chord.isFrenchAugmentedSixth())
+            'is_french_augmented_sixth', chord.isFrenchAugmentedSixth())
         self.events[index].add_viewpoint(
-           'is_german_augmented_sixth', chord.isGermanAugmentedSixth())
+            'is_german_augmented_sixth', chord.isGermanAugmentedSixth())
         self.events[index].add_viewpoint(
-           'is_italian_augmented_sixth', chord.isItalianAugmentedSixth())
+            'is_italian_augmented_sixth', chord.isItalianAugmentedSixth())
         self.events[index].add_viewpoint(
-           'is_swiss_augmented_sixth', chord.isItalianAugmentedSixth())
+            'is_swiss_augmented_sixth', chord.isItalianAugmentedSixth())
         self.events[index].add_viewpoint(
-           'is_augmented_triad', chord.isAugmentedTriad())
+            'is_augmented_triad', chord.isAugmentedTriad())
         self.events[index].add_viewpoint(
-           'is_half_diminished_seventh', chord.isHalfDiminishedSeventh())
+            'is_half_diminished_seventh', chord.isHalfDiminishedSeventh())
         self.events[index].add_viewpoint(
-           'is_diminished_seventh', chord.isDiminishedSeventh())
+            'is_diminished_seventh', chord.isDiminishedSeventh())
         self.events[index].add_viewpoint(
-           'is_dominant_seventh', chord.isDominantSeventh())
+            'is_dominant_seventh', chord.isDominantSeventh())
 
     def get_key_sign_at_offset(self, offset):
         """
@@ -152,7 +154,8 @@ class VerticalParser:
         _ = [uniq_keys_off.append(key) for key in self.keys[k_offset]
              if key not in uniq_keys_off]
 
-        if len(uniq_keys_off) == 1:
+        key = music21.key.KeySignature()
+        if len(uniq_keys_off) > 0:
             key = uniq_keys_off[0]
 
         return key
@@ -164,25 +167,26 @@ class VerticalParser:
         nearest_key_sign = self.get_key_sign_at_offset(
             self.events[index].get_offset())
         self.events[index].add_viewpoint(
-           'keysign', nearest_key_sign)
+            'keysign', nearest_key_sign.sharps)
         self.events[index].add_viewpoint(
-           'key_ks', self.ks_keys[nearest_key_sign.offset])
+            'key_ks', str(self.ks_keys[nearest_key_sign.offset]))
         self.events[index].add_viewpoint(
-           'key_ks_TC', self.ks_keys[nearest_key_sign.offset].tonalCertainty())
+            'key_ks_TC', self.ks_keys[nearest_key_sign.offset].tonalCertainty())
         harm_f_ks = utils.harmonic_functions_key(
             chord, self.ks_keys[nearest_key_sign.offset])
         self.events[index].add_viewpoint(
-           'harmfunc_ks', harm_f_ks.figure)
+            'harmfunc_ks', harm_f_ks.figure)
 
     def perceived_key_at_measure_parsing(self, index, chord):
         """
         Parses the perceived key at measure information
         """
-        measure_key = self.measure_keys[chord.measureNumber]
-        self.events[index].add_viewpoint(
-           'key_ms', measure_key)
-        self.events[index].add_viewpoint(
-           'key_ms_TC', measure_key.tonalCertainty())
-        harm_f_ms = utils.harmonic_functions_key(chord, measure_key)
-        self.events[index].add_viewpoint(
-           'harmfunc_ms', harm_f_ms.figure)
+        measure_key = self.measure_keys[chord.measureNumber-1]
+        if measure_key is not None:
+            self.events[index].add_viewpoint(
+                'key_ms', str(measure_key))
+            self.events[index].add_viewpoint(
+                'key_ms_TC', measure_key.tonalCertainty())
+            harm_f_ms = utils.harmonic_functions_key(chord, measure_key)
+            self.events[index].add_viewpoint(
+                'harmfunc_ms', harm_f_ms.figure)

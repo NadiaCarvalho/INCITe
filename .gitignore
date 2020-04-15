@@ -14,3 +14,4 @@ generation_system/data/database
 generation_system/*/__pycache__
 .pytest_cache
 
+generation_system/data/myexamples/to.mxl

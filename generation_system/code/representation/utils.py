@@ -145,15 +145,6 @@ def get_grace_notes(events):
     return [event for event in events if event.is_grace_note()]
 
 
-def get_analysis_keys_measure(measure):
-    """
-    Gets an analysis of key for a measure
-    """
-    ### Implement Try/Catch
-    k = measure.analyze('key')
-    return (measure.number, k)
-
-
 def harmonic_functions_key(chord, key):
     """
     Parses the harmonic key signatures information for a key

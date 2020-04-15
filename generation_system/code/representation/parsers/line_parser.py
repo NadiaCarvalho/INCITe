@@ -44,11 +44,12 @@ class LineParser:
         self.part_name = part_name_voice[0]
         self.voice = part_name_voice[1]
 
+        ka = music21.analysis.floatingKey.KeyAnalyzer(music_to_parse)
+
         # Get offsets of beginnings of measures
         measures = self.music_to_parse.recurse(classFilter='Measure')
         self.measure_offsets = [measure.offset for measure in measures]
-        self.measure_keys = dict(utils.get_analysis_keys_measure(
-            measure) for measure in measures)
+        self.measure_keys = ka.getRawKeyByMeasure()
 
         self.events = []
 
@@ -136,7 +137,8 @@ class LineParser:
 
         if note_or_rest.tie is not None:
             self.events[index].add_viewpoint('tie_type', note_or_rest.tie.type)
-            self.events[index].add_viewpoint('tie_style', note_or_rest.tie.style)
+            self.events[index].add_viewpoint(
+                'tie_style', note_or_rest.tie.style)
 
     def duration_info_parsing(self, index, note_or_rest):
         """
@@ -196,14 +198,18 @@ class LineParser:
             else:
                 self.events[index].add_viewpoint('expression', expression)
 
-    def get_first_fib_before_fib(self, note_or_rest):
+    def get_first_fib_before_fib(self, offset):
         """
         Returns the first fib before an event that is a fib
         """
-        index = self.measure_offsets.index(note_or_rest.offset)
-        fib_index = index - (1, 0)[index == 0]
-        return [event for event in utils.get_events_at_offset(
-            self.events, self.measure_offsets[fib_index]) if utils.not_rest_or_grace(event)][0]
+        index = self.measure_offsets.index(offset)
+        if index == 0:
+            return None
+        fib_candidates = [event for event in utils.get_events_at_offset(
+            self.events, self.measure_offsets[index - 1]) if utils.not_rest_or_grace(event)]
+        if len(fib_candidates) > 0:
+            return fib_candidates[0]
+        return self.get_first_fib_before_fib(self.measure_offsets[index - 1])
 
     def get_first_fib_before_non_fib(self, note_or_rest):
         """
@@ -213,7 +219,7 @@ class LineParser:
             min(self.measure_offsets, key=lambda x: abs(x - note_or_rest.offset)))
         fib_index = (
             index, index-1)[bool(note_or_rest.offset < self.measure_offsets[index])]
-        return[event for event in utils.get_events_at_offset(
+        return [event for event in utils.get_events_at_offset(
             self.events, self.measure_offsets[fib_index]) if not event.is_grace_note()]
 
     def parsing_fib_element(self, index, note_or_rest):
@@ -222,11 +228,13 @@ class LineParser:
         """
         self.events[index].add_viewpoint('fib', True)
         self.events[index].add_viewpoint('intfib', 0.0)
-        cur_fib_midi = self.events[index].get_viewpoint('pitch')
-        last_fib_midi = self.get_first_fib_before_fib(
-            note_or_rest).get_viewpoint('pitch')
-        self.events[index].add_viewpoint('thrbar', utils.seq_int(
-            cur_fib_midi, last_fib_midi))
+        last_fib = self.get_first_fib_before_fib(
+            note_or_rest.offset)
+        if last_fib is not None:
+            cur_fib_midi = self.events[index].get_viewpoint('pitch')
+            last_fib_midi = last_fib.get_viewpoint('pitch')
+            self.events[index].add_viewpoint('thrbar', utils.seq_int(
+                cur_fib_midi, last_fib_midi))
 
     def parsing_non_fib_element(self, index, note_or_rest):
         """
@@ -248,11 +256,12 @@ class LineParser:
         and melodic sequences with other elements of a measure
         for an event
         """
-        key_anal = self.measure_keys[note_or_rest.measureNumber]
+
+        key_anal = self.measure_keys[note_or_rest.measureNumber - 1]
         self.events[index].add_viewpoint(
             'key_ms', str(key_anal))
 
-        if not note_or_rest.isRest:
+        if not note_or_rest.isRest and key_anal is not None:
             sc_deg = key_anal.getScaleDegreeFromPitch(note_or_rest.pitch.name)
             self.events[index].add_viewpoint(
                 'scale_degree_ms', sc_deg)
