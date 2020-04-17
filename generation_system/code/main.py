@@ -39,14 +39,14 @@ def main():
     #                 music[name] = music_parser
 
 
-    name = 'to.mxl'  # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl'
+    name = 'bwv67.4.mxl' # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl' #'to.mxl' 
     parser = MusicParser(name)
     parser.parse()
     parser.to_pickle('to')
 
     new_parser = MusicParser()
     new_parser.from_pickle('to')
-    new_parser.show_events(events='one part', part_number=0, viewpoints=['pitch'])
+    new_parser.show_events(events='one part', part_number=0, viewpoints=['phrase'])
     
 
     # weights = {
@@ -74,14 +74,8 @@ def main():
 
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):
-    o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
+    norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
         events=events, weights=weights)
-
-    norm_features = gen_utils.normalize(o_features, -1, 1)
-
-    dict_normalized = {}
-    for i, event in enumerate(norm_features):
-        dict_normalized[str(event)] = o_features[i]
 
     thresh = gen_utils.find_threshold(
         norm_features[:dim], weights=weighted_fit, dim=len(features_names), entropy=True)

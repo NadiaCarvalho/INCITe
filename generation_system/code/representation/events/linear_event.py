@@ -114,14 +114,17 @@ class LinearEvent(Event):
             else:
                 self.viewpoints[feat] = from_list[i]
 
-    def to_feature_dict(self, features=None):
+    def to_feature_dict(self, features=None, offset=True):
         """
         Transforms event in a dict of features
         """
         if features is None:
             features = list(self.viewpoints)
+        
         features_dict = {}
-        features_dict['offset'] = self.offset_time
+        if offset:
+            features_dict['offset'] = self.offset_time
+
         for feat in features:
             # add features that are arrays
             if feat in ['articulation', 'expression', 'ornamentation', 'dynamic']:

@@ -3,6 +3,7 @@
 This script presents utility functions for dealing with representations
 """
 
+
 import music21
 import numpy as np
 from sklearn.feature_extraction import DictVectorizer
@@ -193,23 +194,47 @@ def create_similarity_matrix(events, weights=None):
     return np.array(matrix)
 
 
-def create_feature_array_events(events, weights=None):
+def normalize(feat_list, x_min, x_max):
+    """
+    Get Normalization for 
+    """
+    nom = (feat_list-feat_list.min(axis=0))*(x_max-x_min)
+    denom = feat_list.max(axis=0) - feat_list.min(axis=0)
+    denom[denom == 0] = 1
+    return x_min + nom/denom
+
+
+def normalize_weights(weights):
+    """
+    Normalize weight list
+    """
+    if any(w < 0 for w in weights):
+        weights = [float(w) + abs(min(weights)) for w in weights]
+    return [float(w)/sum(weights) for w in weights]
+
+
+def create_feature_array_events(events, weights=None, normalization='st1-mt0', offset=True, flatten=True):
     """
     Creating Feature Array and Weights for Oracle
     """
-    events_dict = [event.to_feature_dict(weights) for event in events]
+    events_dict = [event.to_feature_dict(weights, offset) for event in events]
     vec = DictVectorizer()
     features = vec.fit_transform(events_dict).toarray()
     features_names = vec.get_feature_names()
-
-    # Normalizar com Soma 1, Média 0
 
     imp = SimpleImputer(missing_values=np.nan,
                         strategy='constant', fill_value=10000)
     features = imp.fit_transform(features)
 
-    if len(features_names) == 1:
+    norm_features = []
+    if normalization == 'st1-mt0':
+        norm_features = normalize(features, -1, 1)
+    else:
+        norm_features = normalize(features, 0, 1)
+
+    if len(features_names) == 1 and flatten:
         features = [x for [x] in features]
+        norm_features = [x for [x] in norm_features]
 
     weighted_fit = None
     if weights is not None:
@@ -221,7 +246,10 @@ def create_feature_array_events(events, weights=None):
             else:
                 weighted_fit[i] = weights[w_feat[0]]
 
-    return features, features_names, weighted_fit
+    # dict_normalized = {}
+    # for i, event in enumerate(norm_features):
+    #     dict_normalized[str(event)] = features[i]
+    return norm_features, features, features_names, weighted_fit
 
 
 def part_name_parser(music_to_parse):

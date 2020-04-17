@@ -226,7 +226,7 @@ class MusicParser:
             file_path.replace('code', '')
             file_path = os.sep.join(['..', file_path])
         
-        # .pbz2 is even better for compression
+        # .pbz2 is even better for compression than pickle
         with bz2.BZ2File(file_path + '.pbz2', 'wb') as handle: 
             pickle.dump(self.music_events, handle,
                         protocol=pickle.HIGHEST_PROTOCOL)

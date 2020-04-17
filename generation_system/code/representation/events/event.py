@@ -99,7 +99,7 @@ class Event:
             else:
                 self.viewpoints[feat] = from_list[i]
 
-    def to_feature_dict(self, features=None):
+    def to_feature_dict(self, features=None, offset=True):
         """
         Transforms event in a dict of features
         """
@@ -107,7 +107,10 @@ class Event:
             features = list(self.viewpoints)
 
         features_dict = {}
-        features_dict['offset'] = self.offset_time
+
+        if offset:
+            features_dict['offset'] = self.offset_time
+            
         for feat in features:
             features_dict[feat] = self.get_viewpoint(feat)
         return features_dict
@@ -136,10 +139,10 @@ class Event:
 
     def __iter__(self):
         yield('offset', self.offset_time)
-        for key in self.viewpoints:
+        for key, items in self.viewpoints:
             if key == 'posinbar':
                 yield(key, str(self.viewpoints[key]))
-            else:    
+            else:
                 yield(key, self.viewpoints[key])
 
     def __eq__(self, other):

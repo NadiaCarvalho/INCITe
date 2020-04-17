@@ -9,6 +9,7 @@ import music21
 
 import representation.utils as utils
 from representation.events.linear_event import LinearEvent
+from representation.parsers.segmentation import segmentation
 
 
 class LineParser:
@@ -65,6 +66,9 @@ class LineParser:
         self.metro_marks_parsing()
         self.double_barline_parsing()
         self.repeat_barline_parsing()
+
+        segmentation(self.events)
+        # self.phrase_related_info()
 
         return self.events
 
@@ -393,9 +397,3 @@ class LineParser:
                     'repeat_before', True)
                 events_repeats[0].add_viewpoint(
                     'repeat_direction', repeat.direction)
-
-    def local_boundary_detection_model(self, i):
-        """
-        LBDM
-        """
-        pass
