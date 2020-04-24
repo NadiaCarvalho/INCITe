@@ -50,23 +50,36 @@ def contour_hd(midi_viewpoint_1, midi_viewpoint_2):
     for count, ele in enumerate(values):
         if result < ele:
             return sign(result)*count
-    return int(0)
+    return int(0)    
 
 
-def get_first_event_that_is_note_before_index(events, actual_index=None):
+def get_last_x_events_that_are_notes_before_index(events, number=1, actual_index=None):
     """
     Returns the first event that is a note but not a rest before an event
     """
     if len(events) < 2:
         return None
+    elif len(events) < number+1:
+        number = len(events)-1
+        
     if actual_index is None:
         actual_index = len(events) - 1
+
+    count = 0
+    events_to_return = []    
     events_process = events[:actual_index]
     for i in range(len(events_process)):
         index = len(events_process) - (i + 1)
         if not events_process[index].is_rest():
-            return index
+            if number == 1:
+                return index
+            if count < number:
+                events_to_return.append(index)
+                count += 1
+            else:
+                return events_to_return
     return None
+
 
 
 def offset_info(event, viewpoint):
@@ -94,8 +107,7 @@ def show_sequence_of_viewpoint_without_offset(events, viewpoint):
     Returns a string of a specific viewpoint for all events with no offset
     """
     to_print = 'Viewpoint ' + viewpoint + ': '
-    to_print += ''.join([(str(event.get_viewpoint(viewpoint)) + ' ')
-                         if event.check_viewpoint(viewpoint) else 'None ' for event in events])
+    to_print += ''.join([(str(event.get_viewpoint(viewpoint)) + ' ') for event in events])
     return to_print
 
 
@@ -208,6 +220,9 @@ def normalize_weights(weights):
     """
     Normalize weight list
     """
+    if len(weights) < 1:    
+        return weights
+        
     if any(w < 0 for w in weights):
         weights = [float(w) + abs(min(weights)) for w in weights]
     return [float(w)/sum(weights) for w in weights]
@@ -218,6 +233,8 @@ def create_feature_array_events(events, weights=None, normalization='st1-mt0', o
     Creating Feature Array and Weights for Oracle
     """
     events_dict = [event.to_feature_dict(weights, offset) for event in events]
+    #print(events_dict[0])
+    
     vec = DictVectorizer()
     features = vec.fit_transform(events_dict).toarray()
     features_names = vec.get_feature_names()
@@ -278,6 +295,6 @@ def has_value_viewpoint_events(events, viewpoint):
     """
     for event in events:
         view = event.get_viewpoint(viewpoint)
-        if not (view is None or view is None):
+        if not view is None:
             return True
     return False

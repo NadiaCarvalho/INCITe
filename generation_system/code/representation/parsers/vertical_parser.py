@@ -57,9 +57,9 @@ class VerticalParser:
         Processes the duration information for a chord
         """
         self.events[index].add_viewpoint(
-            'dur_length', chord.duration.quarterLength)
+            'duration.length', chord.duration.quarterLength)
         self.events[index].add_viewpoint(
-            'dur_type', chord.duration.type)
+            'duration.type', chord.duration.type)
         self.events[index].add_viewpoint(
             'dots', chord.duration.dots)
 
@@ -101,7 +101,7 @@ class VerticalParser:
         self.events[index].add_viewpoint(
             'pitches', [p.ps for p in chord.pitches])
         self.events[index].add_viewpoint(
-            'quality', chord.quality)
+            'basic.quality', chord.quality)
         # self.events[index].add_viewpoint(
         #   'scale_degrees', chord.scaleDegrees)
         self.events[index].add_viewpoint(
@@ -169,13 +169,13 @@ class VerticalParser:
         self.events[index].add_viewpoint(
             'keysign', nearest_key_sign.sharps)
         self.events[index].add_viewpoint(
-            'key_ks', str(self.ks_keys[nearest_key_sign.offset]))
+            'signature.key', str(self.ks_keys[nearest_key_sign.offset]))
         self.events[index].add_viewpoint(
-            'key_ks_TC', self.ks_keys[nearest_key_sign.offset].tonalCertainty())
+            'signature.certainty', self.ks_keys[nearest_key_sign.offset].tonalCertainty())
         harm_f_ks = utils.harmonic_functions_key(
             chord, self.ks_keys[nearest_key_sign.offset])
         self.events[index].add_viewpoint(
-            'harmfunc_ks', harm_f_ks.figure)
+            'signature.function', harm_f_ks.figure)
 
     def perceived_key_at_measure_parsing(self, index, chord):
         """
@@ -184,9 +184,9 @@ class VerticalParser:
         measure_key = self.measure_keys[chord.measureNumber-1]
         if measure_key is not None:
             self.events[index].add_viewpoint(
-                'key_ms', str(measure_key))
+                'measure.key', str(measure_key))
             self.events[index].add_viewpoint(
-                'key_ms_TC', measure_key.tonalCertainty())
+                'measure.certainty', measure_key.tonalCertainty())
             harm_f_ms = utils.harmonic_functions_key(chord, measure_key)
             self.events[index].add_viewpoint(
-                'harmfunc_ms', harm_f_ms.figure)
+                'measure.function', harm_f_ms.figure)

@@ -95,19 +95,22 @@ def segmentation(events):
 
     # with different weights
     weights_dict = {  # candidates for phrasing discovery (melodic)
-        'pitch': 1,
+        # 'pitch.value': 1,
         'rest': 1,
         # 'dur_length': 1,
-        'fermata': 2,
+        'fermata': 1,
+        'breath_mark': 1,
+        'closure': 1,
+
         # 'seq_int': 1,
-        'contour': 1,
+        # 'contour': 1,
         # 'contour_hd': 1,
         # 'fib': 1,
         # 'posinbar': 1,
         # 'beat_strength': 1,
-        # 'double_bar': 1,
-        # 'repeat_before': 1,
-        # 'scale_degree_ks': 1,
+        # 'double': 1,
+        # 'repeat.exists': 1,
+        # 'signatures.scale_degree': 1,
         # 'scale_degree_ms': 1,
     }
 
@@ -129,11 +132,11 @@ def segmentation(events):
     # Apply phrasing
     for i, event in enumerate(events):
         if i == len(events) - 1:
-            events[-1].add_viewpoint('phrase', -1)
+            events[-1].add_viewpoint('phrase.boundary', -1)
             break
-            
+
         # Calculate presence of boundary
         boundary = peak_picking(i, normalized_bss, weights)
-        event.add_viewpoint('phrase', boundary)
+        event.add_viewpoint('phrase.boundary', boundary)
         if boundary == 1 and i != 0:
-            events[i-1].add_viewpoint('phrase', -boundary)
+            events[i-1].add_viewpoint('phrase.boundary', -boundary)

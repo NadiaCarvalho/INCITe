@@ -3,7 +3,8 @@
 This script presents the class Event that represents an event in a piece of music
 """
 
-import representation.utils as utils
+import fractions
+import representation.events.utils as utils
 
 
 class Event:
@@ -14,7 +15,6 @@ class Event:
     def __init__(self, offset=None, from_dict=None, from_list=None, features=None):
         self.offset_time = offset
         self.viewpoints = {}
-        self._init_from_list_or_dict(offset, from_dict, from_list, features)
 
     def _init_from_list_or_dict(self, offset=None, from_dict=None, from_list=None, features=None):
         if from_dict is not None:
@@ -22,30 +22,62 @@ class Event:
         elif (from_list is not None) and (features is not None):
             self.from_feature_list(from_list, features)
 
-    def add_viewpoint(self, name, info):
+    def get_view_aux(self, name, category, info=None, add=False):
+        """
+        Aux function for get/add viewpoint
+        """
+        paths = utils.retrieve_path_to_key(
+            self.viewpoints, name)
+
+        if add and len(paths) == 0:
+            self.viewpoints[name] = info
+        elif len(paths) > 0:
+            viewpoint_path = paths[0].split('.')
+
+            if category is not None:
+                for path in paths:
+                    list_paths = path.split('.')
+                    if category in list_paths:
+                        viewpoint_path = list_paths
+                        break
+
+            v_to_process = viewpoint_path
+            if add:
+                v_to_process = viewpoint_path[:-1]
+
+            view_cat = self.viewpoints
+            for viewpoint in v_to_process:
+                view_cat = view_cat[viewpoint]
+            return view_cat
+        return None
+
+    def add_viewpoint(self, name, info, category=None):
         """
         Adds a viewpoint to event
         """
-        if (name in self.viewpoints and
-                isinstance(self.viewpoints[name], list)):
-            self.viewpoints[name].append(info)
-            self.viewpoints[name] = utils.flatten(self.viewpoints[name])
-        else:
-            self.viewpoints[name] = info
+        new_name = name
+        new_category = category
+        if '.' in name:
+            splitted = name.split('.')
+            new_name = splitted[1]
+            new_category = splitted[0]
 
-    def get_viewpoint(self, name):
+        view_cat = self.get_view_aux(new_name, info, new_category, add=True)
+        if view_cat is not None:
+            utils._add_viewpoint(view_cat, new_name, info)
+
+    def get_viewpoint(self, name, category=None):
         """
         Returns a viewpoint of event
         """
-        if name in self.viewpoints:
-            return self.viewpoints[name]
-        return None
+        new_name = name
+        new_category = category
+        if '.' in name:
+            splitted = name.split('.')
+            new_name = splitted[1]
+            new_category = splitted[0]
 
-    def check_viewpoint(self, name):
-        """
-        Returns a viewpoint of event
-        """
-        return name in self.viewpoints
+        return self.get_view_aux(new_name, new_category)
 
     def get_offset(self):
         """
@@ -57,7 +89,7 @@ class Event:
         """
         Returns value of 'rest' viewpoint for event
         """
-        return self.viewpoints['rest']
+        return self.get_viewpoint('rest')
 
     def weighted_comparison(self, other, weights=None):
         """
@@ -82,8 +114,7 @@ class Event:
         if features is None:
             features = list(self.viewpoints)
 
-        features_list = [self.viewpoints[feat]
-                         if feat in self.viewpoints else None for feat in features]
+        features_list = [self.get_viewpoint(feat) for feat in features]
 
         return [self.offset_time] + features_list, features
 
@@ -95,9 +126,9 @@ class Event:
             if feat == 'offset':
                 self.offset_time = from_list[i]
             elif from_list[i] == nan_value:
-                self.viewpoints[feat] = None
+                self.add_viewpoint(feat, None)
             else:
-                self.viewpoints[feat] = from_list[i]
+                self.add_viewpoint(feat, from_list[i])
 
     def to_feature_dict(self, features=None, offset=True):
         """
@@ -110,7 +141,7 @@ class Event:
 
         if offset:
             features_dict['offset'] = self.offset_time
-            
+
         for feat in features:
             features_dict[feat] = self.get_viewpoint(feat)
         return features_dict
@@ -126,32 +157,41 @@ class Event:
             if feat == 'offset':
                 self.offset_time = from_dict[feat]
             else:
-                self.viewpoints[feat] = from_dict[feat]
+                self.add_viewpoint(feat, from_dict[feat])
 
     def __str__(self):
         """
         Overrides str function for Event
         """
         to_return = 'Event at offset {}: \n'.format(self.offset_time)
-        to_return += ''.join([str(key) + ': ' + str(viewpoint) + '; '
-                              for key, viewpoint in self.viewpoints.items()])
+        viewpoints = ['.'.join(path.split('.')[-2:])
+                      for path in utils.get_all_inner_keys(self.viewpoints)]
+
+        to_return += ''.join([str(key) + ': ' + str(self.get_viewpoint(key)) + '; '
+                              for key in viewpoints])
         return to_return
 
     def __iter__(self):
+        viewpoints = ['.'.join(path.split('.')[-2:])
+                      for path in utils.get_all_inner_keys(self.viewpoints)]
         yield('offset', self.offset_time)
-        for key, items in self.viewpoints:
-            if key == 'posinbar':
-                yield(key, str(self.viewpoints[key]))
+        for key in viewpoints:
+            view = self.get_viewpoint(key)
+            if isinstance(view, fractions.Fraction):
+                yield(key, str(view))
             else:
-                yield(key, self.viewpoints[key])
+                yield(key, view)
 
     def __eq__(self, other):
         """
         Overrides equal function for Event
         """
-        for key, viewpoint in self.viewpoints.items():
-            other_view = other.get_viewpoint(key)
-            if other_view is None or viewpoint != other_view:
+        viewpoints = ['.'.join(path.split('.')[-2:])
+                      for path in utils.get_all_inner_keys(self.viewpoints)]
+        for viewpoint in viewpoints:
+            self_view = self.get_viewpoint(viewpoint)
+            other_view = other.get_viewpoint(viewpoint)
+            if other_view is None or self_view != other_view:
                 return False
         return True
 

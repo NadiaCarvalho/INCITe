@@ -80,7 +80,7 @@ class MusicParser:
         parser = LineParser(part)
         parsed = parser.parse_line()
 
-        if not first and not utils.has_value_viewpoint_events(parsed, 'metronome'):
+        if not first and not utils.has_value_viewpoint_events(parsed, 'metro.value'):
             parser.metronome_marks_parsing(self.music_parts[0], parsed)
 
         if verbose:
@@ -193,7 +193,7 @@ class MusicParser:
 
         for num, part in self.music_events['part_events'].items():
             to_dump['part_events'][num] = [dict(event) for event in part]
-
+        
         with open(file_path + '.json', 'w') as handle:
             json.dump(to_dump, handle, indent = indent)
             handle.close()

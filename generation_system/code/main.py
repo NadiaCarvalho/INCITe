@@ -18,6 +18,7 @@ from representation.parsers.score_conversor import ScoreConversor
 
 import os
 
+
 def main():
     """
     Main function for extracting the viewpoints for examples
@@ -32,22 +33,24 @@ def main():
     #                 print(filename)
     #                 music_parser = MusicParser(filename, ['data', 'database', 'music21', 'bach'])
     #                 music_parser.parse()
-                    
+
     #                 name = '.'.join(filename.split('.')[:-1])
     #                 music_parser.to_pickle(name, ['data', 'database', 'parsed', 'bach'])
     #                 music_parser.to_json(name, ['data', 'database', 'parsed', 'bach'])
     #                 music[name] = music_parser
-
-
-    name = 'bwv67.4.mxl' # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl' #'to.mxl' 
+    # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl' #'to.mxl' #'bwv67.4.mxl' #'complexcompass.mxl'
+    name = 'bwv67.4.mxl'
     parser = MusicParser(name)
-    parser.parse()
-    parser.to_pickle('to')
+    parser.parse(vertical=True)
+    parser.show_events(events='one part', part_number=0, viewpoints=[
+                       'phrase.boundary'])
 
-    new_parser = MusicParser()
-    new_parser.from_pickle('to')
-    new_parser.show_events(events='one part', part_number=0, viewpoints=['phrase'])
-    
+    # parser.to_json('complexcompass')
+
+    # new_parser = MusicParser()
+    # new_parser.from_json('complexcompass')
+    # new_parser.show_events(events='one part', part_number=0, viewpoints=[
+    #                    'posinbar', 'beat_strength', 'articulation'])
 
     # weights = {
     #     'pitch': 5,
@@ -84,11 +87,11 @@ def oracle_and_generator(events, seq_len, weights=None, dim=-1):
         norm_features[:dim], flag='a', features=features_names,
         weights=weighted_fit, dim=len(features_names),
         dfunc='cosine', threshold=thresh[0][1])
-    #gen_plot.start_draw(oracle).show()
+    # gen_plot.start_draw(oracle).show()
 
     # oracle2 = VMO.oracle.build_oracle(
     #     norm_features[:dim], flag='a', feature=features_names,
-    #     weights=weighted_fit, dim=len(features_names), 
+    #     weights=weighted_fit, dim=len(features_names),
     #     dfunc='cosine', threshold=thresh[0][1])
     # plot.start_draw(oracle2).show()
 
