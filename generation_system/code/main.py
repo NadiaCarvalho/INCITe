@@ -39,11 +39,12 @@ def main():
     #                 music_parser.to_json(name, ['data', 'database', 'parsed', 'bach'])
     #                 music[name] = music_parser
     # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl' #'to.mxl' #'bwv67.4.mxl' #'complexcompass.mxl'
-    name = 'bwv67.4.mxl'
+    name = 'complexcompass2.mxl'
     parser = MusicParser(name)
     parser.parse(vertical=True)
-    parser.show_events(events='one part', part_number=0, viewpoints=[
-                       'phrase.boundary'])
+
+    #parser.show_events(events='one part', part_number=0, viewpoints=[
+                      # 'phrase.boundary'])
 
     # parser.to_json('complexcompass')
 

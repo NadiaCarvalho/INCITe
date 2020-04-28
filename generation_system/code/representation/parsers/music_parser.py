@@ -8,7 +8,7 @@ import bz2
 import pickle
 import json
 
-from music21 import converter
+import music21
 
 import representation.utils as utils
 from representation.parsers.line_parser import LineParser
@@ -42,7 +42,7 @@ class MusicParser:
                 file_path.replace('code', '')
                 file_path = os.sep.join(['..', file_path])
 
-            self.music = converter.parse(file_path)
+            self.music = music21.converter.parse(file_path)
             self.music_parts = self.music.parts
 
     def parse(self, parts=True, vertical=True):
@@ -54,7 +54,7 @@ class MusicParser:
             self.music_parts.flattenUnnecessaryVoices(inPlace=True)
 
             for i, part in enumerate(self.music_parts):
-                if part.isSequence():
+                if part.isSequence() and len(list(part.flat.getElementsByClass(music21.chord.Chord))) == 0:
                     self.music_events['part_events'][i] = self.parse_sequence_part(
                         part, name=str(i), first=(False, True)[i == 0])
                 else:
@@ -92,21 +92,25 @@ class MusicParser:
         """
         Process a part that has overlappings
         """
-        part.makeVoices(inPlace=True, fillGaps=True)
-        for j, voice in enumerate(part.voices):
+        if len(part.flat.getElementsByClass(music21.chord.Chord)) > 0:
+            utils.de_chordify(part, in_place=True)
+
+        utils.make_voices(part, in_place=True)
+        part.flattenUnnecessaryVoices(inPlace=True)
+        part.voices[0].show()
+        
+        new_parts = part.voicesToParts()
+        
+        #new_parts
+
+        #new_parts.show('text')
+        #print(len(new_parts.parts))
+
+        for j, voice in enumerate(new_parts.parts):
             self.music_events['part_events'][i] = {}
-            if not voice.isSequence():
-                voice.makeVoices(inPlace=True)
-                self.music_events['part_events'][i][j] = {}
-                for k, voc in voice.voices:
-                    name = str(i) + ', voice ' + str(j) + \
-                        ', internal voice ' + str(k)
-                    self.music_events['part_events'][i][j][k] = self.parse_sequence_part(
-                        voc, name=name, first=(False, True)[i == 0])
-            else:
-                name = str(i) + ', voice ' + str(j)
-                self.music_events['part_events'][i][j] = self.parse_sequence_part(
-                    voice, name=name, first=(False, True)[i == 0])
+            name = str(i) + ', voice ' + str(j)
+            self.music_events['part_events'][i][j] = self.parse_sequence_part(
+                voice, name=name, first=(False, True)[i == 0])
 
     def show_events(self, events='all parts', part_number=0, parts=[], viewpoints='all', offset=False):
         """
@@ -193,9 +197,9 @@ class MusicParser:
 
         for num, part in self.music_events['part_events'].items():
             to_dump['part_events'][num] = [dict(event) for event in part]
-        
+
         with open(file_path + '.json', 'w') as handle:
-            json.dump(to_dump, handle, indent = indent)
+            json.dump(to_dump, handle, indent=indent)
             handle.close()
 
     def from_json(self, filename, folders=['data', 'myexamples']):
@@ -225,9 +229,9 @@ class MusicParser:
         if os.path.realpath('.').find('code') != -1:
             file_path.replace('code', '')
             file_path = os.sep.join(['..', file_path])
-        
+
         # .pbz2 is even better for compression than pickle
-        with bz2.BZ2File(file_path + '.pbz2', 'wb') as handle: 
+        with bz2.BZ2File(file_path + '.pbz2', 'wb') as handle:
             pickle.dump(self.music_events, handle,
                         protocol=pickle.HIGHEST_PROTOCOL)
             handle.close()

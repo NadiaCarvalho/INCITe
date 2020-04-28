@@ -20,6 +20,8 @@ class LinearEvent(Event):
             'metadata': {
                 'part': '',
                 'voice': '',
+                'piece_title': '',
+                'composer': '',
             },
             'basic': {
                 'rest': False,
@@ -39,6 +41,15 @@ class LinearEvent(Event):
                 'ornamentation': [],
                 'rehearsal': False,
                 'volume': 100,
+                'notehead': {
+                    'type': 'normal',
+                    'fill': True,
+                    'parenthesis': False,
+                },
+                'tie': {
+                    'type': 'no tie',
+                    'style': 'normal',
+                },
             },
             'pitch': {
                 'cpitch': 60.0,
@@ -47,35 +58,6 @@ class LinearEvent(Event):
                 'accidental': music21.pitch.Accidental('natural').modifier,
                 'microtonal': 0.0,
                 'pitch_class': 0,
-            },
-            'notehead': {
-                'type': 'normal',
-                'fill': True,
-                'parenthesis': False,
-            },
-            'tie': {
-                'type': 'no tie',
-                'style': 'normal',
-            },
-            'pitch_derived': {
-                'seq_int': 0,
-                'contour': 0,
-                'contour_hd': 0,
-                'closure': 0,
-                'registral_direction': False,
-                'intervallic_difference': False,
-                'upwards': False,
-                'downwards': False,
-                'no_movement': False,
-                'fib': True,
-                'intfib': 0, 
-            },
-            'bar_derived': {
-                'thrbar': 0,
-                'posinbar': 0,
-                'beat_strength': 0.0,
-                'tactus': False,
-                'crochet': False,
             },
             'key': {
                 'keysig': 0,
@@ -100,21 +82,37 @@ class LinearEvent(Event):
                     'value': 1,
                     'type': 'quarter',
                 },
-            },
-            'barlines': {
-                'double': False,
-                'repeat': {
-                    'exists_before': False,
-                    'direction': 'end',
-                    'is_end': False,
-                }
-
+                'barlines': {
+                    'double': False,
+                    'repeat': {
+                        'exists_before': False,
+                        'direction': 'end',
+                        'is_end': False,
+                    }
+                },
             },
             'phrase': {
                 'boundary': 0,
-                'intphrase': 0,
                 'length': 0,
-            }
+            },
+            'derived': {
+                    'seq_int': 0,
+                    'contour': 0,
+                    'contour_hd': 0,
+                    'closure': 0,
+                    'registral_direction': False,
+                    'intervallic_difference': False,
+                    'upwards': False,
+                    'downwards': False,
+                    'no_movement': False,
+                    'fib': True,
+                    'posinbar': 0,
+                    'beat_strength': 0.0,
+                    'tactus': False,
+                    'intfib': 0,
+                    'thrbar': 0,
+                    'intphrase': 0,
+            },
         }
 
         self.viewpoints = dict(list(default.items()) +

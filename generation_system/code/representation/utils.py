@@ -3,7 +3,7 @@
 This script presents utility functions for dealing with representations
 """
 
-
+import copy
 import music21
 import numpy as np
 from sklearn.feature_extraction import DictVectorizer
@@ -298,3 +298,73 @@ def has_value_viewpoint_events(events, viewpoint):
         if not view is None:
             return True
     return False
+
+def de_chordify(stream, in_place=False):
+    """
+    If part has music21.chords, interpret them as notes with same offset
+    """
+    return_obj = stream
+    if not in_place:  # make a copy
+        return_obj = copy.deepcopy(stream)
+
+    chords = return_obj.flat.getElementsByClass('Chord')
+    for c in chords:
+        measure = return_obj.getElementsByClass(
+            'Measure')[c.measureNumber-1]
+        for pitch in c.pitches:
+            measure.insert(c.offset, music21.note.Note(pitch, duration=c.duration))
+        measure.remove(c)
+    return return_obj
+
+def make_voices(stream, in_place=False, fill_gaps=True):
+    """
+    Make voices from a poliphonic stream, based on music21 
+    """
+    return_obj = stream
+    if not in_place:  # make a copy
+        return_obj = copy.deepcopy(stream)
+
+    olDict = return_obj.flat.notes.stream().getOverlaps()
+
+    maxVoiceCount = 1
+    for group in olDict.values():
+        if len(group) > maxVoiceCount:
+            maxVoiceCount = len(group)
+    if maxVoiceCount == 1:  # nothing to do here
+        if not inPlace:
+            return return_obj
+        return None
+
+    # store all voices in a list
+    voices = []
+    for dummy in range(maxVoiceCount):
+        voices.append(music21.stream.Voice(id='v'+str(dummy)))  # add voice classes
+
+    # iterate through all elements; if not in an overlap, place in
+    # voice 1, otherwise, distribute
+    for e in return_obj.recurse(classFilter='Note'):
+        o = e.getOffsetBySite(return_obj.flat)
+        # cannot match here by offset, as olDict keys are representative
+        # of the first overlapped offset, not all contained offsets
+        # if o not in olDict: # place in a first voices
+        #    voices[0].insert(o, e)
+        # find a voice to place in
+        # as elements are sorted, can use the highest time
+        # else:
+        for v in voices:
+            if v.highestTime <= o:
+                v.insert(o, e)
+                break
+        # remove from source
+        return_obj.remove(e)
+    # remove any unused voices (possible if overlap group has sus)
+    for v in voices:
+        if v:  # skip empty voices
+            if fill_gaps:
+                return_obj.makeRests(fillGaps=True, inPlace=True)
+            return_obj.insert(0, v)
+    # remove rests in return_obj
+    return_obj.removeByClass('Rest')
+    # elements changed will already have been called
+    if not in_place:
+        return return_obj
