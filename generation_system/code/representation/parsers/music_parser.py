@@ -92,20 +92,12 @@ class MusicParser:
         """
         Process a part that has overlappings
         """
-        if len(part.flat.getElementsByClass(music21.chord.Chord)) > 0:
-            utils.de_chordify(part, in_place=True)
-
-        utils.make_voices(part, in_place=True)
+        max_voice_count = utils.get_number_voices(part)
+        for measure in part.recurse(classFilter='Measure'):
+            utils.make_voices(measure, in_place=True, number_voices=max_voice_count)
+        
         part.flattenUnnecessaryVoices(inPlace=True)
-        part.voices[0].show()
-        
         new_parts = part.voicesToParts()
-        
-        #new_parts
-
-        #new_parts.show('text')
-        #print(len(new_parts.parts))
-
         for j, voice in enumerate(new_parts.parts):
             self.music_events['part_events'][i] = {}
             name = str(i) + ', voice ' + str(j)

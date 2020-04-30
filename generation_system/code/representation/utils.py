@@ -5,6 +5,7 @@ This script presents utility functions for dealing with representations
 
 import copy
 import music21
+import math
 import numpy as np
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.impute import SimpleImputer
@@ -50,7 +51,7 @@ def contour_hd(midi_viewpoint_1, midi_viewpoint_2):
     for count, ele in enumerate(values):
         if result < ele:
             return sign(result)*count
-    return int(0)    
+    return int(0)
 
 
 def get_last_x_events_that_are_notes_before_index(events, number=1, actual_index=None):
@@ -61,12 +62,12 @@ def get_last_x_events_that_are_notes_before_index(events, number=1, actual_index
         return None
     elif len(events) < number+1:
         number = len(events)-1
-        
+
     if actual_index is None:
         actual_index = len(events) - 1
 
     count = 0
-    events_to_return = []    
+    events_to_return = []
     events_process = events[:actual_index]
     for i in range(len(events_process)):
         index = len(events_process) - (i + 1)
@@ -79,7 +80,6 @@ def get_last_x_events_that_are_notes_before_index(events, number=1, actual_index
             else:
                 return events_to_return
     return None
-
 
 
 def offset_info(event, viewpoint):
@@ -107,7 +107,8 @@ def show_sequence_of_viewpoint_without_offset(events, viewpoint):
     Returns a string of a specific viewpoint for all events with no offset
     """
     to_print = 'Viewpoint ' + viewpoint + ': '
-    to_print += ''.join([(str(event.get_viewpoint(viewpoint)) + ' ') for event in events])
+    to_print += ''.join([(str(event.get_viewpoint(viewpoint)) + ' ')
+                         for event in events])
     return to_print
 
 
@@ -220,9 +221,9 @@ def normalize_weights(weights):
     """
     Normalize weight list
     """
-    if len(weights) < 1:    
+    if len(weights) < 1:
         return weights
-        
+
     if any(w < 0 for w in weights):
         weights = [float(w) + abs(min(weights)) for w in weights]
     return [float(w)/sum(weights) for w in weights]
@@ -233,8 +234,8 @@ def create_feature_array_events(events, weights=None, normalization='st1-mt0', o
     Creating Feature Array and Weights for Oracle
     """
     events_dict = [event.to_feature_dict(weights, offset) for event in events]
-    #print(events_dict[0])
-    
+    # print(events_dict[0])
+
     vec = DictVectorizer()
     features = vec.fit_transform(events_dict).toarray()
     features_names = vec.get_feature_names()
@@ -299,51 +300,68 @@ def has_value_viewpoint_events(events, viewpoint):
             return True
     return False
 
-def de_chordify(stream, in_place=False):
+def is_power (x, y): 
     """
-    If part has music21.chords, interpret them as notes with same offset
+    Check if number is power of another
     """
-    return_obj = stream
-    if not in_place:  # make a copy
-        return_obj = copy.deepcopy(stream)
+      
+    # The only power of 1 
+    # is 1 itself 
+    if (x == 1): 
+        return (y == 1) 
+          
+    # Repeatedly compute 
+    # power of x 
+    _pow = 1
+    while (_pow < y): 
+        _pow = _pow * x 
+  
+    # Check if power of x 
+    # becomes y 
+    return (_pow == y) 
 
-    chords = return_obj.flat.getElementsByClass('Chord')
-    for c in chords:
-        measure = return_obj.getElementsByClass(
-            'Measure')[c.measureNumber-1]
-        for pitch in c.pitches:
-            measure.insert(c.offset, music21.note.Note(pitch, duration=c.duration))
-        measure.remove(c)
-    return return_obj
-
-def make_voices(stream, in_place=False, fill_gaps=True):
+def get_number_voices(stream):
+        max_voice_count = 1
+        # To deal with separation of chords
+        chords = stream.recurse(classFilter='Chord')
+        cardinalities = [len(chord.pitches) for chord in chords]
+        for card in cardinalities:
+            if card > max_voice_count:
+                max_voice_count = card
+        olDict = stream.recurse(classFilter='Note').getOverlaps()
+        for group in olDict.values():
+            if len(group) > max_voice_count:
+                max_voice_count = len(group)
+        return max_voice_count
+        
+def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None):
     """
     Make voices from a poliphonic stream, based on music21 
-    """
+    """    
     return_obj = stream
     if not in_place:  # make a copy
         return_obj = copy.deepcopy(stream)
 
-    olDict = return_obj.flat.notes.stream().getOverlaps()
-
-    maxVoiceCount = 1
-    for group in olDict.values():
-        if len(group) > maxVoiceCount:
-            maxVoiceCount = len(group)
-    if maxVoiceCount == 1:  # nothing to do here
-        if not inPlace:
+    max_voice_count = get_number_voices(return_obj)
+    if number_voices is not None:
+        max_voice_count = max(number_voices, max_voice_count)
+    
+    if max_voice_count == 1:  # nothing to do here
+        if not in_place:
             return return_obj
         return None
 
     # store all voices in a list
     voices = []
-    for dummy in range(maxVoiceCount):
-        voices.append(music21.stream.Voice(id='v'+str(dummy)))  # add voice classes
+    for dummy in range(max_voice_count):
+        # add voice classes
+        voices.append(music21.stream.Voice(id=dummy))
 
     # iterate through all elements; if not in an overlap, place in
     # voice 1, otherwise, distribute
-    for e in return_obj.recurse(classFilter='Note'):
+    for e in return_obj.recurse():
         o = e.getOffsetBySite(return_obj.flat)
+
         # cannot match here by offset, as olDict keys are representative
         # of the first overlapped offset, not all contained offsets
         # if o not in olDict: # place in a first voices
@@ -351,20 +369,47 @@ def make_voices(stream, in_place=False, fill_gaps=True):
         # find a voice to place in
         # as elements are sorted, can use the highest time
         # else:
-        for v in voices:
-            if v.highestTime <= o:
+        if type(e) is music21.chord.Chord:            
+            notes_to_insert = [music21.note.Note(pitch, duration=e.duration) for pitch in e.pitches]
+            if notes_to_insert is not None:
+                notes_to_insert.reverse()
+
+            for i, note in enumerate(notes_to_insert):
+                if len(notes_to_insert) == max_voice_count:
+                    voices[i].insert(o, note)
+                else:
+                    # distribute notes by voices, higher ones have always less examples
+                    limits = [(n*max_voice_count - len(notes_to_insert))/len(notes_to_insert) for n in range(max_voice_count)]
+                    powered_values = is_power(len(notes_to_insert), max_voice_count)
+
+                    start_voice = 0
+                    if i > 0:
+                        start_voice = math.ceil(limits[i])
+                        if powered_values:
+                            start_voice += 1
+
+                    end_voice = max_voice_count
+                    if i < len(notes_to_insert) -1:
+                        end_voice = math.floor(limits[i+1])
+                        if powered_values:
+                            end_voice += 1
+                    
+                    for v in range(start_voice, end_voice):
+                        voices[v].insert(o, note)
+        else:
+            for v in voices: 
                 v.insert(o, e)
-                break
+                
         # remove from source
         return_obj.remove(e)
+
     # remove any unused voices (possible if overlap group has sus)
     for v in voices:
         if v:  # skip empty voices
             if fill_gaps:
-                return_obj.makeRests(fillGaps=True, inPlace=True)
+                v.makeRests(fillGaps=True, inPlace=True)
             return_obj.insert(0, v)
-    # remove rests in return_obj
-    return_obj.removeByClass('Rest')
+
     # elements changed will already have been called
     if not in_place:
         return return_obj

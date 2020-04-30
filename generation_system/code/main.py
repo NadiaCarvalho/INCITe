@@ -39,7 +39,7 @@ def main():
     #                 music_parser.to_json(name, ['data', 'database', 'parsed', 'bach'])
     #                 music[name] = music_parser
     # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl' #'to.mxl' #'bwv67.4.mxl' #'complexcompass.mxl'
-    name = 'complexcompass2.mxl'
+    name = 'Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca.mxl'
     parser = MusicParser(name)
     parser.parse(vertical=True)
 
