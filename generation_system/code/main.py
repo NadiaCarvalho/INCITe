@@ -43,10 +43,10 @@ def main():
     parser = MusicParser(name)
     parser.parse(vertical=True)
 
-    #parser.show_events(events='one part', part_number=0, viewpoints=[
-                      # 'phrase.boundary'])
+    #parser.show_events(events='one part', part_number=0, viewpoints=['phrase.boundary'])
 
-    # parser.to_json('complexcompass')
+    parser.to_json('Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca')
+    parser.to_pickle('Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca')
 
     # new_parser = MusicParser()
     # new_parser.from_json('complexcompass')

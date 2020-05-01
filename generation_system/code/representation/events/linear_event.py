@@ -50,6 +50,10 @@ class LinearEvent(Event):
                     'type': 'no tie',
                     'style': 'normal',
                 },
+                'slur': {
+                    'begin': False,
+                    'end': False,
+                },
             },
             'pitch': {
                 'cpitch': 60.0,

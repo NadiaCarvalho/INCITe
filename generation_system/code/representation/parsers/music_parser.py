@@ -99,9 +99,9 @@ class MusicParser:
         part.flattenUnnecessaryVoices(inPlace=True)
         new_parts = part.voicesToParts()
         for j, voice in enumerate(new_parts.parts):
-            self.music_events['part_events'][i] = {}
+            index = str(i) + '.' + str(j)
             name = str(i) + ', voice ' + str(j)
-            self.music_events['part_events'][i][j] = self.parse_sequence_part(
+            self.music_events['part_events'][index] = self.parse_sequence_part(
                 voice, name=name, first=(False, True)[i == 0])
 
     def show_events(self, events='all parts', part_number=0, parts=[], viewpoints='all', offset=False):
@@ -187,12 +187,13 @@ class MusicParser:
                 dict(event) for event in self.music_events['vertical_events']]
         }
 
-        for num, part in self.music_events['part_events'].items():
-            to_dump['part_events'][num] = [dict(event) for event in part]
+        for key, part in self.music_events['part_events'].items():
+            to_dump['part_events'][key] = [dict(event) for event in part]
 
         with open(file_path + '.json', 'w') as handle:
             json.dump(to_dump, handle, indent=indent)
             handle.close()
+        print('Dumped to json')
 
     def from_json(self, filename, folders=['data', 'myexamples']):
         """
@@ -227,6 +228,7 @@ class MusicParser:
             pickle.dump(self.music_events, handle,
                         protocol=pickle.HIGHEST_PROTOCOL)
             handle.close()
+        print('Dumped to pickle')
 
     def from_pickle(self, filename, folders=['data', 'myexamples']):
         """

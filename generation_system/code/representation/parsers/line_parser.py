@@ -57,7 +57,7 @@ class LineParser:
         Returns the events from a line with viewpoints
         """
         self.note_and_rests_parsing()
-        self.intfib_grace_notes_parsing()
+        # self.intfib_grace_notes_parsing()
         self.dynamics_parsing()
         self.key_signatures_parsing()
         self.time_signatures_parsing()
@@ -74,6 +74,7 @@ class LineParser:
         """
         Parses the note/rest events
         """
+        print('Parse Notes')
         # Get Notes and Rests only
         stream_notes_rests = self.music_to_parse.flat.notesAndRests.stream()
 
@@ -94,8 +95,10 @@ class LineParser:
             # Duration Parsing
             self.duration_info_parsing(i, note_or_rest)
 
-            # Expression Parsing
+            # Expression and Spanners Parsing
             self.expression_parsing(i, note_or_rest.expressions)
+            self.spanner_parsing(
+                i, note_or_rest, note_or_rest.getSpannerSites())
 
             # If note is not a rest, parse pitch information
             if not note_or_rest.isRest:
@@ -109,6 +112,7 @@ class LineParser:
         """
         Parses the basic info for a note (not rest) event
         """
+        print('Parse Note Basic')
         self.events[index].add_viewpoint(
             'cpitch', note_or_rest.pitch.ps)
         self.events[index].add_viewpoint('dnote', note_or_rest.step)
@@ -153,6 +157,7 @@ class LineParser:
         """
         Parses the duration info for an event
         """
+        print('Parse Duration')
         self.events[index].add_viewpoint(
             'length', note_or_rest.duration.quarterLength, 'duration')
         self.events[index].add_viewpoint(
@@ -164,6 +169,7 @@ class LineParser:
         """
         Parses the contours for an event
         """
+        print('Parse Contours')
         # get index of last event that is a note and not a rest
         last_note_index = utils.get_last_x_events_that_are_notes_before_index(
             self.events)
@@ -209,17 +215,17 @@ class LineParser:
                 self.events[index].add_viewpoint('no_movement', True)
             else:
                 score += 1
-            
+
             if abs(seq_ints[-1]) < abs(seq_ints[-2])-2:
                 score += 1
             self.events[index].add_viewpoint(
-                    'closure', score)
-
+                'closure', score)
 
     def expression_parsing(self, index, expressions):
         """
         Parses the existence of a fermata in an event
         """
+        print('Parse Expression')
         for expression in expressions:
             if type(expression) is music21.expressions.Fermata:
                 self.events[index].add_viewpoint('fermata', True)
@@ -244,6 +250,18 @@ class LineParser:
                     'ornamentation', 'appogiatura_' + expression.name)
             else:
                 self.events[index].add_viewpoint('expression', expression)
+
+    def spanner_parsing(self, index, note_or_rest, spanners):
+        """
+        Parses the existence of a fermata in an event
+        """
+        print('Parse spanners (slurs, cresc/etc)')
+        for span in spanners:
+            if 'Slur' in span.classes:
+                self.events[index].add_viewpoint(
+                    'slur.begin', span.isFirst(note_or_rest))
+                self.events[index].add_viewpoint(
+                    'slur.end', span.isLast(note_or_rest))
 
     def get_first_fib_before_fib(self, offset):
         """
@@ -303,7 +321,7 @@ class LineParser:
         and melodic sequences with other elements of a measure
         for an event
         """
-
+        print('Parse Measure')
         key_anal = self.measure_keys[note_or_rest.measureNumber - 1]
         self.events[index].add_viewpoint(
             'key', str(key_anal), 'measure')
@@ -314,15 +332,17 @@ class LineParser:
                 'scale_degree', sc_deg, 'measure')
 
         if not note_or_rest.duration.isGrace:
-            components = note_or_rest.beatStr.split(' ')
-            posinbar =  note_or_rest.beat - 1
-            self.events[index].add_viewpoint('posinbar', posinbar)
-            self.events[index].add_viewpoint(
-                'beat_strength', note_or_rest.beatStrength)
-
-            if posinbar == 0 or posinbar % 1 == 0:
+            try:
+                posinbar = note_or_rest.beat - 1
+                self.events[index].add_viewpoint('posinbar', posinbar)
                 self.events[index].add_viewpoint(
-                    'tactus', True)
+                    'beat_strength', note_or_rest.beatStrength)
+
+                if posinbar == 0 or posinbar % 1 == 0:
+                    self.events[index].add_viewpoint(
+                        'tactus', True)
+            except music21.Music21Exception:
+                print(' this object does not have a TimeSignature in Sites')
 
         if note_or_rest.offset in self.measure_offsets and not note_or_rest.duration.isGrace:
             self.parsing_fib_element(index, note_or_rest)
@@ -333,6 +353,7 @@ class LineParser:
         """
         Parses the existent dynamics information
         """
+        print('Parse Dynamics')
         dynamics = list(self.music_to_parse.flat.getElementsByClass(
             music21.dynamics.Dynamic))
         for i, dynamic in enumerate(dynamics):
@@ -346,6 +367,7 @@ class LineParser:
         Parses the intfib information for fib grace_notes, as they are
         not really the fib even if they are the first element in a bar
         """
+        print('Parse Grace')
         for grace_note in utils.get_grace_notes(self.events):
             fib_midi = self.events[self.events.index(
                 grace_note) + 1].get_viewpoint('cpitch')
@@ -356,6 +378,7 @@ class LineParser:
         """
         Parses the existent key signatures information
         """
+        print('Parse Keys')
         keys = list(self.music_to_parse.flat.getElementsByClass(
             music21.key.KeySignature))
 
@@ -378,6 +401,7 @@ class LineParser:
         """
         Parses the existent key signatures information
         """
+        print('Parse Time Sig')
         time_sigs = list(self.music_to_parse.flat.getElementsByClass(
             music21.meter.TimeSignature))
         for i, sig in enumerate(time_sigs):
@@ -426,12 +450,14 @@ class LineParser:
         """
         Parses the existent Metronome Markings
         """
+        print('Parse Metro')
         self.metronome_marks_parsing()
 
     def double_barline_parsing(self):
         """
         Parses the existent double barlines (because they can be important if delimiting phrases)
         """
+        print('Parse Barline')
         for d_bar_off in [barline.offset for barline in self.music_to_parse.flat.getElementsByClass(
                 music21.bar.Barline) if barline.type == 'double']:
             utils.get_events_at_offset(self.events, d_bar_off)[
@@ -442,6 +468,7 @@ class LineParser:
         Parses the existent repeat barlines (because they can be important if delimiting phrases)
         and the direction for repeating
         """
+        print('Parse Repeat')
         for repeat in self.music_to_parse.flat.getElementsByClass(music21.bar.Repeat):
             events_repeats = utils.get_events_at_offset(
                 self.events, repeat.offset)
@@ -458,6 +485,7 @@ class LineParser:
     def segmentation_info(self):
         """
         """
+        print('Parse Segmentation')
         boundary_indexes = [
             i for i, event in enumerate(self.events) if event.get_viewpoint('pharse.boundary') == 1]
 
