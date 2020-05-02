@@ -31,6 +31,7 @@ class LinearEvent(Event):
                 'length': 1,
                 'type': 'quarter',
                 'dots': 0,
+                'slash': False,
             },
             'expressions': {
                 'articulation': [],
@@ -79,6 +80,7 @@ class LinearEvent(Event):
                 'pulses': 4,
                 'barlength': 4,
                 'metro': {
+                    'text': None,
                     'value': None,
                     'sound': 100,
                 },

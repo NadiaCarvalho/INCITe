@@ -45,18 +45,22 @@ class MusicParser:
             self.music = music21.converter.parse(file_path)
             self.music_parts = self.music.parts
 
-    def parse(self, parts=True, vertical=True):
+    def parse(self, parts=True, vertical=True, number_parts=None):
         """
         Parse music
         """
         if parts:
-            self.music_parts = self.music.voicesToParts()
-            self.music_parts.flattenUnnecessaryVoices(inPlace=True)
+            self.music_parts = self.music.parts
 
-            for i, part in enumerate(self.music_parts):
+            if number_parts is None or number_parts > len(self.music_parts):
+                number_parts = len(self.music_parts)
+
+            for i in range(number_parts):
+                part = self.music_parts[i]
                 if part.isSequence() and len(list(part.flat.getElementsByClass(music21.chord.Chord))) == 0:
                     self.music_events['part_events'][i] = self.parse_sequence_part(
                         part, name=str(i), first=(False, True)[i == 0])
+                    part.show()
                 else:
                     self.process_voiced_part(part, i)
 
@@ -93,8 +97,12 @@ class MusicParser:
         Process a part that has overlappings
         """
         max_voice_count = utils.get_number_voices(part)
-        for measure in part.recurse(classFilter='Measure'):
-            utils.make_voices(measure, in_place=True, number_voices=max_voice_count)
+        for measure in list(part.recurse(classFilter='Measure')):
+            measure.flattenUnnecessaryVoices(inPlace=True)
+            if measure.hasVoices():
+                utils.process_voiced_measure(measure, max_voice_count)
+            else:
+                utils.make_voices(measure, in_place=True, number_voices=max_voice_count)
         
         part.flattenUnnecessaryVoices(inPlace=True)
         new_parts = part.voicesToParts()

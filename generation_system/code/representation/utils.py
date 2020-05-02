@@ -334,7 +334,7 @@ def get_number_voices(stream):
                 max_voice_count = len(group)
         return max_voice_count
         
-def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None):
+def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None, dist_name=0):
     """
     Make voices from a poliphonic stream, based on music21 
     """    
@@ -355,7 +355,7 @@ def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None):
     voices = []
     for dummy in range(max_voice_count):
         # add voice classes
-        voices.append(music21.stream.Voice(id=dummy))
+        voices.append(music21.stream.Voice(id=(dummy + dist_name)))
 
     # iterate through all elements; if not in an overlap, place in
     # voice 1, otherwise, distribute
@@ -413,3 +413,18 @@ def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None):
     # elements changed will already have been called
     if not in_place:
         return return_obj
+
+def process_voiced_measure(measure, max_voice_count):
+    """
+    """
+    new_voices = []
+    old_measure = copy.deepcopy(measure)
+    measure.removeByClass(classFilterList='Voice')
+
+    for voice in  old_measure.voices:
+        new = make_voices(voice, in_place=False, number_voices=int(max_voice_count/len(old_measure.voices)), dist_name=len(new_voices))
+        for v in new.voices:
+            new_voices.append(v)
+
+    for v in new_voices:
+        measure.insert(0, v)

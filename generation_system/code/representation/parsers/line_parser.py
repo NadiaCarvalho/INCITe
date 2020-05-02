@@ -128,7 +128,7 @@ class LineParser:
             'pitch_class', note_or_rest.pitch.pitchClass)
 
         self.events[index].add_viewpoint(
-            'type', note_or_rest.notehead, 'notehead')
+            'notehead.type', note_or_rest.notehead)
 
         if note_or_rest.noteheadFill is not None:
             self.events[index].add_viewpoint(
@@ -161,9 +161,15 @@ class LineParser:
         self.events[index].add_viewpoint(
             'length', note_or_rest.duration.quarterLength, 'duration')
         self.events[index].add_viewpoint(
-            'type', note_or_rest.duration.type, 'duration')
+            'duration.type', note_or_rest.duration.type)
         self.events[index].add_viewpoint(
             'dots', note_or_rest.duration.dots, 'duration')
+
+        if note_or_rest.duration.isGrace:
+            self.events[index].add_viewpoint(
+                'duration.type', note_or_rest.duration.components[0].type)
+            self.events[index].add_viewpoint(
+                'duration.slash', note_or_rest.duration.slash)
 
     def contours_parsing(self, index):
         """
@@ -342,7 +348,7 @@ class LineParser:
                     self.events[index].add_viewpoint(
                         'tactus', True)
             except music21.Music21Exception:
-                print(' this object does not have a TimeSignature in Sites')
+                print('this object does not have a TimeSignature in Sites')
 
         if note_or_rest.offset in self.measure_offsets and not note_or_rest.duration.isGrace:
             self.parsing_fib_element(index, note_or_rest)
@@ -413,7 +419,7 @@ class LineParser:
                 event.add_viewpoint(
                     'pulses', sig.numerator)
                 event.add_viewpoint(
-                    'timesig', sig.denominator)
+                    'barlength', sig.denominator)
 
     def metronome_marks_parsing(self, part=None, events=None):
         """
@@ -431,6 +437,9 @@ class LineParser:
             offset = (None if i == (len(metro_marks)-1)
                       else metro_marks[i+1].offset)
             for event in utils.get_evs_bet_offs_inc(events, metro.offset, offset):
+                event.add_viewpoint(
+                    'text', metro.text, 'metro')
+
                 event.add_viewpoint(
                     'value', metro.number, 'metro')
 
@@ -490,9 +499,7 @@ class LineParser:
             i for i, event in enumerate(self.events) if event.get_viewpoint('pharse.boundary') == 1]
 
         for k, event in enumerate(self.events):
-            if k == 0:
-                event.add_viewpoint('phrase.lphrase', boundary_indexes[0])
-            else:
+            if k != 0:
                 index = boundary_indexes.index(
                     min(boundary_indexes, key=lambda x: abs(x - k)))
                 last_index = (
@@ -509,6 +516,6 @@ class LineParser:
                     if last_index < len(boundary_indexes)-2:
                         length = boundary_indexes[last_index+2] - k
 
-                event.add_viewpoint('phrase.intphrase',  utils.seq_int(
-                    event.get_viewpoint('pitch.value'), self.events[last_index].get_viewpoint('pitch.value')))
-                event.add_viewpoint('phrase.lphrase', length)
+                event.add_viewpoint('intphrase',  utils.seq_int(
+                    event.get_viewpoint('pitch.cpitch'), self.events[last_index].get_viewpoint('pitch.cpitch')))
+                event.add_viewpoint('phrase.length', length)

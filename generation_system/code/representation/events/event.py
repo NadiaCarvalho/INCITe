@@ -62,7 +62,7 @@ class Event:
             new_name = splitted[1]
             new_category = splitted[0]
 
-        view_cat = self.get_view_aux(new_name, info, new_category, add=True)
+        view_cat = self.get_view_aux(new_name, new_category, info, add=True)
         if view_cat is not None:
             utils._add_viewpoint(view_cat, new_name, info)
 

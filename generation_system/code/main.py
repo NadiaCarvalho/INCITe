@@ -14,7 +14,7 @@ import representation.utils as rep_utils
 from representation.events.linear_event import LinearEvent
 
 from representation.parsers.music_parser import MusicParser
-from representation.parsers.score_conversor import ScoreConversor
+from representation.conversor.score_conversor import ScoreConversor
 
 import os
 
@@ -39,19 +39,25 @@ def main():
     #                 music_parser.to_json(name, ['data', 'database', 'parsed', 'bach'])
     #                 music[name] = music_parser
     # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl' #'to.mxl' #'bwv67.4.mxl' #'complexcompass.mxl'
-    name = 'Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca.mxl'
-    parser = MusicParser(name)
-    parser.parse(vertical=True)
+    # name = 'Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca.mxl'
+    # parser = MusicParser(name)
+    # parser.parse(vertical=False, number_parts=1)
 
-    #parser.show_events(events='one part', part_number=0, viewpoints=['phrase.boundary'])
+    # parser.show_events(events='one part', part_number="0.1", viewpoints=['duration.type'])
 
-    parser.to_json('Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca')
-    parser.to_pickle('Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca')
+    # #parser.to_json('Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca')
+    # parser.to_pickle('Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca')
 
-    # new_parser = MusicParser()
-    # new_parser.from_json('complexcompass')
-    # new_parser.show_events(events='one part', part_number=0, viewpoints=[
+    new_parser = MusicParser()
+    new_parser.from_pickle('Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca')
+    print(list(new_parser.get_part_events()))
+
+    # new_parser.show_events(events='one part', part_number="0.4", viewpoints=[
     #                    'posinbar', 'beat_strength', 'articulation'])
+
+    score = ScoreConversor()
+    score.parse_events(new_parser.get_part_events()['0.1'], True)
+    score.stream.show()
 
     # weights = {
     #     'pitch': 5,
