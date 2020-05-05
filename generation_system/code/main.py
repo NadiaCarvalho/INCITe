@@ -18,46 +18,24 @@ from representation.conversor.score_conversor import ScoreConversor
 
 import os
 
+# 'MicrotonsExample.mxl' 
+# 'VoiceExample.mxl' 
+# 'bwv1.6.2.mxl' 
+# 'to.mxl' 
+# 'bwv67.4.mxl' 
+# 'complexcompass.mxl'
 
 def main():
     """
     Main function for extracting the viewpoints for examples
     """
-
-    # music = {}
-    # folder = r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\music21\bach'
-    # if os.path.isdir(folder):
-    #     for _, _, files in os.walk(folder):
-    #         for filename in files:
-    #             if '.mxl' in filename:
-    #                 #print(filename)
-    #                 music_parser = MusicParser(filename, ['data', 'database', 'music21', 'bach'])
-    #                 music_parser.parse()
-
-    #                 name = '.'.join(filename.split('.')[:-1])
-    #                 music_parser.to_pickle(name, ['data', 'database', 'parsed', 'bach'])
-    #                 music_parser.to_json(name, ['data', 'database', 'parsed', 'bach'])
-    #                 music[name] = music_parser
-    # # 'MicrotonsExample.mxl' #'VoiceExample.mxl' #'bwv1.6.2.mxl' #'to.mxl' #'bwv67.4.mxl' #'complexcompass.mxl'
-    name = 'Fugue1.mid'
-    parser = MusicParser(name)
+    # name = 'VoiceExample.mxl'
+    # parser = MusicParser(name)
     # parser.parse(vertical=True)
+    # parser.to_pickle(name[:-4])
 
-    # # # # parser.show_events(events='one part', part_number="0.1", viewpoints=['duration.type'])
-
-    # parser.to_json('fugue1_mid')
-    # parser.to_pickle('fugue1_mid')
-
-    # new_parser = MusicParser()
-    # new_parser.from_pickle('fugue1_mxl')
-    #print(list(new_parser.get_part_events()))
-
-    # new_parser.show_events(events='one part', part_number="0.4", viewpoints=[
-    #                    'posinbar', 'beat_strength', 'articulation'])
-
-    # score = ScoreConversor()
-    # score.parse_events(new_parser.get_part_events()['0.1'], True)
-    # score.stream.show()
+    new_parser = MusicParser()
+    new_parser.from_pickle('fugue1_mxl')
 
     weights = {
         'cpitch': 5,
@@ -77,14 +55,12 @@ def main():
         #'fermata': 0.5,
         'phrase.boundary': 0.5,
     }
-    # events = new_parser.get_part_events()['0.0']
+    sequenced_events_0 = oracle_and_generator(
+        new_parser.get_part_events()['0.0'][:20], 20, weights)
 
-    # sequenced_events_0 = oracle_and_generator(
-    #     events, 20, weights)
-
-    # score = ScoreConversor()
-    # score.parse_events(sequenced_events_0, True)
-    # score.stream.show()
+    score = ScoreConversor()
+    score.parse_events(sequenced_events_0, True)
+    score.stream.show()
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):
     norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
@@ -102,9 +78,55 @@ def oracle_and_generator(events, seq_len, weights=None, dim=-1):
     sequence, end, k_trace = gen.generate(
         oracle, seq_len=seq_len, p=0.125, k=1, LRS=5)
 
-    # 
     return [LinearEvent(from_list=o_features[state], features=features_names) for state in sequence]
 
+def parsing_music_folder(folder, json=False, pickle=True):
+    """
+    Parsing a music folder to json/pickle format and return parsed music
+    """
+    music = {}
+    if os.path.isdir(folder):
+        for root, _, files in os.walk(folder):
+            dirs_to_save = root.split(os.sep)[-4:]
+            dirs_to_save[2] = 'parsed'
+
+            for filename in files:
+                if '.mxl' in filename:
+                    music_parser = MusicParser(filename, root.split(os.sep)[-4:])
+                    music_parser.parse()
+                    
+                    name = '.'.join(filename.split('.')[:-1])
+                    music[name] = music_parser
+
+                    if json:
+                        music_parser.to_json(name, dirs_to_save)
+                    if pickle:   
+                        music_parser.to_pickle(name, dirs_to_save)
+                    
+    return music
+
+def recover_parsed_folder(folder, pickle=True):
+    """
+    Recover parsed music in folder
+    If pickle == True: recover '.pbz2' files (default)
+    If pickle == False: recover '.json' files (default)
+    """
+    music = {}
+    if os.path.isdir(folder):
+        for root, _, files in os.walk(folder):
+            for filename in files:
+                name = '.'.join(filename.split('.')[:-1])
+                if pickle and '.pbz2' in filename:
+                    music_parser = MusicParser()
+                    music_parser.from_pickle(name, root.split(os.sep)[-4:])
+                    music[name] = music_parser
+                elif '.json' in filename:
+                    music_parser = MusicParser()
+                    music_parser.from_json(name, root.split(os.sep)[-4:])
+                    music[name] = music_parser
+    return music
 
 if __name__ == "__main__":
     main()
+    #parsing_music_folder(r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\music21\bach')
+    #recover_parsed_folder(r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\parsed\bach')

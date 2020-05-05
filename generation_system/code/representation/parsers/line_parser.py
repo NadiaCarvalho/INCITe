@@ -39,6 +39,8 @@ class LineParser:
         """
         self.music_to_parse = music_to_parse
 
+        print(music_to_parse.metadata)
+
         part_name_voice = utils.part_name_parser(music_to_parse)
         self.part_name = part_name_voice[0]
         self.voice = part_name_voice[1]
@@ -334,7 +336,7 @@ class LineParser:
         for an event
         """
         #print('Parse Measure')
-        
+
         key_anal = self.measure_keys[note_or_rest.measureNumber - 1]
         self.events[index].add_viewpoint(
             'key', str(key_anal), 'measure')

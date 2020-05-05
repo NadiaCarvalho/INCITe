@@ -43,12 +43,11 @@ class MusicParser:
                 file_path = os.sep.join(['..', file_path])
 
             self.music = music21.converter.parse(file_path)
-        
+
             if filename.endswith('.mid'):
                 for part in self.music.parts:
-                    #music21.stream.makeNotation.makeMeasures(part, inPlace=True)
-                    part.show()
-
+                    music21.stream.makeNotation.makeMeasures(
+                        part, inPlace=True)
 
     def parse(self, parts=True, vertical=True, number_parts=None):
         """
@@ -107,8 +106,9 @@ class MusicParser:
             if measure.hasVoices():
                 utils.process_voiced_measure(measure, max_voice_count)
             else:
-                utils.make_voices(measure, in_place=True, number_voices=max_voice_count)
-        
+                utils.make_voices(measure, in_place=True,
+                                  number_voices=max_voice_count)
+
         part.flattenUnnecessaryVoices(inPlace=True)
         new_parts = part.voicesToParts()
         for j, voice in enumerate(new_parts.parts):
