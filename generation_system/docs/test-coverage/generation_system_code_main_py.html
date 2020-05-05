@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=emulateIE7" />
@@ -13,87 +14,116 @@
         jQuery(document).ready(coverage.pyfile_ready);
     </script>
 </head>
+
 <body class="pyfile">
-<div id="header">
-    <div class="content">
-        <h1>Coverage for <b>generation_system\code\main.py</b> :
-            <span class="pc_cov">0%</span>
-        </h1>
-        <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
-        <h2 class="stats">
-            13 statements &nbsp;
-            <span class="run shortkey_r button_toggle_run">0 run</span>
-            <span class="mis show_mis shortkey_m button_toggle_mis">13 missing</span>
-            <span class="exc show_exc shortkey_x button_toggle_exc">0 excluded</span>
-        </h2>
+    <div id="header">
+        <div class="content">
+            <h1>Coverage for <b>generation_system\code\main.py</b> :
+                <span class="pc_cov">0%</span>
+            </h1>
+            <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
+            <h2 class="stats">
+                13 statements &nbsp;
+                <span class="run shortkey_r button_toggle_run">0 run</span>
+                <span class="mis show_mis shortkey_m button_toggle_mis">13 missing</span>
+                <span class="exc show_exc shortkey_x button_toggle_exc">0 excluded</span>
+            </h2>
+        </div>
     </div>
-</div>
-<div class="help_panel">
-    <img id="panel_icon" src="keybd_open.png" alt="Hide keyboard shortcuts" />
-    <p class="legend">Hot-keys on this page</p>
-    <div>
-    <p class="keyhelp">
-        <span class="key">r</span>
-        <span class="key">m</span>
-        <span class="key">x</span>
-        <span class="key">p</span> &nbsp; toggle line displays
-    </p>
-    <p class="keyhelp">
-        <span class="key">j</span>
-        <span class="key">k</span> &nbsp; next/prev highlighted chunk
-    </p>
-    <p class="keyhelp">
-        <span class="key">0</span> &nbsp; (zero) top of page
-    </p>
-    <p class="keyhelp">
-        <span class="key">1</span> &nbsp; (one) first highlighted chunk
-    </p>
+    <div class="help_panel">
+        <img id="panel_icon" src="keybd_open.png" alt="Hide keyboard shortcuts" />
+        <p class="legend">Hot-keys on this page</p>
+        <div>
+            <p class="keyhelp">
+                <span class="key">r</span>
+                <span class="key">m</span>
+                <span class="key">x</span>
+                <span class="key">p</span> &nbsp; toggle line displays
+            </p>
+            <p class="keyhelp">
+                <span class="key">j</span>
+                <span class="key">k</span> &nbsp; next/prev highlighted chunk
+            </p>
+            <p class="keyhelp">
+                <span class="key">0</span> &nbsp; (zero) top of page
+            </p>
+            <p class="keyhelp">
+                <span class="key">1</span> &nbsp; (one) first highlighted chunk
+            </p>
+        </div>
     </div>
-</div>
-<div id="source">
-    <p id="t1" class="pln"><span class="n"><a href="#t1">1</a></span><span class="t"><span class="com">#!/usr/bin/env python3.7</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t2" class="mis show_mis"><span class="n"><a href="#t2">2</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t3" class="pln"><span class="n"><a href="#t3">3</a></span><span class="t"><span class="str">This script is the main script of the generation system</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t4" class="pln"><span class="n"><a href="#t4">4</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t5" class="pln"><span class="n"><a href="#t5">5</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p id="t6" class="mis show_mis"><span class="n"><a href="#t6">6</a></span><span class="t"><span class="key">import</span> <span class="nam">os</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t7" class="pln"><span class="n"><a href="#t7">7</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p id="t8" class="mis show_mis"><span class="n"><a href="#t8">8</a></span><span class="t"><span class="key">from</span> <span class="nam">music21</span> <span class="key">import</span> <span class="nam">converter</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t9" class="pln"><span class="n"><a href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p id="t10" class="mis show_mis"><span class="n"><a href="#t10">10</a></span><span class="t"><span class="key">import</span> <span class="nam">representation</span><span class="op">.</span><span class="nam">utils</span> <span class="key">as</span> <span class="nam">utils</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t11" class="mis show_mis"><span class="n"><a href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="nam">representation</span><span class="op">.</span><span class="nam">parser</span> <span class="key">import</span> <span class="nam">LineParser</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t12" class="pln"><span class="n"><a href="#t12">12</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p id="t13" class="mis show_mis"><span class="n"><a href="#t13">13</a></span><span class="t"><span class="key">if</span> <span class="nam">__name__</span> <span class="op">==</span> <span class="str">"__main__"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t14" class="mis show_mis"><span class="n"><a href="#t14">14</a></span><span class="t">    <span class="nam">FILE_PATH</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">sep</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="op">[</span><span class="str">'data'</span><span class="op">,</span> <span class="str">'myexamples'</span><span class="op">,</span> <span class="str">'bwv1.6.mxl'</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t15" class="mis show_mis"><span class="n"><a href="#t15">15</a></span><span class="t">    <span class="key">if</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">realpath</span><span class="op">(</span><span class="str">'.'</span><span class="op">)</span><span class="op">.</span><span class="nam">find</span><span class="op">(</span><span class="str">'code'</span><span class="op">)</span> <span class="op">!=</span> <span class="op">-</span><span class="num">1</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t16" class="mis show_mis"><span class="n"><a href="#t16">16</a></span><span class="t">        <span class="nam">FILE_PATH</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="str">'code'</span><span class="op">,</span> <span class="str">''</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t17" class="mis show_mis"><span class="n"><a href="#t17">17</a></span><span class="t">        <span class="nam">FILE_PATH</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">sep</span><span class="op">.</span><span class="nam">join</span><span class="op">(</span><span class="op">[</span><span class="str">'..'</span><span class="op">,</span> <span class="nam">FILE_PATH</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t18" class="pln"><span class="n"><a href="#t18">18</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p id="t19" class="mis show_mis"><span class="n"><a href="#t19">19</a></span><span class="t">    <span class="nam">EXAMPLE</span> <span class="op">=</span> <span class="nam">converter</span><span class="op">.</span><span class="nam">parse</span><span class="op">(</span><span class="nam">FILE_PATH</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t20" class="pln"><span class="n"><a href="#t20">20</a></span><span class="t">    <span class="com"># example.flat.show('text')</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t21" class="mis show_mis"><span class="n"><a href="#t21">21</a></span><span class="t">    <span class="nam">EVENTS</span> <span class="op">=</span> <span class="nam">LineParser</span><span class="op">(</span><span class="nam">EXAMPLE</span><span class="op">.</span><span class="nam">parts</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">)</span><span class="op">.</span><span class="nam">parse_line</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t22" class="pln"><span class="n"><a href="#t22">22</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p id="t23" class="mis show_mis"><span class="n"><a href="#t23">23</a></span><span class="t">    <span class="nam">print</span><span class="op">(</span><span class="nam">utils</span><span class="op">.</span><span class="nam">show_sequence_of_viewpoint_without_offset</span><span class="op">(</span><span class="nam">EVENTS</span><span class="op">,</span> <span class="str">'intfib'</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t24" class="pln"><span class="n"><a href="#t24">24</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p id="t25" class="pln"><span class="n"><a href="#t25">25</a></span><span class="t">    <span class="com">#ka = analysis.floatingKey.KeyAnalyzer(to_parse)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t26" class="pln"><span class="n"><a href="#t26">26</a></span><span class="t">    <span class="com"># ka.windowSize = 8 # int(len(self.measure_offsets)/100)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t27" class="pln"><span class="n"><a href="#t27">27</a></span><span class="t">    <span class="com"># print(ka.run())</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t28" class="pln"><span class="n"><a href="#t28">28</a></span><span class="t">    <span class="com">#k = to_parse.analyze('key')</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t29" class="pln"><span class="n"><a href="#t29">29</a></span><span class="t">    <span class="com"># print(k.tonalCertainty())</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t30" class="pln"><span class="n"><a href="#t30">30</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p id="t31" class="pln"><span class="n"><a href="#t31">31</a></span><span class="t">    <span class="com"># Categorization of metrics in bar</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t32" class="pln"><span class="n"><a href="#t32">32</a></span><span class="t">    <span class="com"># Ver artigos + c&#243;digo</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t33" class="pln"><span class="n"><a href="#t33">33</a></span><span class="t">    <span class="com"># Ver c&#243;digo para tonalCertainty</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t34" class="pln"><span class="n"><a href="#t34">34</a></span><span class="t">    <span class="com"># magnitude do 5&#186; coeficiente (ver com value de tonalCertainty)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t35" class="pln"><span class="n"><a href="#t35">35</a></span><span class="t">    <span class="com"># passar segmentos no espa&#231;o para um &#250;nico ponto e calcular a magnitude</span>&nbsp;</span><span class="r"></span></p>
-</div>
-<div id="footer">
-    <div class="content">
-        <p>
-            <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.0.4</a>,
-            created at 2020-03-26 16:13
+    <div id="source">
+        <p id="t1" class="pln"><span class="n"><a href="#t1">1</a></span><span class="t"><span class="com">#!/usr/bin/env python3.7</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t2" class="mis show_mis"><span class="n"><a href="#t2">2</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t3" class="pln"><span class="n"><a href="#t3">3</a></span><span class="t"><span class="str">This script is the main script of the generation system</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t4" class="pln"><span class="n"><a href="#t4">4</a></span><span class="t"><span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t5" class="pln"><span class="n"><a href="#t5">5</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+        <p id="t6" class="mis show_mis"><span class="n"><a href="#t6">6</a></span><span class="t"><span class="key">import</span> <span class="nam">os</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t7" class="pln"><span class="n"><a href="#t7">7</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+        <p id="t8" class="mis show_mis"><span class="n"><a href="#t8">8</a></span><span class="t"><span class="key">from</span> <span class="nam">music21</span> <span class="key">import</span> <span class="nam">converter</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t9" class="pln"><span class="n"><a href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+        <p id="t10" class="mis show_mis"><span class="n"><a href="#t10">10</a></span><span class="t"><span class="key">import</span> <span class="nam">representation</span><span class="op">.</span><span class="nam">utils</span> <span class="key">as</span> <span class="nam">utils</span>&nbsp;</span>
+            <span
+                class="r"></span>
         </p>
+        <p id="t11" class="mis show_mis"><span class="n"><a href="#t11">11</a></span><span class="t"><span class="key">from</span> <span class="nam">representation</span><span class="op">.</span><span class="nam">parser</span> <span class="key">import</span> <span class="nam">LineParser</span>&nbsp;</span>
+            <span
+                class="r"></span>
+        </p>
+        <p id="t12" class="pln"><span class="n"><a href="#t12">12</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+        <p id="t13" class="mis show_mis"><span class="n"><a href="#t13">13</a></span><span class="t"><span class="key">if</span> <span class="nam">__name__</span> <span class="op">==</span> <span class="str">"__main__"</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t14" class="mis show_mis"><span class="n"><a href="#t14">14</a></span><span class="t">    <span class="nam">FILE_PATH</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">sep</span><span class="op">.</span><span class="nam">join</span>
+            <span
+                class="op">(</span><span class="op">[</span><span class="str">'data'</span><span class="op">,</span> <span class="str">'myexamples'</span><span class="op">,</span> <span class="str">'bwv1.6.mxl'</span><span class="op">]</span><span class="op">)</span>&nbsp;</span>
+                <span
+                    class="r"></span>
+        </p>
+        <p id="t15" class="mis show_mis"><span class="n"><a href="#t15">15</a></span><span class="t">    <span class="key">if</span> <span class="nam">os</span><span class="op">.</span><span class="nam">path</span><span class="op">.</span><span class="nam">realpath</span><span class="op">(</span>
+            <span
+                class="str">'.'</span><span class="op">)</span><span class="op">.</span><span class="nam">find</span><span class="op">(</span><span class="str">'code'</span><span class="op">)</span> <span class="op">!=</span> <span class="op">-</span><span class="num">1</span>
+                <span
+                    class="op">:</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t16" class="mis show_mis"><span class="n"><a href="#t16">16</a></span><span class="t">        <span class="nam">FILE_PATH</span><span class="op">.</span><span class="nam">replace</span><span class="op">(</span><span class="str">'code'</span><span class="op">,</span>
+            <span
+                class="str">''</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t17" class="mis show_mis"><span class="n"><a href="#t17">17</a></span><span class="t">        <span class="nam">FILE_PATH</span> <span class="op">=</span> <span class="nam">os</span><span class="op">.</span><span class="nam">sep</span><span class="op">.</span><span class="nam">join</span>
+            <span
+                class="op">(</span><span class="op">[</span><span class="str">'..'</span><span class="op">,</span> <span class="nam">FILE_PATH</span><span class="op">]</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t18" class="pln"><span class="n"><a href="#t18">18</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+        <p id="t19" class="mis show_mis"><span class="n"><a href="#t19">19</a></span><span class="t">    <span class="nam">EXAMPLE</span> <span class="op">=</span> <span class="nam">converter</span><span class="op">.</span><span class="nam">parse</span><span class="op">(</span>
+            <span
+                class="nam">FILE_PATH</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t20" class="pln"><span class="n"><a href="#t20">20</a></span><span class="t">    <span class="com"># example.flat.show('text')</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t21" class="mis show_mis"><span class="n"><a href="#t21">21</a></span><span class="t">    <span class="nam">EVENTS</span> <span class="op">=</span> <span class="nam">LineParser</span><span class="op">(</span><span class="nam">EXAMPLE</span><span class="op">.</span>
+            <span
+                class="nam">parts</span><span class="op">[</span><span class="num">0</span><span class="op">]</span><span class="op">)</span><span class="op">.</span><span class="nam">parse_line</span><span class="op">(</span><span class="op">)</span>&nbsp;</span>
+                <span
+                    class="r"></span>
+        </p>
+        <p id="t22" class="pln"><span class="n"><a href="#t22">22</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+        <p id="t23" class="mis show_mis"><span class="n"><a href="#t23">23</a></span><span class="t">    <span class="nam">print</span><span class="op">(</span><span class="nam">utils</span><span class="op">.</span><span class="nam">show_sequence_of_viewpoint_without_offset</span>
+            <span
+                class="op">(</span><span class="nam">EVENTS</span><span class="op">,</span> <span class="str">'intfib'</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t24" class="pln"><span class="n"><a href="#t24">24</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+        <p id="t25" class="pln"><span class="n"><a href="#t25">25</a></span><span class="t">    <span class="com">#ka = analysis.floatingKey.KeyAnalyzer(to_parse)</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t26" class="pln"><span class="n"><a href="#t26">26</a></span><span class="t">    <span class="com"># ka.windowSize = 8 # int(len(self.measure_offsets)/100)</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t27" class="pln"><span class="n"><a href="#t27">27</a></span><span class="t">    <span class="com"># #print(ka.run())</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t28" class="pln"><span class="n"><a href="#t28">28</a></span><span class="t">    <span class="com">#k = to_parse.analyze('key')</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t29" class="pln"><span class="n"><a href="#t29">29</a></span><span class="t">    <span class="com"># #print(k.tonalCertainty())</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t30" class="pln"><span class="n"><a href="#t30">30</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+        <p id="t31" class="pln"><span class="n"><a href="#t31">31</a></span><span class="t">    <span class="com"># Categorization of metrics in bar</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t32" class="pln"><span class="n"><a href="#t32">32</a></span><span class="t">    <span class="com"># Ver artigos + c&#243;digo</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t33" class="pln"><span class="n"><a href="#t33">33</a></span><span class="t">    <span class="com"># Ver c&#243;digo para tonalCertainty</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t34" class="pln"><span class="n"><a href="#t34">34</a></span><span class="t">    <span class="com"># magnitude do 5&#186; coeficiente (ver com value de tonalCertainty)</span>&nbsp;</span><span class="r"></span></p>
+        <p id="t35" class="pln"><span class="n"><a href="#t35">35</a></span><span class="t">    <span class="com"># passar segmentos no espa&#231;o para um &#250;nico ponto e calcular a magnitude</span>&nbsp;</span><span class="r"></span></p>
     </div>
-</div>
+    <div id="footer">
+        <div class="content">
+            <p>
+                <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.0.4</a>, created at 2020-03-26 16:13
+            </p>
+        </div>
+    </div>
 </body>
+
 </html>

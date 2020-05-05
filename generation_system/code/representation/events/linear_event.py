@@ -54,6 +54,7 @@ class LinearEvent(Event):
                 'slur': {
                     'begin': False,
                     'end': False,
+                    'between': False,
                 },
             },
             'pitch': {
@@ -120,7 +121,6 @@ class LinearEvent(Event):
                     'intphrase': 0,
             },
         }
-
         self.viewpoints = dict(list(default.items()) +
                                list(self.viewpoints.items()))
         self._init_from_list_or_dict(offset, from_dict, from_list, features)
@@ -147,18 +147,16 @@ class LinearEvent(Event):
                 self.add_viewpoint(feat, None, category)
             elif feat in ['rest', 'grace', 'exists_before', 'is_end', 'double', 'fib']:
                 self.add_viewpoint(feat, bool(from_list[i]), category)
-            elif feat in ['articulation', 'expression.other', 'ornamentation', 'dynamic']:
+            elif feat in ['articulation', 'expression', 'ornamentation', 'dynamic']:
                 self.add_viewpoint(feat, from_list[i].split('_'), category)
             elif '=' in feat:
                 if from_list[i] == 1.0:
                     info = feat.split('=')
                     self.add_viewpoint(info[0], info[1], category)
             elif feat == 'dnote':
-                self.add_viewpoint(
-                    self.viewpoints[feat], utils.convert_note_name(from_list[i]), category)
+                self.add_viewpoint(feat, utils.convert_note_name(from_list[i]), category)
             else:
-                self.add_viewpoint(
-                    self.viewpoints[feat], from_list[i], category)
+                self.add_viewpoint(feat, from_list[i], category)
 
     def to_feature_dict(self, features=None, offset=True):
         """
@@ -179,7 +177,7 @@ class LinearEvent(Event):
                 category = feat.split('.')[0]
 
             # add features that are arrays
-            if feat in ['articulation', 'expression.other', 'ornamentation', 'dynamic']:
+            if feat in ['articulation', 'expression', 'ornamentation', 'dynamic']:
                 for a_feat in enumerate(self.get_viewpoint(feat, category)):
                     features_dict[feat + '_' + a_feat] = True
             elif feat == 'dnote':

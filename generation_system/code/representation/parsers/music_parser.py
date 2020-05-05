@@ -43,7 +43,12 @@ class MusicParser:
                 file_path = os.sep.join(['..', file_path])
 
             self.music = music21.converter.parse(file_path)
-            self.music_parts = self.music.parts
+        
+            if filename.endswith('.mid'):
+                for part in self.music.parts:
+                    #music21.stream.makeNotation.makeMeasures(part, inPlace=True)
+                    part.show()
+
 
     def parse(self, parts=True, vertical=True, number_parts=None):
         """

@@ -173,7 +173,6 @@ def get_all_events_similar_to_event(events, event, weights=None, threshold=0.5, 
     res = [(ev, event.weighted_comparison(ev, weights)) for ev in events]
     return [ev for ev in res if cond_sim(ev, event.get_offset(), threshold, offset_thresh)]
 
-
 def cond_sim(event, offset, threshold, offset_thresh):
     """
     cond func for get_all_events_similar_to_event
@@ -188,7 +187,6 @@ def cond_sim(event, offset, threshold, offset_thresh):
 
     return res
 
-
 def create_similarity_matrix(events, weights=None):
     """
     Create Similarity Matrix for events with weights
@@ -197,8 +195,8 @@ def create_similarity_matrix(events, weights=None):
         part_events[0], part_events[0][6], weights, 0.4, 1.5)
     similarity_matrix = rep_utils.create_similarity_matrix(
         part_events[0][:5], weights)
-    print(similarity_matrix)
-    [print(str(ev[0].get_offset()) + ' : ' + str(ev[1])) for ev in similar]
+    #print(similarity_matrix)
+    [#print(str(ev[0].get_offset()) + ' : ' + str(ev[1])) for ev in similar]
     """
     matrix = []
     for event in events:
@@ -234,7 +232,6 @@ def create_feature_array_events(events, weights=None, normalization='st1-mt0', o
     Creating Feature Array and Weights for Oracle
     """
     events_dict = [event.to_feature_dict(weights, offset) for event in events]
-    # print(events_dict[0])
 
     vec = DictVectorizer()
     features = vec.fit_transform(events_dict).toarray()
@@ -264,9 +261,6 @@ def create_feature_array_events(events, weights=None, normalization='st1-mt0', o
             else:
                 weighted_fit[i] = weights[w_feat[0]]
 
-    # dict_normalized = {}
-    # for i, event in enumerate(norm_features):
-    #     dict_normalized[str(event)] = features[i]
     return norm_features, features, features_names, weighted_fit
 
 
@@ -275,7 +269,7 @@ def part_name_parser(music_to_parse):
     Return the name and voice of the part
     """
     part_name_voice = [music_to_parse.partName, 'v0']
-    if music_to_parse.partName is None:
+    if music_to_parse.partName is None and type(music_to_parse.id) == str:
         part_name_voice = music_to_parse.id.split('-')
     return part_name_voice
 
@@ -328,7 +322,10 @@ def get_number_voices(stream):
         for card in cardinalities:
             if card > max_voice_count:
                 max_voice_count = card
-        olDict = stream.recurse(classFilter='Note').getOverlaps()
+        olDictN = stream.recurse(classFilter='Note')
+        stream_not_hidden = music21.stream.Stream()
+        _ = [stream_not_hidden.append(note) for note in olDictN if not note.style.hideObjectOnPrint]
+        olDict = stream_not_hidden.getOverlaps()
         for group in olDict.values():
             if len(group) > max_voice_count:
                 max_voice_count = len(group)
@@ -422,9 +419,12 @@ def process_voiced_measure(measure, max_voice_count):
     measure.removeByClass(classFilterList='Voice')
 
     for voice in  old_measure.voices:
-        new = make_voices(voice, in_place=False, number_voices=int(max_voice_count/len(old_measure.voices)), dist_name=len(new_voices))
-        for v in new.voices:
-            new_voices.append(v)
+        if len(voice.recurse(classFilter='Chord')) > 0 or len(voice.recurse(classFilter='Note').getOverlaps()) > 0:
+            new = make_voices(voice, in_place=False, number_voices=int(max_voice_count/len(old_measure.voices)), dist_name=len(new_voices))
+            for v in new.voices:
+                new_voices.append(v)
+        else:
+            new_voices.append(voice)
 
     for v in new_voices:
         measure.insert(0, v)

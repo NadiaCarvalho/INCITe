@@ -18,7 +18,7 @@ class FactorOracle:
         rsfx: a list containing the reverse suffix links of each state
             as a list.
         lrs: the value of longest repeated suffix of each state.
-        data: the symobols associated with the di_rect link
+        data: the symobols associated with the direct link
             connected to each state.
         compror: a list of tuples (i, i-j), i is the current coded position,
             i-j is the length of the corresponding coded words.

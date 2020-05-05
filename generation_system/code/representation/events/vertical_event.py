@@ -30,7 +30,7 @@ class VerticalEvent(Event):
                 'quality': '',
             },
             'classes': {
-                'pc_original': '',
+                'pc_ordered': '',
                 'pc_cardinality': 0,
                 'pitch_class': '',
                 'forte_class': '',
