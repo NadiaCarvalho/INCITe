@@ -64,11 +64,10 @@ class MusicParser:
                 if part.isSequence() and len(list(part.flat.getElementsByClass(music21.chord.Chord))) == 0:
                     self.music_events['part_events'][i] = self.parse_sequence_part(
                         part, name=str(i), first=(False, True)[i == 0])
-                    part.show()
                 else:
                     self.process_voiced_part(part, i)
 
-        if vertical and len(self.music.getOverlaps()) > 0 and len(self.music_parts) > 1:
+        if vertical and (len(self.music.parts) > 1 or len(self.music.getOverlaps()) > 0):
             print('Processing Vertical Events')
             self.music_events['vertical_events'] = VerticalParser(
                 self.music).parse_music()
@@ -85,7 +84,7 @@ class MusicParser:
         if verbose:
             print('Processing part {}'.format(name))
 
-        parser = LineParser(part)
+        parser = LineParser(part, self.music.metadata)
         parsed = parser.parse_line()
 
         if not first and not utils.has_value_viewpoint_events(parsed, 'metro.value'):

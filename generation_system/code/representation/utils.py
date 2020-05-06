@@ -372,6 +372,9 @@ def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None, dist
                 notes_to_insert.reverse()
 
             for i, note in enumerate(notes_to_insert):
+                if note.style.hideObjectOnPrint:
+                    continue
+
                 if len(notes_to_insert) == max_voice_count:
                     voices[i].insert(o, note)
                 else:
@@ -395,6 +398,9 @@ def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None, dist
                         voices[v].insert(o, note)
         else:
             for v in voices: 
+                if type(e) is music21.note.Note or type(e) is music21.note.Rest and e.style.hideObjectOnPrint:
+                    break
+
                 v.insert(o, e)
                 
         # remove from source

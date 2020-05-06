@@ -16,6 +16,7 @@ class VerticalParser:
     """
 
     def __init__(self, music_to_parse):
+        print('Chordifying music...')
         self.music_to_parse = music_to_parse.chordify()
         self.events = []
 
@@ -36,7 +37,7 @@ class VerticalParser:
         """
         Returns the events from vertical relations between parts
         """
-        # self.music_to_parse.show('text')
+        print('Parsing chords')
         chords = self.music_to_parse.flat.getElementsByClass('Chord')
         for i, chord in enumerate(chords):
             self.events.append(VerticalEvent(chord.offset))
@@ -56,12 +57,22 @@ class VerticalParser:
         """
         Processes the duration information for a chord
         """
-        self.events[index].add_viewpoint(
-            'duration.length', chord.duration.quarterLength)
-        self.events[index].add_viewpoint(
-            'duration.type', chord.duration.type)
-        self.events[index].add_viewpoint(
-            'dots', chord.duration.dots)
+        
+        try:
+            self.events[index].add_viewpoint(
+                'duration.length', chord.duration.quarterLength)
+            self.events[index].add_viewpoint(
+                'duration.type', chord.duration.type)
+            self.events[index].add_viewpoint(
+                'dots', chord.duration.dots)
+        except music21.duration.DurationException:
+            print("Can't return duration types smaller than 2048th")
+            self.events[index].add_viewpoint(
+                'duration.length', 1/1120)
+            self.events[index].add_viewpoint(
+                'duration.type', '2048th')
+            self.events[index].add_viewpoint(
+                'dots', 0)
 
         if chord.tie is not None:
             self.events[index].add_viewpoint('tie_type', chord.tie.type)

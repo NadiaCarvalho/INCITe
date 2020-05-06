@@ -18,49 +18,72 @@ from representation.conversor.score_conversor import ScoreConversor
 
 import os
 
-# 'MicrotonsExample.mxl' 
-# 'VoiceExample.mxl' 
-# 'bwv1.6.2.mxl' 
-# 'to.mxl' 
-# 'bwv67.4.mxl' 
+# 'MicrotonsExample.mxl'
+# 'VoiceExample.mxl'
+# 'bwv1.6.2.mxl'
+# 'to.mxl'
+# 'bwv67.4.mxl'
 # 'complexcompass.mxl'
+
 
 def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    # name = 'VoiceExample.mxl'
-    # parser = MusicParser(name)
-    # parser.parse(vertical=True)
-    # parser.to_pickle(name[:-4])
+    name = 'to.mxl'
+    parser = MusicParser(name)
+    parser.parse(parts=False, vertical=True)
+    parser.to_pickle(name[:-4])
 
-    new_parser = MusicParser()
-    new_parser.from_pickle('fugue1_mxl')
+    # new_parser = MusicParser()
+    # new_parser.from_pickle('fugue1_mxl')
 
-    weights = {
-        'cpitch': 5,
-        #'dnote': 4,
-        #'accidental': 1,
-        #'pitch_class': 0.5,
-        'rest': 1,
-        'contour': 1,
-        #'intfib': 3,
-        #'thrbar': 0.1,
-        #'posinbar': 0.5,
-        #'beat_strength': 0.5,
-        'duration.length': 5,
-        'duration.type': 0.5,
-        'timesig': 1,
-        'fib': 0.1,
-        #'fermata': 0.5,
-        'phrase.boundary': 0.5,
-    }
-    sequenced_events_0 = oracle_and_generator(
-        new_parser.get_part_events()['0.0'][:20], 20, weights)
+    # weights = {
+    #     'cpitch': 5,
+    #     # 'dnote': 4,
+    #     # 'accidental': 1,
+    #     # 'pitch_class': 0.5,
+    #     'rest': 1,
+    #     'contour': 1,
+    #     # 'intfib': 3,
+    #     # 'thrbar': 0.1,
+    #     # 'posinbar': 0.5,
+    #     # 'beat_strength': 0.5,
+    #     'duration.length': 5,
+    #     'duration.type': 0.5,
+    #     'timesig': 1,
+    #     'fib': 0.1,
+    #     # 'fermata': 0.5,
+    #     'phrase.boundary': 0.5,
+    # }
+    # part_number = input('Choose a part from {}:  '.format(
+    #     new_parser.get_part_events().keys()))
+    # if part_number in new_parser.get_part_events().keys():
 
-    score = ScoreConversor()
-    score.parse_events(sequenced_events_0, True)
-    score.stream.show()
+    #     events = new_parser.get_part_events()[part_number][:20]
+    #     norm_features,  o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
+    #         events=events, offset=False)
+
+    #     columns_values = list(zip(*norm_features))
+    #     statistic_dict = {}
+    #     for i, feat in enumerate(features_names):
+    #         if '=' in feat:
+    #             info = feat.split('=')
+    #             if not info[0] in statistic_dict:
+    #                 statistic_dict[info[0]] = {}
+    #             statistic_dict[info[0]][info[1]] = list(zip(*np.unique(list(columns_values[i]), return_counts=True)))
+    #         else:
+    #             statistic_dict[feat] = list(zip(*np.unique(list(columns_values[i]), return_counts=True)))
+    #     for feat, value in statistic_dict.items():
+    #         print(feat + ': ' + str(value))
+
+        # sequenced_events_0 = oracle_and_generator(
+        #     events, 20, weights)
+
+        # score = ScoreConversor()
+        # score.parse_events(sequenced_events_0, True)
+        # score.stream.show()
+
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):
     norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
@@ -80,6 +103,7 @@ def oracle_and_generator(events, seq_len, weights=None, dim=-1):
 
     return [LinearEvent(from_list=o_features[state], features=features_names) for state in sequence]
 
+
 def parsing_music_folder(folder, json=False, pickle=True):
     """
     Parsing a music folder to json/pickle format and return parsed music
@@ -92,18 +116,20 @@ def parsing_music_folder(folder, json=False, pickle=True):
 
             for filename in files:
                 if '.mxl' in filename:
-                    music_parser = MusicParser(filename, root.split(os.sep)[-4:])
+                    music_parser = MusicParser(
+                        filename, root.split(os.sep)[-4:])
                     music_parser.parse()
-                    
+
                     name = '.'.join(filename.split('.')[:-1])
                     music[name] = music_parser
 
                     if json:
                         music_parser.to_json(name, dirs_to_save)
-                    if pickle:   
+                    if pickle:
                         music_parser.to_pickle(name, dirs_to_save)
-                    
+
     return music
+
 
 def recover_parsed_folder(folder, pickle=True):
     """
@@ -126,7 +152,8 @@ def recover_parsed_folder(folder, pickle=True):
                     music[name] = music_parser
     return music
 
+
 if __name__ == "__main__":
     main()
-    #parsing_music_folder(r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\music21\bach')
-    #recover_parsed_folder(r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\parsed\bach')
+    # parsing_music_folder(r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\music21\bach')
+    # recover_parsed_folder(r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\parsed\bach')

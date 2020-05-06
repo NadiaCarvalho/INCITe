@@ -22,6 +22,7 @@ class LinearEvent(Event):
                 'voice': '',
                 'piece_title': '',
                 'composer': '',
+                'instrument': '',
             },
             'basic': {
                 'rest': False,

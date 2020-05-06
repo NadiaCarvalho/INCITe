@@ -30,16 +30,18 @@ class LineParser:
         analysis of key by measure in music
     """
 
-    def __init__(self, music_to_parse):
+    def __init__(self, music_to_parse, metadata=None):
         """
         Parameters
         ----------
         music_to_parse: music21 stream
             line of music to parse
         """
-        self.music_to_parse = music_to_parse
+        self.music_to_parse = music_to_parse  # .toSoundingPitch()
 
-        print(music_to_parse.metadata)
+        self.composer = metadata.composer
+        self.title = metadata.title
+        self.instrument = music_to_parse.getInstrument()
 
         part_name_voice = utils.part_name_parser(music_to_parse)
         self.part_name = part_name_voice[0]
@@ -82,13 +84,12 @@ class LineParser:
 
         for i, note_or_rest in enumerate(stream_notes_rests.elements):
 
-            if note_or_rest.style.hideObjectOnPrint:
-                continue
-
             self.events.append(LinearEvent(offset=note_or_rest.offset))
-            # #print(self.events[0].viewpoints)
 
             # Basic Part/Voice Names
+            self.events[i].add_viewpoint('piece_title', self.title)
+            self.events[i].add_viewpoint('composer', self.composer)
+            self.events[i].add_viewpoint('instrument', self.instrument)
             self.events[i].add_viewpoint('part', self.part_name)
             self.events[i].add_viewpoint('voice', self.voice)
 
@@ -400,17 +401,22 @@ class LineParser:
         for i, key in enumerate(keys):
             next_key_offset = (self.music_to_parse.highestTime if i == (len(keys)-1)
                                else keys[i+1].offset)
-            key_anal = utils.get_analysis_keys_stream_bet_offsets(
-                self.music_to_parse, key.offset, next_key_offset)[1]
 
-            for event in utils.get_evs_bet_offs_inc(self.events, key.offset, next_key_offset):
-                event.add_viewpoint('keysig', key.sharps)
-                event.add_viewpoint('key', str(key_anal), 'signature')
-                if not event.is_rest():
-                    sc_deg = key_anal.getScaleDegreeFromPitch(
-                        event.get_viewpoint('dnote') +
-                        event.get_viewpoint('accidental'))
-                    event.add_viewpoint('scale_degree', sc_deg, 'signature')
+            try:
+                key_anal = utils.get_analysis_keys_stream_bet_offsets(
+                    self.music_to_parse, key.offset, next_key_offset)[1]
+
+                for event in utils.get_evs_bet_offs_inc(self.events, key.offset, next_key_offset):
+                    event.add_viewpoint('keysig', key.sharps)
+                    event.add_viewpoint('key', str(key_anal), 'signature')
+                    if not event.is_rest():
+                        sc_deg = key_anal.getScaleDegreeFromPitch(
+                            event.get_viewpoint('dnote') +
+                            event.get_viewpoint('accidental'))
+                        event.add_viewpoint(
+                            'scale_degree', sc_deg, 'signature')
+            except music21.analysis.discrete.DiscreteAnalysisException:
+                print('failed to get likely keys for Stream component')
 
     def time_signatures_parsing(self):
         """
@@ -439,30 +445,24 @@ class LineParser:
         if events is None:
             events = self.events
 
-        metro_marks = list(part.flat.getElementsByClass(
-            music21.tempo.MetronomeMark))
+        metro_marks = list(part.flat.metronomeMarkBoundaries())
 
         for i, metro in enumerate(metro_marks):
-            offset = (None if i == (len(metro_marks)-1)
-                      else metro_marks[i+1].offset)
-            for event in utils.get_evs_bet_offs_inc(events, metro.offset, offset):
+            for event in utils.get_evs_bet_offs_inc(events, metro[0], metro[1]):
                 event.add_viewpoint(
-                    'text', metro.text, 'metro')
-
+                    'text', metro[2].text, 'metro')
                 event.add_viewpoint(
-                    'value', metro.number, 'metro')
-
-                if metro.numberSounding is not None:
+                    'value', metro[2].number, 'metro')
+                if metro[2].numberSounding is not None:
                     event.add_viewpoint(
-                        'sound', metro.numberSounding)
+                        'sound', metro[2].numberSounding)
                 else:
                     event.add_viewpoint(
-                        'sound', metro.number)
-
+                        'sound', metro[2].number)
                 event.add_viewpoint(
-                    'value', metro.referent.quarterLength, 'ref')
+                    'value', metro[2].referent.quarterLength, 'ref')
                 event.add_viewpoint(
-                    'type', metro.referent.type, 'ref')
+                    'type', metro[2].referent.type, 'ref')
 
     def metro_marks_parsing(self):
         """
@@ -478,8 +478,11 @@ class LineParser:
         #print('Parse Barline')
         for d_bar_off in [barline.offset for barline in self.music_to_parse.flat.getElementsByClass(
                 music21.bar.Barline) if barline.type == 'double']:
-            utils.get_events_at_offset(self.events, d_bar_off)[
-                0].add_viewpoint('double', True)
+            events_at_barline = utils.get_events_at_offset(
+                self.events, d_bar_off)
+            if len(events_at_barline) > 0:
+                utils.get_events_at_offset(self.events, d_bar_off)[
+                    0].add_viewpoint('double', True)
 
     def repeat_barline_parsing(self):
         """
