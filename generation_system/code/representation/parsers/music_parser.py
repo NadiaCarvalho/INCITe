@@ -111,6 +111,7 @@ class MusicParser:
         part.flattenUnnecessaryVoices(inPlace=True)
         new_parts = part.voicesToParts()
         for j, voice in enumerate(new_parts.parts):
+            voice.append(part.getInstrument())
             index = str(i) + '.' + str(j)
             name = str(i) + ', voice ' + str(j)
             self.music_events['part_events'][index] = self.parse_sequence_part(

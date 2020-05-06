@@ -40,7 +40,7 @@ class ScoreConversor:
         last_instrument = music21.instrument.Instrument('')
         for event in events:
 
-            if event.get_viewpoint('instrument') != last_instrument:
+            if event.get_viewpoint('instrument') != last_instrument and event.get_viewpoint('instrument') != ': ':
                 stream.append(event.get_viewpoint('instrument'))
                 last_instrument = event.get_viewpoint('instrument')
 

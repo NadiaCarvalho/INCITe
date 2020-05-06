@@ -144,8 +144,11 @@ class LinearEvent(Event):
 
             if feat == 'offset':
                 self.offset_time = from_list[i]
-            elif from_list[i] == 1000:
-                self.add_viewpoint(feat, None, category)
+            elif from_list[i] == 10000.0:
+                if 'instrument' in feat:
+                    self.add_viewpoint('instrument', music21.instrument.Instrument(), category)
+                else:
+                    self.add_viewpoint(feat, None, category)
             elif feat in ['rest', 'grace', 'exists_before', 'is_end', 'double', 'fib']:
                 self.add_viewpoint(feat, bool(from_list[i]), category)
             elif any(val in feat for val in ['articulation', 'expression', 'ornamentation', 'dynamic']):
@@ -154,7 +157,7 @@ class LinearEvent(Event):
             elif '=' in feat:
                 if from_list[i] == 1.0:
                     info = feat.split('=')
-                    if info[0] == 'instrument':
+                    if info[0] == 'instrument' and  info[1] != ': ':
                         info[1] = getattr(music21.instrument, info[1].capitalize())()
                     self.add_viewpoint(info[0], info[1], category)
             elif feat == 'dnote':

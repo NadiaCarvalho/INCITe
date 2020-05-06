@@ -30,10 +30,10 @@ def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    name = 'to.mxl'
-    parser = MusicParser(name)
-    parser.parse(parts=True, vertical=True)
-    parser.to_pickle(name[:-4])
+    # name = 'to.mxl'
+    # parser = MusicParser(name)
+    # parser.parse(parts=True, vertical=True)
+    # parser.to_pickle(name[:-4])
 
     new_parser = MusicParser()
     new_parser.from_pickle('to')
@@ -70,10 +70,10 @@ def main():
         score.parse_events(events, True)
         score.stream.show()
 
-        norm_features,  o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
+        norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
             events=events, offset=False)
-        
-        columns_values = list(zip(*norm_features))
+
+        columns_values = list(zip(*o_features))
         statistic_dict = {}
         for i, feat in enumerate(features_names):
             if '=' in feat:
@@ -81,17 +81,19 @@ def main():
                 if not info[0] in statistic_dict:
                     statistic_dict[info[0]] = []
 
-                values = list(zip(*np.unique(list(columns_values[i]), return_counts=True)))
+                values = list(
+                    zip(*np.unique(list(columns_values[i]), return_counts=True)))
                 if len(values) == 1:
                     statistic_dict[info[0]].append((info[1], values[0][1]))
-                else: 
+                else:
                     ret = [item for item in values if item[0] == 1.0]
                     if len(ret) > 0:
                         statistic_dict[info[0]].append((info[1], ret[0][1]))
             else:
-                statistic_dict[feat] = list(zip(*np.unique(list(columns_values[i]), return_counts=True)))
+                statistic_dict[feat] = list(
+                    zip(*np.unique(list(columns_values[i]), return_counts=True)))
         for feat, value in statistic_dict.items():
-           print(feat + ': ' + str(value))
+            print(feat + ': ' + str(value))
 
         sequenced_events_0 = oracle_and_generator(
             events, 30)
