@@ -173,6 +173,7 @@ def get_all_events_similar_to_event(events, event, weights=None, threshold=0.5, 
     res = [(ev, event.weighted_comparison(ev, weights)) for ev in events]
     return [ev for ev in res if cond_sim(ev, event.get_offset(), threshold, offset_thresh)]
 
+
 def cond_sim(event, offset, threshold, offset_thresh):
     """
     cond func for get_all_events_similar_to_event
@@ -186,6 +187,7 @@ def cond_sim(event, offset, threshold, offset_thresh):
             res = True
 
     return res
+
 
 def create_similarity_matrix(events, weights=None):
     """
@@ -205,14 +207,26 @@ def create_similarity_matrix(events, weights=None):
     return np.array(matrix)
 
 
+def normalize_column(col, x_min, x_max):
+
+    if max(col) == min(col) and max(col) != 0:
+        return [1. for item in col]
+
+    nom = (col - min(col))*(x_max-x_min)
+    denom = max(col) - min(col)
+    if denom == 0:
+        denom = 1
+    return (nom/denom) + x_min
+
+
 def normalize(feat_list, x_min, x_max):
     """
     Get Normalization for 
     """
-    nom = (feat_list-feat_list.min(axis=0))*(x_max-x_min)
-    denom = feat_list.max(axis=0) - feat_list.min(axis=0)
-    denom[denom == 0] = 1
-    return x_min + nom/denom
+    normalized_columns = []
+    for col in list(zip(*feat_list)):
+        normalized_columns.append(normalize_column(list(col), x_min, x_max))
+    return [list(line) for line in list(zip(*normalized_columns))]
 
 
 def normalize_weights(weights):
@@ -294,47 +308,51 @@ def has_value_viewpoint_events(events, viewpoint):
             return True
     return False
 
-def is_power (x, y): 
+
+def is_power(x, y):
     """
     Check if number is power of another
     """
-      
-    # The only power of 1 
-    # is 1 itself 
-    if (x == 1): 
-        return (y == 1) 
-          
-    # Repeatedly compute 
-    # power of x 
+
+    # The only power of 1
+    # is 1 itself
+    if (x == 1):
+        return (y == 1)
+
+    # Repeatedly compute
+    # power of x
     _pow = 1
-    while (_pow < y): 
-        _pow = _pow * x 
-  
-    # Check if power of x 
-    # becomes y 
-    return (_pow == y) 
+    while (_pow < y):
+        _pow = _pow * x
+
+    # Check if power of x
+    # becomes y
+    return (_pow == y)
+
 
 def get_number_voices(stream):
-        max_voice_count = 1
-        # To deal with separation of chords
-        chords = stream.recurse(classFilter='Chord')
-        cardinalities = [len(chord.pitches) for chord in chords]
-        for card in cardinalities:
-            if card > max_voice_count:
-                max_voice_count = card
-        olDictN = stream.recurse(classFilter='Note')
-        stream_not_hidden = music21.stream.Stream()
-        _ = [stream_not_hidden.append(note) for note in olDictN if not note.style.hideObjectOnPrint]
-        olDict = stream_not_hidden.getOverlaps()
-        for group in olDict.values():
-            if len(group) > max_voice_count:
-                max_voice_count = len(group)
-        return max_voice_count
-        
+    max_voice_count = 1
+    # To deal with separation of chords
+    chords = stream.recurse(classFilter='Chord')
+    cardinalities = [len(chord.pitches) for chord in chords]
+    for card in cardinalities:
+        if card > max_voice_count:
+            max_voice_count = card
+    olDictN = stream.recurse(classFilter='Note')
+    stream_not_hidden = music21.stream.Stream()
+    _ = [stream_not_hidden.append(
+        note) for note in olDictN if not note.style.hideObjectOnPrint]
+    olDict = stream_not_hidden.getOverlaps()
+    for group in olDict.values():
+        if len(group) > max_voice_count:
+            max_voice_count = len(group)
+    return max_voice_count
+
+
 def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None, dist_name=0):
     """
     Make voices from a poliphonic stream, based on music21 
-    """    
+    """
     return_obj = stream
     if not in_place:  # make a copy
         return_obj = copy.deepcopy(stream)
@@ -342,7 +360,7 @@ def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None, dist
     max_voice_count = get_number_voices(return_obj)
     if number_voices is not None:
         max_voice_count = max(number_voices, max_voice_count)
-    
+
     if max_voice_count == 1:  # nothing to do here
         if not in_place:
             return return_obj
@@ -366,8 +384,9 @@ def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None, dist
         # find a voice to place in
         # as elements are sorted, can use the highest time
         # else:
-        if type(e) is music21.chord.Chord:            
-            notes_to_insert = [music21.note.Note(pitch, duration=e.duration) for pitch in e.pitches]
+        if type(e) is music21.chord.Chord:
+            notes_to_insert = [music21.note.Note(
+                pitch, duration=e.duration) for pitch in e.pitches]
             if notes_to_insert is not None:
                 notes_to_insert.reverse()
 
@@ -379,8 +398,10 @@ def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None, dist
                     voices[i].insert(o, note)
                 else:
                     # distribute notes by voices, higher ones have always less examples
-                    limits = [(n*max_voice_count - len(notes_to_insert))/len(notes_to_insert) for n in range(max_voice_count)]
-                    powered_values = is_power(len(notes_to_insert), max_voice_count)
+                    limits = [(n*max_voice_count - len(notes_to_insert)) /
+                              len(notes_to_insert) for n in range(max_voice_count)]
+                    powered_values = is_power(
+                        len(notes_to_insert), max_voice_count)
 
                     start_voice = 0
                     if i > 0:
@@ -389,20 +410,20 @@ def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None, dist
                             start_voice += 1
 
                     end_voice = max_voice_count
-                    if i < len(notes_to_insert) -1:
+                    if i < len(notes_to_insert) - 1:
                         end_voice = math.floor(limits[i+1])
                         if powered_values:
                             end_voice += 1
-                    
+
                     for v in range(start_voice, end_voice):
                         voices[v].insert(o, note)
         else:
-            for v in voices: 
-                if type(e) is music21.note.Note or type(e) is music21.note.Rest and e.style.hideObjectOnPrint:
+            for v in voices:
+                if (type(e) is music21.note.Note or type(e) is music21.note.Rest) and e.style.hideObjectOnPrint:
                     break
 
                 v.insert(o, e)
-                
+
         # remove from source
         return_obj.remove(e)
 
@@ -417,6 +438,7 @@ def make_voices(stream, in_place=False, fill_gaps=True, number_voices=None, dist
     if not in_place:
         return return_obj
 
+
 def process_voiced_measure(measure, max_voice_count):
     """
     """
@@ -424,9 +446,10 @@ def process_voiced_measure(measure, max_voice_count):
     old_measure = copy.deepcopy(measure)
     measure.removeByClass(classFilterList='Voice')
 
-    for voice in  old_measure.voices:
+    for voice in old_measure.voices:
         if len(voice.recurse(classFilter='Chord')) > 0 or len(voice.recurse(classFilter='Note').getOverlaps()) > 0:
-            new = make_voices(voice, in_place=False, number_voices=int(max_voice_count/len(old_measure.voices)), dist_name=len(new_voices))
+            new = make_voices(voice, in_place=False, number_voices=int(
+                max_voice_count/len(old_measure.voices)), dist_name=len(new_voices))
             for v in new.voices:
                 new_voices.append(v)
         else:

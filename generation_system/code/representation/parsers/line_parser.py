@@ -481,8 +481,7 @@ class LineParser:
             events_at_barline = utils.get_events_at_offset(
                 self.events, d_bar_off)
             if len(events_at_barline) > 0:
-                utils.get_events_at_offset(self.events, d_bar_off)[
-                    0].add_viewpoint('double', True)
+                events_at_barline[0].add_viewpoint('double', True)
 
     def repeat_barline_parsing(self):
         """

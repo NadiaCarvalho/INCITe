@@ -37,7 +37,12 @@ class ScoreConversor:
         last_key_signature = 0
         last_time_signature = ''
         last_metro_value = ''
+        last_instrument = music21.instrument.Instrument('')
         for event in events:
+
+            if event.get_viewpoint('instrument') != last_instrument:
+                stream.append(event.get_viewpoint('instrument'))
+                last_instrument = event.get_viewpoint('instrument')
 
             if event.get_viewpoint('timesig') != last_time_signature:
                 stream.append(music21.meter.TimeSignature(

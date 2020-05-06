@@ -104,22 +104,22 @@ class LinearEvent(Event):
                 'length': 0,
             },
             'derived': {
-                    'seq_int': 0,
-                    'contour': 0,
-                    'contour_hd': 0,
-                    'closure': 0,
-                    'registral_direction': False,
-                    'intervallic_difference': False,
-                    'upwards': False,
-                    'downwards': False,
-                    'no_movement': False,
-                    'fib': True,
-                    'posinbar': 0,
-                    'beat_strength': 0.0,
-                    'tactus': False,
-                    'intfib': 0,
-                    'thrbar': 0,
-                    'intphrase': 0,
+                'seq_int': 0,
+                'contour': 0,
+                'contour_hd': 0,
+                'closure': 0,
+                'registral_direction': False,
+                'intervallic_difference': False,
+                'upwards': False,
+                'downwards': False,
+                'no_movement': False,
+                'fib': True,
+                'posinbar': 0,
+                'beat_strength': 0.0,
+                'tactus': False,
+                'intfib': 0,
+                'thrbar': 0,
+                'intphrase': 0,
             },
         }
         self.viewpoints = dict(list(default.items()) +
@@ -148,14 +148,18 @@ class LinearEvent(Event):
                 self.add_viewpoint(feat, None, category)
             elif feat in ['rest', 'grace', 'exists_before', 'is_end', 'double', 'fib']:
                 self.add_viewpoint(feat, bool(from_list[i]), category)
-            elif feat in ['articulation', 'expression', 'ornamentation', 'dynamic']:
-                self.add_viewpoint(feat, from_list[i].split('_'), category)
+            elif any(val in feat for val in ['articulation', 'expression', 'ornamentation', 'dynamic']):
+                if from_list[i] == 1.0:
+                    self.add_viewpoint(feat.split('_')[0], feat.split('_')[1:], category)
             elif '=' in feat:
                 if from_list[i] == 1.0:
                     info = feat.split('=')
+                    if info[0] == 'instrument':
+                        info[1] = getattr(music21.instrument, info[1].capitalize())()
                     self.add_viewpoint(info[0], info[1], category)
             elif feat == 'dnote':
-                self.add_viewpoint(feat, utils.convert_note_name(from_list[i]), category)
+                self.add_viewpoint(
+                    feat, utils.convert_note_name(from_list[i]), category)
             else:
                 self.add_viewpoint(feat, from_list[i], category)
 
@@ -180,10 +184,14 @@ class LinearEvent(Event):
             # add features that are arrays
             if feat in ['articulation', 'expression', 'ornamentation', 'dynamic']:
                 for a_feat in enumerate(self.get_viewpoint(feat, category)):
+                    if isinstance(a_feat, tuple):
+                        a_feat = a_feat[1]
                     features_dict[feat + '_' + a_feat] = True
             elif feat == 'dnote':
                 features_dict[feat] = utils.convert_note_name(
                     self.get_viewpoint(feat, category))
+            elif feat == 'instrument':
+                features_dict[feat] = self.get_viewpoint(feat, category).instrumentName
             else:
                 features_dict[feat] = self.get_viewpoint(feat, category)
         return features_dict

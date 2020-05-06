@@ -32,57 +32,75 @@ def main():
     """
     name = 'to.mxl'
     parser = MusicParser(name)
-    parser.parse(parts=False, vertical=True)
+    parser.parse(parts=True, vertical=True)
     parser.to_pickle(name[:-4])
 
-    # new_parser = MusicParser()
-    # new_parser.from_pickle('fugue1_mxl')
+    new_parser = MusicParser()
+    new_parser.from_pickle('to')
 
-    # weights = {
-    #     'cpitch': 5,
-    #     # 'dnote': 4,
-    #     # 'accidental': 1,
-    #     # 'pitch_class': 0.5,
-    #     'rest': 1,
-    #     'contour': 1,
-    #     # 'intfib': 3,
-    #     # 'thrbar': 0.1,
-    #     # 'posinbar': 0.5,
-    #     # 'beat_strength': 0.5,
-    #     'duration.length': 5,
-    #     'duration.type': 0.5,
-    #     'timesig': 1,
-    #     'fib': 0.1,
-    #     # 'fermata': 0.5,
-    #     'phrase.boundary': 0.5,
-    # }
-    # part_number = input('Choose a part from {}:  '.format(
-    #     new_parser.get_part_events().keys()))
-    # if part_number in new_parser.get_part_events().keys():
+    weights = {
+        'cpitch': 5,
+        # 'dnote': 4,
+        # 'accidental': 1,
+        # 'pitch_class': 0.5,
+        'rest': 1,
+        'contour': 1,
+        # 'intfib': 3,
+        # 'thrbar': 0.1,
+        # 'posinbar': 0.5,
+        # 'beat_strength': 0.5,
+        'duration.length': 5,
+        'duration.type': 0.5,
+        'timesig': 1,
+        'fib': 0.1,
+        # 'fermata': 0.5,
+        'phrase.boundary': 0.5,
+    }
+    part_number = input('Choose a part from {}:  '.format(
+        new_parser.get_part_events().keys()))
 
-    #     events = new_parser.get_part_events()[part_number][:20]
-    #     norm_features,  o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
-    #         events=events, offset=False)
+    if part_number.find('.') == -1 and part_number != '':
+        part_number = int(part_number)
 
-    #     columns_values = list(zip(*norm_features))
-    #     statistic_dict = {}
-    #     for i, feat in enumerate(features_names):
-    #         if '=' in feat:
-    #             info = feat.split('=')
-    #             if not info[0] in statistic_dict:
-    #                 statistic_dict[info[0]] = {}
-    #             statistic_dict[info[0]][info[1]] = list(zip(*np.unique(list(columns_values[i]), return_counts=True)))
-    #         else:
-    #             statistic_dict[feat] = list(zip(*np.unique(list(columns_values[i]), return_counts=True)))
-    #     for feat, value in statistic_dict.items():
-    #         print(feat + ': ' + str(value))
+    if part_number in new_parser.get_part_events().keys():
 
-        # sequenced_events_0 = oracle_and_generator(
-        #     events, 20, weights)
+        events = new_parser.get_part_events()[part_number][:100]
 
-        # score = ScoreConversor()
-        # score.parse_events(sequenced_events_0, True)
-        # score.stream.show()
+        score = ScoreConversor()
+        score.parse_events(events, True)
+        score.stream.show()
+
+        norm_features,  o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
+            events=events, offset=False)
+        
+        columns_values = list(zip(*norm_features))
+        statistic_dict = {}
+        for i, feat in enumerate(features_names):
+            if '=' in feat:
+                info = feat.split('=')
+                if not info[0] in statistic_dict:
+                    statistic_dict[info[0]] = []
+
+                values = list(zip(*np.unique(list(columns_values[i]), return_counts=True)))
+                if len(values) == 1:
+                    statistic_dict[info[0]].append((info[1], values[0][1]))
+                else: 
+                    ret = [item for item in values if item[0] == 1.0]
+                    if len(ret) > 0:
+                        statistic_dict[info[0]].append((info[1], ret[0][1]))
+            else:
+                statistic_dict[feat] = list(zip(*np.unique(list(columns_values[i]), return_counts=True)))
+        for feat, value in statistic_dict.items():
+           print(feat + ': ' + str(value))
+
+        sequenced_events_0 = oracle_and_generator(
+            events, 30)
+
+        score = ScoreConversor()
+        score.parse_events(sequenced_events_0, True)
+        score.stream.show()
+    else:
+        print('Not a part of this piece!')
 
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):
@@ -99,7 +117,7 @@ def oracle_and_generator(events, seq_len, weights=None, dim=-1):
     gen_plot.start_draw(oracle).show()
 
     sequence, end, k_trace = gen.generate(
-        oracle, seq_len=seq_len, p=0.125, k=1, LRS=5)
+        oracle, seq_len=seq_len, p=0.3, k=1, LRS=5)
 
     return [LinearEvent(from_list=o_features[state], features=features_names) for state in sequence]
 
