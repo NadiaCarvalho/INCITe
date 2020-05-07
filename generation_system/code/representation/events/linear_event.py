@@ -139,8 +139,8 @@ class LinearEvent(Event):
         for i, feat in enumerate(features):
             category = None
             if '.' in feat:
-                feat = feat.split('.')[1]
                 category = feat.split('.')[0]
+                feat = feat.split('.')[1]
 
             if feat == 'offset':
                 self.offset_time = from_list[i]
@@ -180,21 +180,22 @@ class LinearEvent(Event):
 
         for feat in features:
             category = None
+            real_feat = feat
             if '.' in feat:
-                feat = feat.split('.')[1]
                 category = feat.split('.')[0]
+                real_feat = feat.split('.')[1]
 
             # add features that are arrays
-            if feat in ['articulation', 'expression', 'ornamentation', 'dynamic']:
-                for a_feat in enumerate(self.get_viewpoint(feat, category)):
+            if real_feat in ['articulation', 'expression', 'ornamentation', 'dynamic']:
+                for a_feat in enumerate(self.get_viewpoint(real_feat, category)):
                     if isinstance(a_feat, tuple):
                         a_feat = a_feat[1]
-                    features_dict[feat + '_' + a_feat] = True
-            elif feat == 'dnote':
+                    features_dict[real_feat + '_' + a_feat] = True
+            elif real_feat == 'dnote':
                 features_dict[feat] = utils.convert_note_name(
-                    self.get_viewpoint(feat, category))
-            elif feat == 'instrument':
-                features_dict[feat] = self.get_viewpoint(feat, category).instrumentName
+                    self.get_viewpoint(real_feat, category))
+            elif real_feat == 'instrument':
+                features_dict[feat] = self.get_viewpoint(real_feat, category).instrumentName
             else:
-                features_dict[feat] = self.get_viewpoint(feat, category)
+                features_dict[feat] = self.get_viewpoint(real_feat, category)
         return features_dict

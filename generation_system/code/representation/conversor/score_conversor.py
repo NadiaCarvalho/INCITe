@@ -96,6 +96,7 @@ class ScoreConversor:
         if pitch.ps != event.get_viewpoint('cpitch'):
             pitch.ps = event.get_viewpoint('cpitch')
 
+
         note = music21.note.Note(
             pitch, quarterLength=event.get_viewpoint('duration.length'),
             type=event.get_viewpoint('duration.type'),

@@ -64,39 +64,16 @@ def main():
 
     if part_number in new_parser.get_part_events().keys():
 
-        events = new_parser.get_part_events()[part_number][:100]
+        events = new_parser.get_part_events()[part_number]
 
-        score = ScoreConversor()
-        score.parse_events(events, True)
-        score.stream.show()
+        # score = ScoreConversor()
+        # score.parse_events(events, True)
+        # score.stream.show()
 
-        norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
-            events=events, offset=False)
-
-        columns_values = list(zip(*o_features))
-        statistic_dict = {}
-        for i, feat in enumerate(features_names):
-            if '=' in feat:
-                info = feat.split('=')
-                if not info[0] in statistic_dict:
-                    statistic_dict[info[0]] = []
-
-                values = list(
-                    zip(*np.unique(list(columns_values[i]), return_counts=True)))
-                if len(values) == 1:
-                    statistic_dict[info[0]].append((info[1], values[0][1]))
-                else:
-                    ret = [item for item in values if item[0] == 1.0]
-                    if len(ret) > 0:
-                        statistic_dict[info[0]].append((info[1], ret[0][1]))
-            else:
-                statistic_dict[feat] = list(
-                    zip(*np.unique(list(columns_values[i]), return_counts=True)))
-        for feat, value in statistic_dict.items():
-            print(feat + ': ' + str(value))
+        #rep_utils.statistic_features(events)
 
         sequenced_events_0 = oracle_and_generator(
-            events, 30)
+            events, 100)
 
         score = ScoreConversor()
         score.parse_events(sequenced_events_0, True)

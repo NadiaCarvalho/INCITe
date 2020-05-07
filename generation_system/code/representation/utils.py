@@ -457,3 +457,35 @@ def process_voiced_measure(measure, max_voice_count):
 
     for v in new_voices:
         measure.insert(0, v)
+
+
+def statistic_features(events):
+    """
+    """
+    norm_features, o_features, features_names, weighted_fit = create_feature_array_events(
+        events=events, offset=False)
+
+    columns_values = list(zip(*o_features))
+    statistic_dict = {}
+    for i, feat in enumerate(features_names):
+        if '=' in feat:
+            info = feat.split('=')
+            if not info[0] in statistic_dict:
+                statistic_dict[info[0]] = []
+
+            values = list(
+                zip(*np.unique(list(columns_values[i]), return_counts=True)))
+            if len(values) == 1:
+                statistic_dict[info[0]].append((info[1], values[0][1]))
+            else:
+                ret = [item for item in values if item[0] == 1.0]
+                if len(ret) > 0:
+                    statistic_dict[info[0]].append((info[1], ret[0][1]))
+        else:
+            statistic_dict[feat] = list(
+                zip(*np.unique(list(columns_values[i]), return_counts=True)))
+                
+    for feat, value in statistic_dict.items():
+        print(feat + ': ' + str(value))
+    
+    return statistic_dict
