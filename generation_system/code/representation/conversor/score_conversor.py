@@ -38,11 +38,13 @@ class ScoreConversor:
         last_time_signature = ''
         last_metro_value = ''
         last_instrument = music21.instrument.Instrument('')
+        last_dynamics = []
         for event in events:
-
-            if event.get_viewpoint('instrument') != last_instrument and event.get_viewpoint('instrument') != ': ':
-                stream.append(event.get_viewpoint('instrument'))
-                last_instrument = event.get_viewpoint('instrument')
+            
+            instrument = event.get_viewpoint('instrument')
+            if instrument != last_instrument and instrument != ': ':
+                stream.append(instrument)
+                last_instrument = instrument
 
             if event.get_viewpoint('timesig') != last_time_signature:
                 stream.append(music21.meter.TimeSignature(
@@ -68,11 +70,16 @@ class ScoreConversor:
             else:
                 note = self.convert_note_event(event)
 
+            stream.append(note)
+
+            for dyn in event.get_viewpoint('dynamic'):
+                if not dyn in last_dynamics:
+                    stream.insert(stream.highestOffset, music21.dynamics.Dynamic(dyn))
+            last_dynamics = event.get_viewpoint('dynamic')
+            
             if event.get_viewpoint('slur.begin'):
                 slurs.append(music21.spanner.Slur())
                 pass
-
-            stream.append(note)
 
         
         music21.stream.makeNotation.makeMeasures(stream, inPlace=True)

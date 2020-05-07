@@ -436,16 +436,12 @@ class LineParser:
                 event.add_viewpoint(
                     'barlength', sig.denominator)
 
-    def metronome_marks_parsing(self, part=None, events=None):
+    def metronome_marks_parsing(self, metro_marks, events=None):
         """
         Parses the existent Metronome Markings of a line part to a set of events
         """
-        if part is None:
-            part = self.music_to_parse
         if events is None:
             events = self.events
-
-        metro_marks = list(part.flat.metronomeMarkBoundaries())
 
         for i, metro in enumerate(metro_marks):
             for event in utils.get_evs_bet_offs_inc(events, metro[0], metro[1]):
@@ -469,7 +465,7 @@ class LineParser:
         Parses the existent Metronome Markings
         """
         #print('Parse Metro')
-        self.metronome_marks_parsing()
+        self.metronome_marks_parsing(metro_marks=list(self.music_to_parse.flat.metronomeMarkBoundaries()))
 
     def double_barline_parsing(self):
         """

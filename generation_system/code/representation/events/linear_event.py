@@ -158,7 +158,11 @@ class LinearEvent(Event):
                 if from_list[i] == 1.0:
                     info = feat.split('=')
                     if info[0] == 'instrument' and  info[1] != ': ':
-                        info[1] = getattr(music21.instrument, info[1].capitalize())()
+                        if 'Instrument' in info[1]:
+                            info[1] = 'Instrument'
+                        elif info[1] in ['Brass', 'Woodwind', 'Keyboard', 'String']:
+                            info[1] += 'Instrument'
+                        info[1] = getattr(music21.instrument, info[1])()
                     self.add_viewpoint(info[0], info[1], category)
             elif feat == 'dnote':
                 self.add_viewpoint(

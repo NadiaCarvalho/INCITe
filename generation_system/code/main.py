@@ -30,10 +30,10 @@ def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    # name = 'to.mxl'
-    # parser = MusicParser(name)
-    # parser.parse(parts=True, vertical=True)
-    # parser.to_pickle(name[:-4])
+    #name = 'to.mxl'
+    #parser = MusicParser(name)
+    #parser.parse(parts=True, vertical=True)
+    #parser.to_pickle(name[:-4])
 
     new_parser = MusicParser()
     new_parser.from_pickle('to')
@@ -65,15 +65,14 @@ def main():
     if part_number in new_parser.get_part_events().keys():
 
         events = new_parser.get_part_events()[part_number]
-
-        # score = ScoreConversor()
-        # score.parse_events(events, True)
-        # score.stream.show()
+        events_to_learn = []
+        for phrase in rep_utils.get_phrases_from_part(events):
+            events_to_learn.extend(phrase)
 
         #rep_utils.statistic_features(events)
 
         sequenced_events_0 = oracle_and_generator(
-            events, 100)
+            events_to_learn, 100)
 
         score = ScoreConversor()
         score.parse_events(sequenced_events_0, True)

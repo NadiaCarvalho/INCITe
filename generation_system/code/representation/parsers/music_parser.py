@@ -35,6 +35,8 @@ class MusicParser:
             'part_events': {},
             'vertical_events': []
         }
+        
+        self.first_part = None
 
         if filename is not None:
             file_path = os.sep.join(folders + [filename])
@@ -87,8 +89,9 @@ class MusicParser:
         parser = LineParser(part, self.music.metadata)
         parsed = parser.parse_line()
 
-        if not first and not utils.has_value_viewpoint_events(parsed, 'metro.value'):
-            parser.metronome_marks_parsing(self.music_parts[0], parsed)
+        first_metro_marks = list(self.music.parts[0].flat.metronomeMarkBoundaries())
+        if not first and first_metro_marks != list(part.flat.metronomeMarkBoundaries()):
+            parser.metronome_marks_parsing(first_metro_marks, parsed)
 
         if verbose:
             print('End of Processing part {}'.format(name))
