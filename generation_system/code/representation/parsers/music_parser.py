@@ -68,10 +68,12 @@ class MusicParser:
                 number_parts = len(self.music_parts)
             for i in range(number_parts):
                 part = self.music_parts[i]
-                # .isClassOrSubclass((music21.instrument.KeyboardInstrument,))
+                
                 instrument = part.getInstrument().instrumentName
-                classes = getattr(music21.instrument, ''.join(
-                    instrument.split(' ')))().classes
+                if instrument in ['Brass', 'Woodwind', 'Keyboard', 'String']:
+                    instrument += 'Instrument'
+                inst_name = ''.join(instrument.split(' '))
+                classes = getattr(music21.instrument, inst_name)().classes
 
                 if (any(val in classes for val in ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']) and
                     (len(part.recurse(classFilter='Chord')) > 0 or part.hasVoices())):
