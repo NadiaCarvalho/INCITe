@@ -17,7 +17,7 @@ class VerticalParser:
 
     def __init__(self, music_to_parse):
         print('Chordifying music...')
-        self.music_to_parse = music_to_parse.chordify()
+        self.music_to_parse = music_to_parse.chordify(toSoundingPitch=True)
         self.events = []
 
         self.keys = defaultdict(list)

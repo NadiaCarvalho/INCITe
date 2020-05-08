@@ -170,7 +170,16 @@ class LinearEvent(Event):
                             info[1] = 'Instrument'
                         elif info[1] in ['Brass', 'Woodwind', 'Keyboard', 'String']:
                             info[1] += 'Instrument'
-                        info[1] = getattr(music21.instrument, info[1])()
+                        try:
+                            info[1] = getattr(music21.instrument, info[1])()
+                        except AttributeError:
+                            print('Wrong Instrument: ' + info[1])
+                            try:
+                                info[1] = music21.instrument.fromString(info[1])
+                            except music21.exceptions21.InstrumentException:
+                                print("Can't convert from this instrument: " + info[1])
+                                info[1] = music21.instrument.Instrument()
+
                     self.add_viewpoint(info[0], info[1], category)
             elif feat == 'dnote':
                 self.add_viewpoint(
@@ -207,7 +216,7 @@ class LinearEvent(Event):
                 features_dict[feat] = utils.convert_note_name(
                     self.get_viewpoint(real_feat, category))
             elif real_feat == 'instrument':
-                features_dict[feat] = ''.join(self.get_viewpoint(real_feat, category).instrumentName.split(' '))
+                features_dict[feat] = self.get_viewpoint(real_feat, category).instrumentName
             else:
                 features_dict[feat] = self.get_viewpoint(real_feat, category)
         return features_dict

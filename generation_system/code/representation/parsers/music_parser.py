@@ -70,16 +70,25 @@ class MusicParser:
                 part = self.music_parts[i]
                 
                 instrument = part.getInstrument().instrumentName
-                if instrument in ['Brass', 'Woodwind', 'Keyboard', 'String']:
-                    instrument += 'Instrument'
-                inst_name = ''.join(instrument.split(' '))
-                classes = getattr(music21.instrument, inst_name)().classes
+                
+                real_in = music21.instrument.Instrument()
+                try:
+                    if instrument in ['Brass', 'Woodwind', 'Keyboard', 'String']:
+                        instrument += 'Instrument'
+                    inst_name = ''.join(instrument.split(' '))
+                    real_in = getattr(music21.instrument, inst_name)()
+                except AttributeError:
+                    print('Wrong Instrument: ' + instrument)
+                    try:
+                        real_in = music21.instrument.fromString(instrument)
+                    except music21.exceptions21.InstrumentException:
+                        print("Can't convert from this instrument: " + instrument)
 
-                if (any(val in classes for val in ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']) and
+                if (any(val in real_in.classes for val in ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']) and
                     (len(part.recurse(classFilter='Chord')) > 0 or part.hasVoices())):
-                    self.process_voiced_part_linear_instruments(part, i)
+                    self.process_voiced_part_linear_instruments(part, i, real_in)
                 elif not part.isSequence() or part.hasVoices():
-                    self.process_voiced_part(part, i)
+                    self.process_voiced_part(part, i, real_in)
                 else:
                     self.music_events['part_events'][i] = self.parse_sequence_part(
                         part, name=str(i), first=(False, True)[i == 0])
@@ -114,7 +123,7 @@ class MusicParser:
 
         return parsed
 
-    def process_voiced_part_linear_instruments(self, part, i):
+    def process_voiced_part_linear_instruments(self, part, i, real_in):
         """
         Process a part that has overlappings
         """
@@ -130,21 +139,28 @@ class MusicParser:
         part.flattenUnnecessaryVoices(inPlace=True)
         new_parts = part.voicesToParts()
         for j, voice in enumerate(new_parts.parts):
-            voice.append(part.getInstrument())
+            voice.append(real_in)
             index = str(i) + '.' + str(j)
             name = str(i) + ', voice ' + str(j)
             self.music_events['part_events'][index] = self.parse_sequence_part(
                 voice, name=name, first=(False, True)[i == 0])
 
-    def process_voiced_part(self, part, i):
+    def process_voiced_part(self, part, i, real_in):
         part.recurse().flattenUnnecessaryVoices(inPlace=True, force=True)
-        new_parts = part.voicesToParts(separateById=True)
-        for j, voice in enumerate(new_parts.parts):
-            voice.append(part.getInstrument())
-            index = str(i) + '.' + str(j)
-            name = str(i) + ', voice ' + str(j)
-            self.music_events['part_events'][index] = self.parse_sequence_part(
-                voice, name=name, first=(False, True)[i == 0])
+
+        new_parts = part
+        if part.hasVoices():    
+            try:
+                new_parts = part.voicesToParts(separateById=True)
+            except Exception:
+                new_pats = part.voicesToParts(separateById=False)
+            
+            for j, voice in enumerate(new_parts.parts):
+                voice.append(real_in)
+                index = str(i) + '.' + str(j)
+                name = str(i) + ', voice ' + str(j)
+                self.music_events['part_events'][index] = self.parse_sequence_part(
+                    voice, name=name, first=(False, True)[i == 0])
 
     def clean_hidden_music(self):
         for e in self.music.recurse():

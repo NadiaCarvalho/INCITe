@@ -31,7 +31,7 @@ def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    name = 'MicrotonsExample.mxl'
+    name = 'to.mxl'
     parser = MusicParser(name)
     parser.parse(parts=True, vertical=True)
     parser.to_pickle(name[:-4])
