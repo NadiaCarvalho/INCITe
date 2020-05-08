@@ -7,8 +7,6 @@ import music21
 
 import representation.utils as utils
 from representation.events.linear_event import LinearEvent
-from representation.parsers.segmentation import segmentation
-
 
 class LineParser:
     """
@@ -68,9 +66,6 @@ class LineParser:
         self.metro_marks_parsing()
         self.double_barline_parsing()
         self.repeat_barline_parsing()
-
-        segmentation(self.events)
-        self.segmentation_info()
 
         return self.events
 
@@ -512,32 +507,3 @@ class LineParser:
                     'exists_before', True)
                 events_repeats[0].add_viewpoint(
                     'direction', repeat.direction)
-
-    def segmentation_info(self):
-        """
-        """
-        #print('Parse Segmentation')
-        boundary_indexes = [
-            i for i, event in enumerate(self.events) if event.get_viewpoint('pharse.boundary') == 1]
-
-        for k, event in enumerate(self.events):
-            if k != 0:
-                index = boundary_indexes.index(
-                    min(boundary_indexes, key=lambda x: abs(x - k)))
-                last_index = (
-                    index, index-1)[bool(k < boundary_indexes[index])]
-
-                length = len(self.events) - boundary_indexes[last_index]
-                if last_index < len(boundary_indexes)-1:
-                    length = boundary_indexes[last_index +
-                                              1] - boundary_indexes[last_index]
-
-                if k in boundary_indexes:
-                    last_index = boundary_indexes.index(k)-1
-                    length = len(self.events) - k
-                    if last_index < len(boundary_indexes)-2:
-                        length = boundary_indexes[last_index+2] - k
-
-                event.add_viewpoint('intphrase',  utils.seq_int(
-                    event.get_viewpoint('pitch.cpitch'), self.events[last_index].get_viewpoint('pitch.cpitch')))
-                event.add_viewpoint('phrase.length', length)

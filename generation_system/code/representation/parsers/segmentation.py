@@ -85,7 +85,7 @@ def peak_picking(i, boundary_strengths, weights, window=None, k=1.28):
     return 0
 
 
-def segmentation(events):
+def segmentation(events, weights_dict=None):
     """
     Segmentation for a set of events, using 
     Peak Picking Boundary Location by Witten and Pearce
@@ -94,25 +94,26 @@ def segmentation(events):
     #weights_dict = {i: 1 for i in list(events[0].viewpoints)}
 
     # with different weights
-    weights_dict = {  # candidates for phrasing discovery (melodic)
-        # 'pitch.value': 1,
-        'rest': 1,
-        # 'dur_length': 1,
-        'fermata': 1,
-        'breath_mark': 1,
-        'closure': 1,
+    if weights_dict is None:
+        weights_dict = {  # candidates for phrasing discovery (melodic)
+            # 'pitch.value': 1,
+            'rest': 1,
+            # 'dur_length': 1,
+            'fermata': 1,
+            'breath_mark': 1,
+            'closure': 1,
 
-        # 'seq_int': 1,
-        # 'contour': 1,
-        # 'contour_hd': 1,
-        # 'fib': 1,
-        # 'posinbar': 1,
-        # 'beat_strength': 1,
-        # 'double': 1,
-        # 'repeat.exists': 1,
-        # 'signatures.scale_degree': 1,
-        # 'scale_degree_ms': 1,
-    }
+            # 'seq_int': 1,
+            # 'contour': 1,
+            # 'contour_hd': 1,
+            # 'fib': 1,
+            # 'posinbar': 1,
+            # 'beat_strength': 1,
+            # 'double': 1,
+            # 'repeat.exists': 1,
+            # 'signatures.scale_degree': 1,
+            # 'scale_degree_ms': 1,
+        }
 
     # Get all events as a set of normalized features
     norm_features, _, _, weights = utils.create_feature_array_events(
@@ -140,3 +141,54 @@ def segmentation(events):
         event.add_viewpoint('phrase.boundary', boundary)
         if boundary == 1 and i != 0:
             events[i-1].add_viewpoint('phrase.boundary', -boundary)
+
+def apply_segmentation_info(events):
+    """
+    """
+    #print('Parse Segmentation')
+    boundary_indexes = [
+        i for i, event in enumerate(events) if event.get_viewpoint('pharse.boundary') == 1]
+
+    for k, event in enumerate(events):
+        if k != 0:
+            index = boundary_indexes.index(
+                min(boundary_indexes, key=lambda x: abs(x - k)))
+            last_index = (
+                index, index-1)[bool(k < boundary_indexes[index])]
+
+            length = len(events) - boundary_indexes[last_index]
+            if last_index < len(boundary_indexes)-1:
+                length = boundary_indexes[last_index +
+                                            1] - boundary_indexes[last_index]
+
+            if k in boundary_indexes:
+                last_index = boundary_indexes.index(k)-1
+                length = len(events) - k
+                if last_index < len(boundary_indexes)-2:
+                    length = boundary_indexes[last_index+2] - k
+
+            event.add_viewpoint('intphrase',  utils.seq_int(
+                event.get_viewpoint('pitch.cpitch'), events[last_index].get_viewpoint('pitch.cpitch')))
+            event.add_viewpoint('phrase.length', length)
+
+def get_phrases_from_events(events, return_rest_phrases=False):
+    """
+    """
+    phrase_begins = [i for i, event in enumerate(events) if event.get_viewpoint('pharse.boundary') == 1]
+
+    phrases = []
+    for i, begin in enumerate(phrase_begins):
+        if i < len(phrase_begins) -1:
+            phrases.append(events[begin:phrase_begins[i+1]+1])
+        else:
+            phrases.append(events[begin:])
+    
+    if not return_rest_phrases:
+        new_phrases = []
+        for phrase in phrases:
+            rests_of_phrase = [event for event in phrase if event.is_rest()]
+            if len(rests_of_phrase) != len(phrase):
+                new_phrases.append(phrase)
+        phrases = new_phrases
+
+    return phrases

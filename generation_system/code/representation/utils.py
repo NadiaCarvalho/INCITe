@@ -490,26 +490,3 @@ def statistic_features(events):
     
     return statistic_dict
 
-def get_phrases_from_part(events, return_rest_phrases=False):
-    """
-    """
-    phrase_begins = [i for i, event in enumerate(events) if event.get_viewpoint('pharse.boundary') == 1]
-
-    phrases = []
-    for i, begin in enumerate(phrase_begins):
-        if i < len(phrase_begins) -1:
-            phrases.append(events[begin:phrase_begins[i+1]+1])
-        else:
-            phrases.append(events[begin:])
-    
-    if not return_rest_phrases:
-        new_phrases = []
-        for phrase in phrases:
-            rests_of_phrase = [event for event in phrase if event.is_rest()]
-            if len(rests_of_phrase) != len(phrase):
-                new_phrases.append(phrase)
-        phrases = new_phrases
-
-    return phrases
-
-
