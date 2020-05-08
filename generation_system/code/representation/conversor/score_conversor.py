@@ -40,7 +40,7 @@ class ScoreConversor:
         last_instrument = music21.instrument.Instrument('')
         last_dynamics = []
         for event in events:
-            
+
             instrument = event.get_viewpoint('instrument')
             if instrument != last_instrument and instrument != ': ':
                 stream.append(instrument)
@@ -53,7 +53,7 @@ class ScoreConversor:
 
             if event.get_viewpoint('metro.value') != last_metro_value:
                 stream.append(music21.tempo.MetronomeMark(text=event.get_viewpoint('metro.text'),
-                                                                number=event.get_viewpoint('metro.value'), referent=music21.note.Note(type=event.get_viewpoint('ref.type'))))
+                                                          number=event.get_viewpoint('metro.value'), referent=music21.note.Note(type=event.get_viewpoint('ref.type'))))
                 last_metro_value = event.get_viewpoint('metro.value')
 
             if event.get_viewpoint('keysig') != last_key_signature:
@@ -74,14 +74,14 @@ class ScoreConversor:
 
             for dyn in event.get_viewpoint('dynamic'):
                 if not dyn in last_dynamics:
-                    stream.insert(stream.highestOffset, music21.dynamics.Dynamic(dyn))
+                    stream.insert(stream.highestOffset,
+                                  music21.dynamics.Dynamic(dyn))
             last_dynamics = event.get_viewpoint('dynamic')
-            
+
             if event.get_viewpoint('slur.begin'):
                 slurs.append(music21.spanner.Slur())
                 pass
 
-        
         music21.stream.makeNotation.makeMeasures(stream, inPlace=True)
 
         if new_part:
@@ -103,11 +103,19 @@ class ScoreConversor:
         if pitch.ps != event.get_viewpoint('cpitch'):
             pitch.ps = event.get_viewpoint('cpitch')
 
-
         note = music21.note.Note(
             pitch, quarterLength=event.get_viewpoint('duration.length'),
             type=event.get_viewpoint('duration.type'),
             dots=event.get_viewpoint('duration.dots'))
+
+        if event.is_chord():
+            note = music21.chord.Chord([music21.pitch.Pitch(p) for p in event.get_viewpoint(
+                                           'chordPitches')],
+                                       quarterLength=event.get_viewpoint(
+                                           'duration.length'),
+                                       type=event.get_viewpoint(
+                                           'duration.type'),
+                                       dots=event.get_viewpoint('duration.dots'))
 
         for articulation in event.get_viewpoint('articulation'):
             note.articulations.append(
@@ -116,9 +124,30 @@ class ScoreConversor:
         if event.get_viewpoint('breath mark'):
             note.articulations.append(music21.articulations.BreathMark())
 
-        for exp in event.get_viewpoint('expression') + event.get_viewpoint('ornamentation'):
+        for exp in event.get_viewpoint('expression'):
             note.expressions.append(
                 getattr(music21.expressions, exp.capitalize())())
+
+        for orn in event.get_viewpoint('ornamentation'):
+            splitted = orn.split(':')
+            ornament = getattr(music21.expressions, splitted[0].capitalize())()
+
+            if splitted[0] == 'turn' or splitted[0] == 'appogiatura':
+                ornament.name = splitted[1]
+            elif splitted[0] == 'trill':
+                ornament.placement = splitted[1]
+                ornament.size.name = splitted[2]
+            elif splitted[0] == 'tremolo':
+                ornament.measured = splitted[1]
+                ornament.numberOfMarks = splitted[2]
+            elif splitted[0] == 'tremolo':
+                ornament.measured = splitted[1]
+                ornament.numberOfMarks = splitted[2]
+            elif splitted[0] == 'mordent':
+                ornament.direction = splitted[1]
+                ornament.size.name = splitted[2]
+
+            note.expressions.append(ornament)
 
         if event.get_viewpoint('fermata'):
             note.expressions.append(music21.expressions.Fermata())

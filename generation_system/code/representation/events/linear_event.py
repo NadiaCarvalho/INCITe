@@ -27,6 +27,7 @@ class LinearEvent(Event):
             'basic': {
                 'rest': False,
                 'grace': False,
+                'chord': False
             },
             'duration': {
                 'length': 1,
@@ -65,6 +66,7 @@ class LinearEvent(Event):
                 'accidental': music21.pitch.Accidental('natural').modifier,
                 'microtonal': 0.0,
                 'pitch_class': 0,
+                'chordPitches': [],
             },
             'key': {
                 'keysig': 0,
@@ -131,6 +133,12 @@ class LinearEvent(Event):
         Returns value of 'grace' viewpoint for event
         """
         return self.get_viewpoint('grace')
+    
+    def is_chord(self):
+        """
+        Returns value of 'chord' viewpoint for event
+        """
+        return self.get_viewpoint('chord')
 
     def from_feature_list(self, from_list, features):
         """
@@ -149,9 +157,9 @@ class LinearEvent(Event):
                     self.add_viewpoint('instrument', music21.instrument.Instrument(), category)
                 else:
                     self.add_viewpoint(feat, None, category)
-            elif feat in ['rest', 'grace', 'exists_before', 'is_end', 'double', 'fib']:
+            elif feat in ['rest', 'grace', 'chord', 'exists_before', 'is_end', 'double', 'fib']:
                 self.add_viewpoint(feat, bool(from_list[i]), category)
-            elif any(val in feat for val in ['articulation', 'expression', 'ornamentation', 'dynamic']):
+            elif any(val in feat for val in ['articulation', 'expression', 'ornamentation', 'dynamic', 'chordPitches']):
                 if from_list[i] == 1.0:
                     self.add_viewpoint(feat.split('_')[0], feat.split('_')[1:], category)
             elif '=' in feat:
@@ -190,7 +198,7 @@ class LinearEvent(Event):
                 real_feat = feat.split('.')[1]
 
             # add features that are arrays
-            if real_feat in ['articulation', 'expression', 'ornamentation', 'dynamic']:
+            if real_feat in ['articulation', 'expression', 'ornamentation', 'dynamic', 'chordPitches']:
                 for a_feat in enumerate(self.get_viewpoint(real_feat, category)):
                     if isinstance(a_feat, tuple):
                         a_feat = a_feat[1]
@@ -199,7 +207,7 @@ class LinearEvent(Event):
                 features_dict[feat] = utils.convert_note_name(
                     self.get_viewpoint(real_feat, category))
             elif real_feat == 'instrument':
-                features_dict[feat] = self.get_viewpoint(real_feat, category).instrumentName
+                features_dict[feat] = ''.join(self.get_viewpoint(real_feat, category).instrumentName.split(' '))
             else:
                 features_dict[feat] = self.get_viewpoint(real_feat, category)
         return features_dict

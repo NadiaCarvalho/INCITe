@@ -35,7 +35,7 @@ class MusicParser:
             'part_events': {},
             'vertical_events': []
         }
-        
+
         self.first_part = None
 
         if filename is not None:
@@ -51,23 +51,36 @@ class MusicParser:
                     music21.stream.makeNotation.makeMeasures(
                         part, inPlace=True)
 
+        self.clean_hidden_music()
+
     def parse(self, parts=True, vertical=True, number_parts=None):
         """
         Parse music
         """
         if parts:
-            self.music_parts = self.music.parts
+            self.music.makeVoices(inPlace=True)
+            self.music.flattenUnnecessaryVoices(inPlace=True)
+            if self.music.hasVoices():
+                self.music = self.music.voicesToParts(separateById=True)
 
+            self.music_parts = self.music.parts
             if number_parts is None or number_parts > len(self.music_parts):
                 number_parts = len(self.music_parts)
-
             for i in range(number_parts):
                 part = self.music_parts[i]
-                if part.isSequence() and len(list(part.flat.getElementsByClass(music21.chord.Chord))) == 0:
+                # .isClassOrSubclass((music21.instrument.KeyboardInstrument,))
+                instrument = part.getInstrument().instrumentName
+                classes = getattr(music21.instrument, ''.join(
+                    instrument.split(' ')))().classes
+
+                if (any(val in classes for val in ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']) and
+                    (len(part.recurse(classFilter='Chord')) > 0 or part.hasVoices())):
+                    self.process_voiced_part_linear_instruments(part, i)
+                elif not part.isSequence() or part.hasVoices():
+                    self.process_voiced_part(part, i)
+                else:
                     self.music_events['part_events'][i] = self.parse_sequence_part(
                         part, name=str(i), first=(False, True)[i == 0])
-                else:
-                    self.process_voiced_part(part, i)
 
         if vertical and (len(self.music.parts) > 1 or len(self.music.getOverlaps()) > 0):
             print('Processing Vertical Events')
@@ -89,7 +102,8 @@ class MusicParser:
         parser = LineParser(part, self.music.metadata)
         parsed = parser.parse_line()
 
-        first_metro_marks = list(self.music.parts[0].flat.metronomeMarkBoundaries())
+        first_metro_marks = list(
+            self.music.parts[0].flat.metronomeMarkBoundaries())
         if not first and first_metro_marks != list(part.flat.metronomeMarkBoundaries()):
             parser.metronome_marks_parsing(first_metro_marks, parsed)
 
@@ -98,7 +112,7 @@ class MusicParser:
 
         return parsed
 
-    def process_voiced_part(self, part, i):
+    def process_voiced_part_linear_instruments(self, part, i):
         """
         Process a part that has overlappings
         """
@@ -119,6 +133,21 @@ class MusicParser:
             name = str(i) + ', voice ' + str(j)
             self.music_events['part_events'][index] = self.parse_sequence_part(
                 voice, name=name, first=(False, True)[i == 0])
+
+    def process_voiced_part(self, part, i):
+        part.recurse().flattenUnnecessaryVoices(inPlace=True, force=True)
+        new_parts = part.voicesToParts(separateById=True)
+        for j, voice in enumerate(new_parts.parts):
+            voice.append(part.getInstrument())
+            index = str(i) + '.' + str(j)
+            name = str(i) + ', voice ' + str(j)
+            self.music_events['part_events'][index] = self.parse_sequence_part(
+                voice, name=name, first=(False, True)[i == 0])
+
+    def clean_hidden_music(self):
+        for e in self.music.recurse():
+            if not isinstance(e.style, str) and e.style.hideObjectOnPrint:
+                self.music.remove(e, recurse=True)
 
     def show_events(self, events='all parts', part_number=0, parts=[], viewpoints='all', offset=False):
         """

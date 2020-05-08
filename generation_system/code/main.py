@@ -30,13 +30,13 @@ def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    #name = 'to.mxl'
-    #parser = MusicParser(name)
-    #parser.parse(parts=True, vertical=True)
-    #parser.to_pickle(name[:-4])
+    name = 'to.mxl'
+    parser = MusicParser(name)
+    parser.parse(parts=True, vertical=True)
+    parser.to_pickle(name[:-4])
 
-    new_parser = MusicParser()
-    new_parser.from_pickle('to')
+    # new_parser = MusicParser()
+    # new_parser.from_pickle('to')
 
     weights = {
         'cpitch': 5,
@@ -56,29 +56,29 @@ def main():
         # 'fermata': 0.5,
         'phrase.boundary': 0.5,
     }
-    part_number = input('Choose a part from {}:  '.format(
-        new_parser.get_part_events().keys()))
+    # part_number = input('Choose a part from {}:  '.format(
+    #     parser.get_part_events().keys()))
 
-    if part_number.find('.') == -1 and part_number != '':
-        part_number = int(part_number)
+    # if part_number.find('.') == -1 and part_number != '':
+    #     part_number = int(part_number)
 
-    if part_number in new_parser.get_part_events().keys():
+    # if part_number in parser.get_part_events().keys():
 
-        events = new_parser.get_part_events()[part_number]
-        events_to_learn = []
-        for phrase in rep_utils.get_phrases_from_part(events):
-            events_to_learn.extend(phrase)
+    #     events = parser.get_part_events()[part_number]
+    #     events_to_learn = []
+    #     for phrase in rep_utils.get_phrases_from_part(events):
+    #         events_to_learn.extend(phrase)
 
-        #rep_utils.statistic_features(events)
+    #     #rep_utils.statistic_features(events)
 
-        sequenced_events_0 = oracle_and_generator(
-            events_to_learn, 100)
+    #     sequenced_events_0 = oracle_and_generator(
+    #         events_to_learn, 100)
 
-        score = ScoreConversor()
-        score.parse_events(sequenced_events_0, True)
-        score.stream.show()
-    else:
-        print('Not a part of this piece!')
+    #     score = ScoreConversor()
+    #     score.parse_events(sequenced_events_0, True)
+    #     score.stream.show()
+    # else:
+    #     print('Not a part of this piece!')
 
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):

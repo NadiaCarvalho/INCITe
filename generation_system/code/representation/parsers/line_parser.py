@@ -98,6 +98,10 @@ class LineParser:
             self.events[i].add_viewpoint(
                 'grace', note_or_rest.duration.isGrace)
 
+            is_chord = isinstance(note_or_rest, music21.chord.Chord)
+            self.events[i].add_viewpoint(
+                'chord', is_chord)
+
             # Duration Parsing
             self.duration_info_parsing(i, note_or_rest)
 
@@ -108,7 +112,12 @@ class LineParser:
 
             # If note is not a rest, parse pitch information
             if not note_or_rest.isRest:
-                self.note_basic_info_parsing(i, note_or_rest)
+                note_to_parse = note_or_rest
+                if is_chord:
+                    note_to_parse = music21.note.Note(note_or_rest.bass())
+                    self.events[i].add_viewpoint('chordPitches',  [str(p) for p in note_or_rest.pitches])
+
+                self.note_basic_info_parsing(i, note_to_parse)
                 self.contours_parsing(i)
 
             # Measure Related Information Parsing
@@ -246,21 +255,21 @@ class LineParser:
                 self.events[index].add_viewpoint('rehearsal', True)
             elif type(expression) is music21.expressions.Turn:
                 self.events[index].add_viewpoint(
-                    'ornamentation', 'turn_' + expression.name)
+                    'ornamentation', 'turn:' + expression.name)
             elif type(expression) is music21.expressions.Trill:
                 self.events[index].add_viewpoint(
-                    'ornamentation', 'trill_' + expression.placement + '_' + expression.size.name)
+                    'ornamentation', 'trill:' + expression.placement + ':' + expression.size.name)
             elif type(expression) is music21.expressions.Tremolo:
                 self.events[index].add_viewpoint(
-                    'ornamentation', 'tremolo_' + str(expression.measured) + '_' + str(expression.numberOfMarks))
+                    'ornamentation', 'tremolo:' + str(expression.measured) + ':' + str(expression.numberOfMarks))
             elif type(expression) is music21.expressions.Schleifer:
                 self.events[index].add_viewpoint('ornamentation', 'schleifer')
             elif 'GeneralMordent' in expression.classes:
                 self.events[index].add_viewpoint(
-                    'ornamentation', 'mordent_' + expression.direction + '_' + expression.size.name)
+                    'ornamentation', 'mordent:' + expression.direction + ':' + expression.size.name)
             elif 'GeneralAppoggiatura' in expression.classes:
                 self.events[index].add_viewpoint(
-                    'ornamentation', 'appogiatura_' + expression.name)
+                    'ornamentation', 'appogiatura:' + expression.name)
             else:
                 self.events[index].add_viewpoint('expression', expression)
 
@@ -343,7 +352,13 @@ class LineParser:
             'key', str(key_anal), 'measure')
 
         if not note_or_rest.isRest and key_anal is not None:
-            sc_deg = key_anal.getScaleDegreeFromPitch(note_or_rest.pitch.name)
+            note = None
+            if isinstance(note_or_rest, music21.chord.Chord):
+                note = note_or_rest.bass()
+            else:
+                note = note_or_rest.pitch.name
+
+            sc_deg = key_anal.getScaleDegreeFromPitch(note)
             self.events[index].add_viewpoint(
                 'scale_degree', sc_deg, 'measure')
 
