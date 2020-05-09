@@ -10,8 +10,6 @@ import music21
 
 import representation.utils as utils
 
-#from representation.conversor.score_attributes import ARTICULATIONS
-
 
 class ScoreConversor:
     """
@@ -23,13 +21,16 @@ class ScoreConversor:
 
     def __init__(self):
         self.stream = music21.stream.Stream()
+        self.last_voice_id = 0
 
-    def parse_events(self, events, new_part=True):
+    def parse_events(self, events, new_part=True, new_voice=True):
         """
         """
         stream = self.stream
         if new_part:
             stream = music21.stream.Part()
+        
+        voice = music21.stream.Voice(self.last_voice_id)
 
         #measures = []
         slurs = []
@@ -70,7 +71,10 @@ class ScoreConversor:
             else:
                 note = self.convert_note_event(event)
 
-            stream.append(note)
+            if new_voice:
+                voice.append(note)
+            else:
+                stream.append(note)
 
             for dyn in event.get_viewpoint('dynamic'):
                 if not dyn in last_dynamics:
@@ -82,8 +86,11 @@ class ScoreConversor:
                 slurs.append(music21.spanner.Slur())
                 pass
 
-        music21.stream.makeNotation.makeMeasures(stream, inPlace=True)
+        if new_voice:
+            stream.append(voice)
+            self.last_voice_id += 1
 
+        music21.stream.makeNotation.makeMeasures(stream, inPlace=True)
         if new_part:
             self.stream.append(stream)
 
@@ -110,12 +117,12 @@ class ScoreConversor:
 
         if event.is_chord():
             note = music21.chord.Chord([music21.pitch.Pitch(p) for p in event.get_viewpoint(
-                                           'chordPitches')],
-                                       quarterLength=event.get_viewpoint(
-                                           'duration.length'),
-                                       type=event.get_viewpoint(
-                                           'duration.type'),
-                                       dots=event.get_viewpoint('duration.dots'))
+                'chordPitches')],
+                quarterLength=event.get_viewpoint(
+                'duration.length'),
+                type=event.get_viewpoint(
+                'duration.type'),
+                dots=event.get_viewpoint('duration.dots'))
 
         for articulation in event.get_viewpoint('articulation'):
             note.articulations.append(

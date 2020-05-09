@@ -44,12 +44,18 @@ class MusicParser:
                 file_path.replace('code', '')
                 file_path = os.sep.join(['..', file_path])
 
+            
             self.music = music21.converter.parse(file_path)
-
             if filename.endswith('.mid'):
-                for part in self.music.parts:
-                    music21.stream.makeNotation.makeMeasures(
-                        part, inPlace=True)
+                try:
+                    self.music = music21.converter.parse(file_path, makeNotation=False)
+                    self.music.makeNotation(inPlace=True)
+                    len(self.music.getElementsByClass('Measure'))
+
+                    for part in self.music.parts:
+                        part.makeNotation(inPlace=True)
+                except music21.exceptions21.StreamException:
+                    self.music.show()
 
         self.clean_hidden_music()
 
@@ -67,10 +73,8 @@ class MusicParser:
             if number_parts is None or number_parts > len(self.music_parts):
                 number_parts = len(self.music_parts)
             for i in range(number_parts):
-                part = self.music_parts[i]
-                
+                part = self.music_parts[i]                
                 instrument = part.getInstrument().instrumentName
-                
                 real_in = music21.instrument.Instrument()
                 try:
                     if instrument in ['Brass', 'Woodwind', 'Keyboard', 'String']:
@@ -146,21 +150,24 @@ class MusicParser:
                 voice, name=name, first=(False, True)[i == 0])
 
     def process_voiced_part(self, part, i, real_in):
+        #if isinstance(part, music21.stream.PartStaff):
+        #    part = music21.stream.Part(part)
+
         part.recurse().flattenUnnecessaryVoices(inPlace=True, force=True)
 
         new_parts = part
-        if part.hasVoices():    
+        if len(part.recurse(classFilter='Voice')) > 0:  
             try:
                 new_parts = part.voicesToParts(separateById=True)
             except Exception:
-                new_pats = part.voicesToParts(separateById=False)
-            
-            for j, voice in enumerate(new_parts.parts):
-                voice.append(real_in)
-                index = str(i) + '.' + str(j)
-                name = str(i) + ', voice ' + str(j)
-                self.music_events['part_events'][index] = self.parse_sequence_part(
-                    voice, name=name, first=(False, True)[i == 0])
+                new_parts = part.voicesToParts(separateById=False)
+
+        for j, voice in enumerate(new_parts.parts):
+            voice.append(real_in)
+            index = str(i) + '.' + str(j)
+            name = str(i) + ', voice ' + str(j)
+            self.music_events['part_events'][index] = self.parse_sequence_part(
+                voice, name=name, first=(False, True)[i == 0])
 
     def clean_hidden_music(self):
         for e in self.music.recurse():

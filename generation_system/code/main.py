@@ -31,10 +31,10 @@ def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    name = 'to.mxl'
+    name = 'Faur2.mxl'
     parser = MusicParser(name)
     parser.parse(parts=True, vertical=True)
-    parser.to_pickle(name[:-4])
+    # parser.to_pickle(name[:-4])
 
     # new_parser = MusicParser()
     # new_parser.from_pickle('to')
@@ -57,33 +57,52 @@ def main():
         # 'fermata': 0.5,
         'phrase.boundary': 0.5,
     }
-    part_number = input('Choose a part from {}:  '.format(
-        parser.get_part_events().keys()))
+    # part_number = input('Choose a part from {}:  '.format(
+    #     parser.get_part_events().keys()))
 
-    if part_number.find('.') == -1 and part_number != '':
-        part_number = int(part_number)
+    # if part_number.find('.') == -1 and part_number != '':
+    #     part_number = int(part_number)
 
-    if part_number in parser.get_part_events().keys():
+    # if part_number in parser.get_part_events().keys():
 
+    #     events = parser.get_part_events()[part_number]
+    #     segmentation(events)
+    #     apply_segmentation_info(events)
+
+    #     #rep_utils.statistic_features(events)
+
+    #     events_to_learn = []
+    #     for phrase in get_phrases_from_events(events):
+    #         events_to_learn.extend(phrase)
+
+    #     sequenced_events_0 = oracle_and_generator(
+    #         events_to_learn, 100)
+
+    #     score = ScoreConversor()
+    #     score.parse_events(sequenced_events_0, True)
+    #     score.stream.show()
+    # else:
+    #     print('Not a part of this piece!')
+
+    score = ScoreConversor()
+    
+    first = True
+    for part_number in ['1.0', '1.1']:
         events = parser.get_part_events()[part_number]
         segmentation(events)
         apply_segmentation_info(events)
-
-        rep_utils.statistic_features(events)
-
+        
         events_to_learn = []
         for phrase in get_phrases_from_events(events):
             events_to_learn.extend(phrase)
 
-        sequenced_events_0 = oracle_and_generator(
+        sequenced_events = oracle_and_generator(
             events_to_learn, 100)
-
-        score = ScoreConversor()
-        score.parse_events(sequenced_events_0, True)
-        score.stream.show()
-    else:
-        print('Not a part of this piece!')
-
+        if len(sequenced_events) > 0:
+            score.parse_events(sequenced_events, first)
+            first = False
+    
+    score.stream.show('text')
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):
     norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
@@ -99,7 +118,7 @@ def oracle_and_generator(events, seq_len, weights=None, dim=-1):
     gen_plot.start_draw(oracle).show()
 
     sequence, end, k_trace = gen.generate(
-        oracle, seq_len=seq_len, p=0.3, k=1, LRS=5)
+        oracle, seq_len=seq_len, p=0.3, k=-1, LRS=5)
 
     return [LinearEvent(from_list=o_features[state], features=features_names) for state in sequence]
 

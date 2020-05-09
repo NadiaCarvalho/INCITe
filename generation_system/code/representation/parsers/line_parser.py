@@ -436,8 +436,7 @@ class LineParser:
         time_sigs = list(self.music_to_parse.flat.getElementsByClass(
             music21.meter.TimeSignature))
         for i, sig in enumerate(time_sigs):
-            offset = (None if i == (len(time_sigs)-1)
-                      else time_sigs[i+1].offset)
+            offset = (None if i == (len(time_sigs)-1) else time_sigs[i+1].offset)
             for event in utils.get_evs_bet_offs_inc(self.events, sig.offset, offset):
                 event.add_viewpoint(
                     'timesig', sig.ratioString)

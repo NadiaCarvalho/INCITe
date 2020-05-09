@@ -133,8 +133,12 @@ def get_evs_bet_offs_inc(events, offset1, offset2=None):
     """
     Returns all events that happen between (and including) two specified offsets
     """
+    if len(events) < 1:
+        return events
+
     if offset2 is None:
         offset2 = events[-1].get_offset()
+
     return [event for event in events if offset1 <= event.get_offset() <= offset2]
 
 
