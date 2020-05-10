@@ -5,9 +5,6 @@ based on the code in https://github.com/wangsix/vmo/b_lob/master/vmo/plot.py
 """
 
 import numpy as np
-# import music21 #@UnusedImport
-# import pretty_midi #@UnusedImport
-
 
 try:
     # , ImageFilter  # @UnresolvedImport @UnusedImport
@@ -57,6 +54,11 @@ def draw(oracle, current_state, image, width=WIDTH, height=HEIGHT):
     for i in range(n_states):
         # draw circle for each state
         x_pos = (float(i) / n_states * width) + 0.5 * 1.0 / n_states * width
+        x_ball = x_pos + (0.25 / n_states * width)
+        diameter = x_ball - x_pos
+
+        drawer.ellipse([x_pos, height/2 -diameter/2, x_ball, height/2 + diameter/2], outline='green', width=2)
+
         # iterate over forward transitions
         for tran in trn[i]:
             # if forward transition to next state
@@ -74,8 +76,8 @@ def draw(oracle, current_state, image, width=WIDTH, height=HEIGHT):
                     next_x = (float(tran) / n_states * width) + \
                         (0.5 / n_states * width)
                     arc_height = (height / 2) + (tran - i) * 0.125
-                    drawer.arc((int(current_x), int(height/2 - arc_height/2),
-                                int(next_x), int(height/2 + arc_height / 2)), 180, 0,
+                    drawer.arc((int(current_x) + diameter/2, int(height/2 - arc_height/2) - diameter/2.5,
+                                int(next_x) + diameter/2, int(height/2 + arc_height / 2) - diameter/2.5), 180, 0,
                                fill='White')
         if sfx[i] is not None and sfx[i] != 0 and lrs[sfx[i]] >= LRS_THRESH:
             current_x = x_pos
@@ -83,13 +85,13 @@ def draw(oracle, current_state, image, width=WIDTH, height=HEIGHT):
                 (0.5 / n_states * width)
             # draw arc
             arc_height = (height / 2) - (sfx[i] - i) * 0.125
-            drawer.arc((int(next_x),
-                        int(height/2 - arc_height/2),
-                        int(current_x),
-                        int(height/2 + arc_height/2)),
+            drawer.arc((int(next_x) + diameter/2,
+                        int(height/2 - arc_height/2) + diameter/2.5,
+                        int(current_x) + diameter/2,
+                        int(height/2 + arc_height/2) + diameter/2.5),
                        0,
                        180,
-                       fill='White')
+                       fill='Red')
 
     image.resize((900, 400), (Image.BILINEAR))
     return image

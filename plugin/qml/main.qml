@@ -7,6 +7,7 @@ import QtQuick.Layouts 1.0
 import QtQuick.Controls 1.4
 import QtQuick.Dialogs 1.2
 
+
 // 
 //import Qt.labs.platform 1.0
 //import FileIO 3.0
@@ -38,15 +39,21 @@ MuseScore {
       }
       
       GridLayout {
+        WorkerScript {
+            id: myWorker
+            source: "script.js"
 
-        
+            onMessage: myText.text = messageObject.reply
+        }
+      
         Button {
           id: bUnloadProject
           visible: true
           text: qsTr("Unload project")
           width: 100
           onClicked: {
-                resettingElements()
+                myWorker.sendMessage()
+                writeScore(curScore, "","mxl")
           }
           y: 595
           x: 10

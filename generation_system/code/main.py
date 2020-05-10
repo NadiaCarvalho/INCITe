@@ -31,78 +31,68 @@ def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    name = 'Faur2.mxl'
-    parser = MusicParser(name)
-    parser.parse(parts=True, vertical=True)
+    # name = 'bwv67.4.mxl'
+    # parser = MusicParser(name)
+    # parser.parse(parts=True, vertical=True)
     # parser.to_pickle(name[:-4])
 
-    # new_parser = MusicParser()
-    # new_parser.from_pickle('to')
+    parser = MusicParser()
+    parser.from_pickle('bwv67.4')
 
     weights = {
-        'cpitch': 5,
-        # 'dnote': 4,
-        # 'accidental': 1,
-        # 'pitch_class': 0.5,
-        'rest': 1,
-        'contour': 1,
-        # 'intfib': 3,
-        # 'thrbar': 0.1,
-        # 'posinbar': 0.5,
-        # 'beat_strength': 0.5,
-        'duration.length': 5,
-        'duration.type': 0.5,
-        'timesig': 1,
-        'fib': 0.1,
-        # 'fermata': 0.5,
-        'phrase.boundary': 0.5,
+        # 'basic.rest': 1,
+        # 'basic.grace': 1,
+        # 'basic.chord': 1,
+        # 'duration.length': 1,
+        # 'duration.type': 1,
+        # 'pitch.cpitch': 1,
+        # 'pitch.dnote': 1,
+        # 'pitch.chordPitches': 1,
+        # 'time.timesig': 1,
+        # 'metro.value': 1,
+        'fermata': 1,
+
+        # 'derived.seq_int': 1,
+        # 'derived.contour': 1,
+        # 'derived.contour_hd': 1,
+        # 'derived.closure': 1,
+        # 'derived.registral_direction': 1,
+        # 'derived.intervallic_difference': 1,
+        # 'derived.upwards': 1,
+        # 'derived.downwards': 1,
+        # 'derived.no_movement': 1,
+        # 'derived.fib': 1,
+        # 'derived.posinbar': 1,
+        # 'derived.beat_strength': 1,
+        # 'derived.tactus': 1,
+        # 'derived.intfib': 1,
+        # 'derived.thrbar': 1,
     }
-    # part_number = input('Choose a part from {}:  '.format(
-    #     parser.get_part_events().keys()))
 
-    # if part_number.find('.') == -1 and part_number != '':
-    #     part_number = int(part_number)
+    vertical_start_indexes = {}
+    original_features = {}
+    oracles = {}
 
-    # if part_number in parser.get_part_events().keys():
+    vertical_offsets = [ev.get_offset() for ev in parser.get_vertical_events()]
 
-    #     events = parser.get_part_events()[part_number]
-    #     segmentation(events)
-    #     apply_segmentation_info(events)
+    last_offset = 0
+    for key, events in parser.get_part_events().items():
+        if len(events) > 1:
+            oracle, vs_ind, o_features, last_off = create_line_oracle(parser, events, weights, vertical_offsets=None, phrase=0)
+            oracles[key] = oracle
+            original_features[key] = o_features
+            vertical_start_indexes[key] = vs_ind
+            if last_off > last_offset:
+                last_offset = last_off
 
-    #     #rep_utils.statistic_features(events)
+    vert_oracle = create_vertical_oracle(parser, dim2=vertical_offsets.index(last_offset))
+    oracles['vertical'] = vert_oracle
 
-    #     events_to_learn = []
-    #     for phrase in get_phrases_from_events(events):
-    #         events_to_learn.extend(phrase)
-
-    #     sequenced_events_0 = oracle_and_generator(
-    #         events_to_learn, 100)
-
-    #     score = ScoreConversor()
-    #     score.parse_events(sequenced_events_0, True)
-    #     score.stream.show()
-    # else:
-    #     print('Not a part of this piece!')
-
-    score = ScoreConversor()
-    
-    first = True
-    for part_number in ['1.0', '1.1']:
-        events = parser.get_part_events()[part_number]
-        segmentation(events)
-        apply_segmentation_info(events)
+    for key, oracle in oracles.items():
+        image = gen_plot.start_draw(oracle)
+        name = r'data\myexamples\oracle of part '+ str(key) + '.PNG'
+        image.save(name)
         
-        events_to_learn = []
-        for phrase in get_phrases_from_events(events):
-            events_to_learn.extend(phrase)
-
-        sequenced_events = oracle_and_generator(
-            events_to_learn, 100)
-        if len(sequenced_events) > 0:
-            score.parse_events(sequenced_events, first)
-            first = False
-    
-    score.stream.show('text')
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):
     norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
@@ -170,6 +160,110 @@ def recover_parsed_folder(folder, pickle=True):
                     music_parser.from_json(name, root.split(os.sep)[-4:])
                     music[name] = music_parser
     return music
+
+
+def create_music(parser):
+    first = True
+    for part_number in ['1.0', '1.1']:
+        events = parser.get_part_events()[part_number]
+        segmentation(events)
+        apply_segmentation_info(events)
+
+        events_to_learn = []
+        for phrase in get_phrases_from_events(events):
+            events_to_learn.extend(phrase)
+
+        sequenced_events = oracle_and_generator(
+            events_to_learn, 100)
+        if len(sequenced_events) > 0:
+            score.parse_events(sequenced_events, first)
+            first = False
+
+    score.stream.show('text')
+
+
+def view_specific_part(parser):
+    part_number = input('Choose a part from {}:  '.format(
+        list(parser.get_part_events())))
+
+    if part_number.find('.') == -1 and part_number != '':
+        part_number = int(part_number)
+
+    if part_number in parser.get_part_events().keys():
+
+        events = parser.get_part_events()[part_number]
+        segmentation(events)
+        apply_segmentation_info(events)
+
+        # rep_utils.statistic_features(events)
+
+        events_to_learn = []
+        for phrase in get_phrases_from_events(events):
+            events_to_learn.extend(phrase)
+
+        sequenced_events_0 = oracle_and_generator(
+            events_to_learn, 100)
+
+        score = ScoreConversor()
+        score.parse_events(sequenced_events_0, True)
+        score.stream.show()
+    else:
+        print('Not a part of this piece!')
+
+
+def create_vertical_oracle(parser, dim1=0, dim2=None):
+    """
+    Create the vertical oracle
+    """
+    norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
+        events=parser.get_vertical_events())
+    thresh = gen_utils.find_threshold(
+        norm_features[dim1:dim2], weights=weighted_fit, dim=len(features_names), entropy=True)
+
+    if dim2 is None:
+        dim2 = len(norm_features)
+
+    oracle = gen_utils.build_oracle(
+        norm_features[dim1:dim2], flag='a', features=features_names,
+        weights=weighted_fit, dim=len(features_names),
+        dfunc='cosine', threshold=thresh[0][1])
+    return oracle
+
+
+def create_line_oracle(parser, events, weights=None, dim1=0, dim2=None, vertical_offsets=None, phrase=None):
+    """
+    Create oracle for line part
+    """
+
+    vertical_start_indexes = []
+    if vertical_offsets is not None:
+        ev_offsets = [ev.get_offset() for ev in events]
+        vertical_start_indexes = [vertical_offsets.index(off) for off in ev_offsets]
+        segmentation(events, weights_line=weights, vertical_events=parser.get_vertical_events(), indexes=vertical_start_indexes)
+    else:
+        segmentation(events, weights_line=weights)
+
+    apply_segmentation_info(events)
+    
+    new_events = events
+    if phrase is not None and phrase < len(get_phrases_from_events(events)):
+        new_events = get_phrases_from_events(events)[phrase]
+    
+    last_offset = new_events[-1].get_offset()
+
+    if dim2 is None:
+        dim2 = len(new_events)
+
+    norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(events=new_events)
+    thresh = gen_utils.find_threshold(
+        norm_features[dim1:dim2], weights=weighted_fit, dim=len(features_names), entropy=True)
+    oracle = gen_utils.build_oracle(
+        norm_features[dim1:dim2], flag='a', features=features_names,
+        weights=weighted_fit, dim=len(features_names),
+        dfunc='cosine', threshold=thresh[0][1])
+    
+    return oracle, vertical_start_indexes, o_features, last_offset
+
 
 
 if __name__ == "__main__":

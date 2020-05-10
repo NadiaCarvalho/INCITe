@@ -57,7 +57,7 @@ class MusicParser:
                 except music21.exceptions21.StreamException:
                     self.music.show()
 
-        self.clean_hidden_music()
+            self.clean_hidden_music()
 
     def parse(self, parts=True, vertical=True, number_parts=None):
         """

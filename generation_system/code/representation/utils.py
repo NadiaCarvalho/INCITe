@@ -4,8 +4,9 @@ This script presents utility functions for dealing with representations
 """
 
 import copy
-import music21
 import math
+
+import music21
 import numpy as np
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.impute import SimpleImputer
@@ -22,6 +23,27 @@ def flatten(newlist):
         else:
             rt.append(item)
     return rt
+
+
+def is_power(x, y):
+    """
+    Check if number is power of another
+    """
+
+    # The only power of 1
+    # is 1 itself
+    if (x == 1):
+        return (y == 1)
+
+    # Repeatedly compute
+    # power of x
+    _pow = 1
+    while (_pow < y):
+        _pow = _pow * x
+
+    # Check if power of x
+    # becomes y
+    return (_pow == y)
 
 
 def sign(x): return x and (1, -1)[x < 0]
@@ -313,28 +335,9 @@ def has_value_viewpoint_events(events, viewpoint):
     return False
 
 
-def is_power(x, y):
-    """
-    Check if number is power of another
-    """
-
-    # The only power of 1
-    # is 1 itself
-    if (x == 1):
-        return (y == 1)
-
-    # Repeatedly compute
-    # power of x
-    _pow = 1
-    while (_pow < y):
-        _pow = _pow * x
-
-    # Check if power of x
-    # becomes y
-    return (_pow == y)
-
-
 def get_number_voices(stream):
+    """
+    """
     max_voice_count = 1
     # To deal with separation of chords
     chords = stream.recurse(classFilter='Chord')
@@ -488,9 +491,8 @@ def statistic_features(events):
         else:
             statistic_dict[feat] = list(
                 zip(*np.unique(list(columns_values[i]), return_counts=True)))
-                
+
     for feat, value in statistic_dict.items():
         print(feat + ': ' + str(value))
-    
-    return statistic_dict
 
+    return statistic_dict

@@ -2,12 +2,15 @@
 """
 This script presents the class VerticalEvent that represents a vertical (harmonic) event in a piece of music
 """
+import representation.events.utils as utils
 from representation.events.event import Event
+
 
 class VerticalEvent(Event):
     """
     Class VerticalEvent
     """
+
     def __init__(self, offset=None, from_dict=None, from_list=None, features=None):
         super().__init__(offset, from_dict, from_list, features)
 
@@ -66,7 +69,36 @@ class VerticalEvent(Event):
                 },
             },
         }
-        
-        self.viewpoints = dict(list(default.items()) + list(self.viewpoints.items()))
+
+        self.viewpoints = dict(list(default.items()) +
+                               list(self.viewpoints.items()))
         self._init_from_list_or_dict(offset, from_dict, from_list, features)
 
+    def to_feature_dict(self, features=None, offset=True):
+        """
+        Transforms event in a dict of features
+        """
+        if features is None:
+            features = ['.'.join(path.split('.')[-2:])
+                        for path in utils.get_all_inner_keys(self.viewpoints)]
+
+        features_dict = {}
+        if offset:
+            features_dict['offset'] = self.offset_time
+
+        for feat in features:
+            category = None
+            real_feat = feat
+            if '.' in feat:
+                category = feat.split('.')[0]
+                real_feat = feat.split('.')[1]
+
+            # add features that are arrays
+            if real_feat in ['pitches', 'pitch_class', 'prime_form', 'pc_ordered']:
+                for a_feat in enumerate(self.get_viewpoint(real_feat, category)):
+                    if isinstance(a_feat, tuple):
+                        a_feat = a_feat[1]
+                    features_dict[real_feat + '_' + str(a_feat)] = True
+            else:
+                features_dict[feat] = self.get_viewpoint(real_feat, category)
+        return features_dict
