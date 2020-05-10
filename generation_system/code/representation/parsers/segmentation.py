@@ -130,8 +130,9 @@ def segmentation(events, weights_line=None, vertical_events=None, weights_vert=N
             offset=False, flatten=False)
 
         for i, ind in enumerate(indexes):
-            norm_final_features[i] = np.concatenate((norm_final_features[i], normed_vert_features[ind]))
-            
+            norm_final_features[i] = np.concatenate(
+                (norm_final_features[i], normed_vert_features[ind]))
+
         final_weights = np.concatenate((final_weights, weights_vert))
 
     # Calculate boundary strengths
@@ -196,7 +197,7 @@ def get_phrases_from_events(events, return_rest_phrases=False):
     phrases = []
     for i, begin in enumerate(phrase_begins):
         if i < len(phrase_begins) - 1:
-            phrases.append(events[begin:phrase_begins[i+1]+1])
+            phrases.append(events[begin:phrase_begins[i+1]])
         else:
             phrases.append(events[begin:])
 

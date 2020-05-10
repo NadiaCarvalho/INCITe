@@ -40,59 +40,61 @@ def main():
     parser.from_pickle('bwv67.4')
 
     weights = {
-        # 'basic.rest': 1,
-        # 'basic.grace': 1,
-        # 'basic.chord': 1,
-        # 'duration.length': 1,
-        # 'duration.type': 1,
-        # 'pitch.cpitch': 1,
-        # 'pitch.dnote': 1,
-        # 'pitch.chordPitches': 1,
-        # 'time.timesig': 1,
-        # 'metro.value': 1,
-        'fermata': 1,
+        'line': {
+            'basic.rest': 1,
+            'basic.grace': 1,
+            'basic.chord': 1,
+            'duration.length': 1,
+            'duration.type': 1,
+            'pitch.cpitch': 1,
+            'pitch.dnote': 1,
+            'pitch.chordPitches': 1,
+            'time.timesig': 1,
+            'metro.value': 1,
+            'fermata': 1,
 
-        # 'derived.seq_int': 1,
-        # 'derived.contour': 1,
-        # 'derived.contour_hd': 1,
-        # 'derived.closure': 1,
-        # 'derived.registral_direction': 1,
-        # 'derived.intervallic_difference': 1,
-        # 'derived.upwards': 1,
-        # 'derived.downwards': 1,
-        # 'derived.no_movement': 1,
-        # 'derived.fib': 1,
-        # 'derived.posinbar': 1,
-        # 'derived.beat_strength': 1,
-        # 'derived.tactus': 1,
-        # 'derived.intfib': 1,
-        # 'derived.thrbar': 1,
+            'derived.seq_int': 1,
+            'derived.contour': 1,
+            'derived.contour_hd': 1,
+            'derived.closure': 1,
+            'derived.registral_direction': 1,
+            'derived.intervallic_difference': 1,
+            'derived.upwards': 1,
+            'derived.downwards': 1,
+            'derived.no_movement': 1,
+            'derived.fib': 1,
+            'derived.posinbar': 1,
+            'derived.beat_strength': 1,
+            'derived.tactus': 1,
+            'derived.intfib': 1,
+            'derived.thrbar': 1,
+        },
+        'vertical': {
+            'basic.root': 1,
+            'pitches': 1,
+            'cardinality': 1,
+            'quality': 1,
+            'prime_form': 1,
+            'inversion': 1,
+            'pitch_class': 1,
+            'forte_class': 1,
+            'pc_ordered': 1,
+            'keysig': 1,
+            'signatures.function': 1,
+            'measure.function': 1,
+        }
     }
+    oracles, o_feats, feat_names, vs_ind = create_oracles(parser, seg_weights={
+        'line': {'fermata': 1}}, model_weights=None, phrases=[0], use_vertical=False)
 
-    vertical_start_indexes = {}
-    original_features = {}
-    oracles = {}
-
-    vertical_offsets = [ev.get_offset() for ev in parser.get_vertical_events()]
-
-    last_offset = 0
-    for key, events in parser.get_part_events().items():
-        if len(events) > 1:
-            oracle, vs_ind, o_features, last_off = create_line_oracle(parser, events, weights, vertical_offsets=None, phrase=0)
-            oracles[key] = oracle
-            original_features[key] = o_features
-            vertical_start_indexes[key] = vs_ind
-            if last_off > last_offset:
-                last_offset = last_off
-
-    vert_oracle = create_vertical_oracle(parser, dim2=vertical_offsets.index(last_offset))
-    oracles['vertical'] = vert_oracle
-
-    for key, oracle in oracles.items():
-        image = gen_plot.start_draw(oracle)
-        name = r'data\myexamples\oracle of part '+ str(key) + '.PNG'
-        image.save(name)
-        
+    # score = ScoreConversor()
+    # for key, oracle in oracles.items():
+    #     if key != 'vertical':
+    #         sequence, end, k_trace = gen.generate(
+    #             oracle, seq_len=30, p=0.3, k=0, LRS=5)   
+    #         sequenced_events = [LinearEvent(from_list=o_feats[key][state-1], features=feat_names[key]) for state in sequence]
+    #         score.parse_events(sequenced_events, new_part=True, new_voice=True)
+    # score.stream.show()
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):
     norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
@@ -211,12 +213,12 @@ def view_specific_part(parser):
         print('Not a part of this piece!')
 
 
-def create_vertical_oracle(parser, dim1=0, dim2=None):
+def create_vertical_oracle(parser, model_weights=None, dim1=0, dim2=None):
     """
     Create the vertical oracle
     """
     norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
-        events=parser.get_vertical_events())
+        events=parser.get_vertical_events(), weights=model_weights)
     thresh = gen_utils.find_threshold(
         norm_features[dim1:dim2], weights=weighted_fit, dim=len(features_names), entropy=True)
 
@@ -230,40 +232,103 @@ def create_vertical_oracle(parser, dim1=0, dim2=None):
     return oracle
 
 
-def create_line_oracle(parser, events, weights=None, dim1=0, dim2=None, vertical_offsets=None, phrase=None):
+def create_line_oracle(parser, events, seg_weights=None, model_weights=None, dim1=0, dim2=None, vertical_offsets=None, phrases=None):
     """
     Create oracle for line part
     """
+    line_seg_weights = None
+    if seg_weights is not None and 'line' in seg_weights:
+        line_seg_weights = seg_weights['line']
+
+    vert_seg_weights = None
+    if seg_weights is not None and 'vertical' in seg_weights:
+        vert_seg_weights = seg_weights['vertical']
 
     vertical_start_indexes = []
     if vertical_offsets is not None:
         ev_offsets = [ev.get_offset() for ev in events]
-        vertical_start_indexes = [vertical_offsets.index(off) for off in ev_offsets]
-        segmentation(events, weights_line=weights, vertical_events=parser.get_vertical_events(), indexes=vertical_start_indexes)
+        vertical_start_indexes = [
+            vertical_offsets.index(off) for off in ev_offsets]
+        segmentation(events, weights_line=line_seg_weights,
+                     weights_vert=vert_seg_weights,
+                     vertical_events=parser.get_vertical_events(),
+                     indexes=vertical_start_indexes)
     else:
-        segmentation(events, weights_line=weights)
+        segmentation(events, weights_line=line_seg_weights)
 
     apply_segmentation_info(events)
-    
-    new_events = events
-    if phrase is not None and phrase < len(get_phrases_from_events(events)):
-        new_events = get_phrases_from_events(events)[phrase]
-    
+
+    new_events = []
+    piece_phrases = get_phrases_from_events(events)
+    if phrases is None:
+        phrases = range(len(piece_phrases))
+
+    for phrase in phrases:
+        if phrase < len(piece_phrases):
+            new_events.extend(piece_phrases[phrase])
+
     last_offset = new_events[-1].get_offset()
 
     if dim2 is None:
         dim2 = len(new_events)
 
-    norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(events=new_events)
+    norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
+        events=new_events, weights=model_weights)
     thresh = gen_utils.find_threshold(
         norm_features[dim1:dim2], weights=weighted_fit, dim=len(features_names), entropy=True)
     oracle = gen_utils.build_oracle(
         norm_features[dim1:dim2], flag='a', features=features_names,
         weights=weighted_fit, dim=len(features_names),
         dfunc='cosine', threshold=thresh[0][1])
-    
-    return oracle, vertical_start_indexes, o_features, last_offset
 
+    return oracle, vertical_start_indexes, o_features, features_names, last_offset
+
+
+def create_oracles(parser, seg_weights=None, model_weights=None, parts=None, phrases=None, use_vertical=False):
+    """
+    Creator of oracles
+    """
+    vertical_start_indexes = {}
+    original_features = {}
+    oracles = {}
+    total_features_names = {}
+
+    vertical_offsets = [ev.get_offset() for ev in parser.get_vertical_events()]
+
+    if parts is None:
+        parts = list(parser.get_part_events())
+
+    line_mod_weights = None
+    if model_weights is not None and 'line' in model_weights:
+        line_mod_weights = model_weights['line']
+
+    vert_mod_weights = None
+    if model_weights is not None and 'vertical' in model_weights:
+        vert_mod_weights = model_weights['vertical']
+
+    last_offset = 0
+    for key, events in parser.get_part_events().items():
+        if len(events) > 1 and key in parts:
+            oracle, vs_ind, o_features, features_names, last_off = create_line_oracle(
+                parser, events, seg_weights, line_mod_weights,
+                vertical_offsets=(None, vertical_offsets)[use_vertical], phrases=phrases)
+            oracles[key] = oracle
+            original_features[key] = o_features
+            vertical_start_indexes[key] = vs_ind
+            total_features_names[key] = features_names
+            if last_off > last_offset:
+                last_offset = last_off
+
+    vert_oracle = create_vertical_oracle(
+        parser, model_weights=vert_mod_weights, dim2=vertical_offsets.index(last_offset))
+    oracles['vertical'] = vert_oracle
+
+    for key, oracle in oracles.items():
+        image = gen_plot.start_draw(oracle)
+        name = r'data\myexamples\oracle of part ' + str(key) + '.PNG'
+        image.save(name)
+
+    return oracles, original_features, total_features_names, vertical_start_indexes
 
 
 if __name__ == "__main__":

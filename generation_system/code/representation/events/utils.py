@@ -21,6 +21,7 @@ def convert_note_name(dnote):
     }
     if type(dnote) is type(''):
         return dnotes[dnote]
+        
     note_number = int(list(dnotes.values()).index(dnote))
     return list(dnotes.keys())[note_number]
 

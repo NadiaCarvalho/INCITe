@@ -28,11 +28,13 @@ class ScoreConversor:
         """
         stream = self.stream
         if new_part:
+            self.last_voice_id = 0
             stream = music21.stream.Part()
-        
-        voice = music21.stream.Voice(self.last_voice_id)
 
-        #measures = []
+        voice = music21.stream.Voice(id=self.last_voice_id)
+
+        measures = []
+
         slurs = []
 
         last_key_signature = 0
@@ -40,27 +42,38 @@ class ScoreConversor:
         last_metro_value = ''
         last_instrument = music21.instrument.Instrument('')
         last_dynamics = []
+
         for event in events:
+            if new_voice and event.get_viewpoint('fib') and len(measures) > 0:
+                measures[-1].append(voice)
+                voice = music21.stream.Voice(id=self.last_voice_id)
+            if len(measures) == 0 or event.get_viewpoint('fib'):
+                measures.append(music21.stream.Measure())
 
             instrument = event.get_viewpoint('instrument')
-            if instrument != last_instrument and instrument != ': ':
+            if instrument != last_instrument and not isinstance(instrument, str):
                 stream.append(instrument)
                 last_instrument = instrument
 
-            if event.get_viewpoint('timesig') != last_time_signature:
-                stream.append(music21.meter.TimeSignature(
-                    event.get_viewpoint('timesig')))
-                last_time_signature = event.get_viewpoint('timesig')
+            time_sig = event.get_viewpoint('timesig')
+            if time_sig != last_time_signature:
+                measures[-1].append(music21.meter.TimeSignature(time_sig))
+                last_time_signature = time_sig
 
-            if event.get_viewpoint('metro.value') != last_metro_value:
-                stream.append(music21.tempo.MetronomeMark(text=event.get_viewpoint('metro.text'),
-                                                          number=event.get_viewpoint('metro.value'), referent=music21.note.Note(type=event.get_viewpoint('ref.type'))))
-                last_metro_value = event.get_viewpoint('metro.value')
+            metro_value = event.get_viewpoint('metro.value')
+            if metro_value != last_metro_value:
+                measures[-1].append(
+                    music21.tempo.MetronomeMark(
+                        text=event.get_viewpoint('metro.text'),
+                        number=metro_value,
+                        referent=music21.note.Note(type=event.get_viewpoint('ref.type'))))
+                last_metro_value = metro_value
 
-            if event.get_viewpoint('keysig') != last_key_signature:
-                stream.append(music21.key.KeySignature(
-                    sharps=int(event.get_viewpoint('keysig'))))
-                last_key_signature = event.get_viewpoint('keysig')
+            keysig = event.get_viewpoint('keysig')
+            if keysig != last_key_signature:
+                measures[-1].append(music21.key.KeySignature(
+                    sharps=int(keysig)))
+                last_key_signature = keysig
 
             note = None
             if event.is_rest():
@@ -74,23 +87,35 @@ class ScoreConversor:
             if new_voice:
                 voice.append(note)
             else:
-                stream.append(note)
+                measures[-1].append(note)
 
             for dyn in event.get_viewpoint('dynamic'):
                 if not dyn in last_dynamics:
-                    stream.insert(stream.highestOffset,
-                                  music21.dynamics.Dynamic(dyn))
+                    measures[-1].insert(stream.highestOffset,
+                                        music21.dynamics.Dynamic(dyn))
             last_dynamics = event.get_viewpoint('dynamic')
 
             if event.get_viewpoint('slur.begin'):
                 slurs.append(music21.spanner.Slur())
                 pass
 
-        if new_voice:
-            stream.append(voice)
-            self.last_voice_id += 1
+        if events[0].get_viewpoint('posinbar') > 0:
+            measures[0].padAsAnacrusis(useGaps=True, useInitialRests=False)
+        # music21.stream.makeNotation.makeMeasures(stream, inPlace=True)
 
-        music21.stream.makeNotation.makeMeasures(stream, inPlace=True)
+        if new_voice and len(measures) > 0:
+            measures[-1].append(voice)
+
+        if self.last_voice_id == 0:
+            stream.append(measures)
+        else:
+            for i, measure in enumerate(list(stream.recurse(classFilter='Measure'))):
+                for v in measures[i].voices:
+                    measure.append(v)
+
+        # stream.flattenUnnecessaryVoices(force=True, inPlace=True)
+        if new_voice:
+            self.last_voice_id += 1
         if new_part:
             self.stream.append(stream)
 
@@ -98,6 +123,7 @@ class ScoreConversor:
 
     def convert_note_event(self, event):
         """
+        Convert Note Event
         """
         pitch = music21.pitch.Pitch(event.get_viewpoint(
             'dnote') + str(int(event.get_viewpoint('octave'))))
