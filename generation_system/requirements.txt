@@ -2,3 +2,6 @@ music21
 matplotlib
 numpy
 scipy
+sklearn
+vmo
+Pillow

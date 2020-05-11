@@ -37,6 +37,7 @@ class ScoreConversor:
 
         slurs = []
 
+        bar_duration = music21.duration.Duration(quarterLength=4)
         last_key_signature = 0
         last_time_signature = ''
         last_metro_value = ''
@@ -45,9 +46,12 @@ class ScoreConversor:
 
         for event in events:
             if new_voice and event.get_viewpoint('fib') and len(measures) > 0:
+                # measures[-1].makeNotation(inPlace=True)
                 measures[-1].append(voice)
                 voice = music21.stream.Voice(id=self.last_voice_id)
-            if len(measures) == 0 or event.get_viewpoint('fib'):
+            if (len(measures) == 0 or event.get_viewpoint('fib')
+                    or measures[-1].barDurationProportion(barDuration=bar_duration) == 1.0):
+                # measures[-1].makeNotation(inPlace=True)
                 measures.append(music21.stream.Measure())
 
             instrument = event.get_viewpoint('instrument')
@@ -55,25 +59,27 @@ class ScoreConversor:
                 stream.append(instrument)
                 last_instrument = instrument
 
+            keysig = event.get_viewpoint('keysig')
+            if keysig != last_key_signature:
+                stream.append(music21.key.KeySignature(
+                    sharps=int(keysig)))
+                last_key_signature = keysig
+
             time_sig = event.get_viewpoint('timesig')
             if time_sig != last_time_signature:
-                measures[-1].append(music21.meter.TimeSignature(time_sig))
+                time_signature = music21.meter.TimeSignature(time_sig)
+                stream.append(time_signature)
                 last_time_signature = time_sig
+                bar_duration = time_signature.barDuration
 
             metro_value = event.get_viewpoint('metro.value')
             if metro_value != last_metro_value:
-                measures[-1].append(
+                stream.append(
                     music21.tempo.MetronomeMark(
                         text=event.get_viewpoint('metro.text'),
                         number=metro_value,
                         referent=music21.note.Note(type=event.get_viewpoint('ref.type'))))
                 last_metro_value = metro_value
-
-            keysig = event.get_viewpoint('keysig')
-            if keysig != last_key_signature:
-                measures[-1].append(music21.key.KeySignature(
-                    sharps=int(keysig)))
-                last_key_signature = keysig
 
             note = None
             if event.is_rest():
@@ -100,8 +106,7 @@ class ScoreConversor:
                 pass
 
         if events[0].get_viewpoint('posinbar') > 0:
-            measures[0].padAsAnacrusis(useGaps=True, useInitialRests=False)
-        # music21.stream.makeNotation.makeMeasures(stream, inPlace=True)
+            measures[0].padAsAnacrusis(useGaps=False, useInitialRests=True)
 
         if new_voice and len(measures) > 0:
             measures[-1].append(voice)
@@ -113,7 +118,8 @@ class ScoreConversor:
                 for v in measures[i].voices:
                     measure.append(v)
 
-        # stream.flattenUnnecessaryVoices(force=True, inPlace=True)
+        #music21.stream.makeNotation.makeMeasures(stream, inPlace=True, searchContext=True)
+
         if new_voice:
             self.last_voice_id += 1
         if new_part:

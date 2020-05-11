@@ -4,7 +4,6 @@ This script is the main script of the generation system
 """
 
 import numpy as np
-from vmo import VMO, plot
 
 import generation.generation as gen
 import generation.plot_fo as gen_plot
@@ -87,11 +86,19 @@ def main():
     oracles, o_feats, feat_names, vs_ind = create_oracles(parser, seg_weights={
         'line': {'fermata': 1}}, model_weights=None, phrases=[0], use_vertical=False)
 
+    score = ScoreConversor()
+    sequence, end, k_trace = gen.generate(
+        oracles[0], seq_len=30, p=0.3, k=0, LRS=5)
+    sequenced_events = [LinearEvent(
+        from_list=o_feats[0][state-1], features=feat_names[0]) for state in sequence]
+    score.parse_events(sequenced_events, new_part=True, new_voice=True)
+    score.stream.show()
+
     # score = ScoreConversor()
     # for key, oracle in oracles.items():
     #     if key != 'vertical':
     #         sequence, end, k_trace = gen.generate(
-    #             oracle, seq_len=30, p=0.3, k=0, LRS=5)   
+    #             oracle, seq_len=30, p=0.3, k=0, LRS=5)
     #         sequenced_events = [LinearEvent(from_list=o_feats[key][state-1], features=feat_names[key]) for state in sequence]
     #         score.parse_events(sequenced_events, new_part=True, new_voice=True)
     # score.stream.show()

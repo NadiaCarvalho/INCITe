@@ -122,6 +122,7 @@ class LinearEvent(Event):
                 'intfib': 0,
                 'thrbar': 0,
                 'intphrase': 0,
+                'anacrusis': False,
             },
         }
         self.viewpoints = dict(list(default.items()) +
