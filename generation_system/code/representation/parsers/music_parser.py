@@ -234,13 +234,17 @@ class MusicParser:
         """
         Returns the parts events
         """
-        return self.music_events['part_events']
+        if 'part_events' in self.music_events:
+            return self.music_events['part_events']
+        return None
 
     def get_vertical_events(self):
         """
         Returns the vertical events
         """
-        return self.music_events['vertical_events']
+        if 'vertical_events' in self.music_events:
+            return self.music_events['vertical_events']
+        return None
 
     def to_json(self, filename, folders=['data', 'myexamples'], indent=2):
         """

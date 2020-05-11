@@ -3,20 +3,16 @@
 This script is the main script of the generation system
 """
 
-import numpy as np
-
-import generation.generation as gen
-import generation.plot_fo as gen_plot
-import generation.utils as gen_utils
-import representation.utils as rep_utils
-
-from representation.events.linear_event import LinearEvent
-
-from representation.parsers.segmentation import segmentation, apply_segmentation_info, get_phrases_from_events
-from representation.parsers.music_parser import MusicParser
-from representation.conversor.score_conversor import ScoreConversor
-
 import os
+from representation.conversor.score_conversor import ScoreConversor
+from representation.parsers.music_parser import MusicParser
+from representation.parsers.segmentation import segmentation, apply_segmentation_info, get_phrases_from_events
+from representation.events.linear_event import LinearEvent
+import representation.utils as rep_utils
+import generation.utils as gen_utils
+import generation.plot_fo as gen_plot
+import generation.generation as gen
+import numpy as np
 
 # 'MicrotonsExample.mxl'
 # 'VoiceExample.mxl'
@@ -30,13 +26,13 @@ def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    # name = 'bwv67.4.mxl'
-    # parser = MusicParser(name)
+    # name = 'lg-199757.mxl'
+    # parser = MusicParser(name, folders=['data','database','ScoresOfScores-master', '3-Corpus'])
     # parser.parse(parts=True, vertical=True)
     # parser.to_pickle(name[:-4])
 
     parser = MusicParser()
-    parser.from_pickle('bwv67.4')
+    parser.from_pickle('lg-199757')
 
     weights = {
         'line': {
@@ -47,6 +43,8 @@ def main():
             'duration.type': 1,
             'pitch.cpitch': 1,
             'pitch.dnote': 1,
+            'pitch.accidental': 1,
+            'pitch.octave': 1,
             'pitch.chordPitches': 1,
             'time.timesig': 1,
             'metro.value': 1,
@@ -83,8 +81,18 @@ def main():
             'measure.function': 1,
         }
     }
-    oracles, o_feats, feat_names, vs_ind = create_oracles(parser, seg_weights={
-        'line': {'fermata': 1}}, model_weights=None, phrases=[0], use_vertical=False)
+    # parts=[0,1,2],
+    oracles, o_feats, feat_names, vs_ind = create_oracles(parser, seg_weights={'line': {
+                                                          'fermata': 1, 'basic.rest': 1}}, model_weights=None, phrases=[0], use_vertical=False)
+
+    key = 0
+    score = ScoreConversor()
+    sequence, end, k_trace = gen.generate(
+        oracles[key], seq_len=30, p=0.3, k=0, LRS=5)
+    sequenced_events = [LinearEvent(
+        from_list=o_feats[key][state-1], features=feat_names[key]) for state in sequence]
+    score.parse_events(sequenced_events, new_part=True, new_voice=True)
+    score.stream.show()
 
     score = ScoreConversor()
     sequence, end, k_trace = gen.generate(
@@ -99,9 +107,11 @@ def main():
     #     if key != 'vertical':
     #         sequence, end, k_trace = gen.generate(
     #             oracle, seq_len=30, p=0.3, k=0, LRS=5)
-    #         sequenced_events = [LinearEvent(from_list=o_feats[key][state-1], features=feat_names[key]) for state in sequence]
+    #         sequenced_events = [LinearEvent(
+    #             from_list=o_feats[key][state-1], features=feat_names[key]) for state in sequence]
     #         score.parse_events(sequenced_events, new_part=True, new_voice=True)
     # score.stream.show()
+
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):
     norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
@@ -291,7 +301,7 @@ def create_line_oracle(parser, events, seg_weights=None, model_weights=None, dim
     return oracle, vertical_start_indexes, o_features, features_names, last_offset
 
 
-def create_oracles(parser, seg_weights=None, model_weights=None, parts=None, phrases=None, use_vertical=False):
+def create_oracles(parser, seg_weights=None, model_weights=None, parts=None, phrases=None, use_vertical=False, print=True):
     """
     Creator of oracles
     """
@@ -300,7 +310,10 @@ def create_oracles(parser, seg_weights=None, model_weights=None, parts=None, phr
     oracles = {}
     total_features_names = {}
 
-    vertical_offsets = [ev.get_offset() for ev in parser.get_vertical_events()]
+    vertical_offsets = []
+    if parser.get_vertical_events() is not None:
+        vertical_offsets = [ev.get_offset()
+                            for ev in parser.get_vertical_events()]
 
     if parts is None:
         parts = list(parser.get_part_events())
@@ -313,7 +326,7 @@ def create_oracles(parser, seg_weights=None, model_weights=None, parts=None, phr
     if model_weights is not None and 'vertical' in model_weights:
         vert_mod_weights = model_weights['vertical']
 
-    last_offset = 0
+    last_offset = 0.0
     for key, events in parser.get_part_events().items():
         if len(events) > 1 and key in parts:
             oracle, vs_ind, o_features, features_names, last_off = create_line_oracle(
@@ -323,22 +336,27 @@ def create_oracles(parser, seg_weights=None, model_weights=None, parts=None, phr
             original_features[key] = o_features
             vertical_start_indexes[key] = vs_ind
             total_features_names[key] = features_names
-            if last_off > last_offset:
+
+            if (last_offset < last_off and last_off in vertical_offsets):
                 last_offset = last_off
 
-    vert_oracle = create_vertical_oracle(
-        parser, model_weights=vert_mod_weights, dim2=vertical_offsets.index(last_offset))
-    oracles['vertical'] = vert_oracle
+    if parser.get_vertical_events() is not None:
+        index = vertical_offsets.index(last_offset)
+        vert_oracle = create_vertical_oracle(
+            parser, model_weights=vert_mod_weights, dim2=index)
+        oracles['vertical'] = vert_oracle
 
-    for key, oracle in oracles.items():
-        image = gen_plot.start_draw(oracle)
-        name = r'data\myexamples\oracle of part ' + str(key) + '.PNG'
-        image.save(name)
+    if print:
+        for key, oracle in oracles.items():
+            image = gen_plot.start_draw(oracle)
+            name = r'data\myexamples\oracle of part ' + str(key) + '.PNG'
+            image.save(name)
 
     return oracles, original_features, total_features_names, vertical_start_indexes
 
 
 if __name__ == "__main__":
     main()
+
     # parsing_music_folder(r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\music21\bach')
     # recover_parsed_folder(r'D:\FEUP_1920\DISS\Dissertation\generation_system\data\database\parsed\bach')
