@@ -82,8 +82,12 @@ def main():
         }
     }
     # parts=[0,1,2],
-    oracles, o_feats, feat_names, vs_ind = create_oracles(parser, seg_weights={'line': {
-                                                          'fermata': 1, 'basic.rest': 1}}, model_weights=None, phrases=[0], use_vertical=False)
+    oracles, o_feats, feat_names, vs_ind = create_oracles(parser,
+                                                          seg_weights={'line': {
+                                                              'fermata': 1, 'basic.rest': 1}},
+                                                          model_weights=None,
+                                                          phrases=[0],
+                                                          use_vertical=False)
 
     key = 0
     score = ScoreConversor()

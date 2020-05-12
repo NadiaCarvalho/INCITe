@@ -10,6 +10,7 @@ import numpy as np
 from generation.factor_oracle import FactorOracle
 
 
+
 def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
     """ Generate a sequence based on traversing an oracle.
     :param oracle: a indexed vmo object
@@ -109,6 +110,7 @@ def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
             k = 0
     kend = k
     return s, kend, ktrace
+
 
 def _find_links(k_vec, sfx, rsfx, k):
     """Find sfx/rsfx recursively."""
