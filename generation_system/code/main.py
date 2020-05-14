@@ -12,6 +12,7 @@ import representation.utils as rep_utils
 import generation.utils as gen_utils
 import generation.plot_fo as gen_plot
 import generation.generation as gen
+import generation.multi_oracle_gen as multi_gen
 import numpy as np
 
 # 'MicrotonsExample.mxl'
@@ -82,29 +83,30 @@ def main():
         }
     }
     # parts=[0,1,2],
-    oracles, o_feats, feat_names, vs_ind = create_oracles(parser,
+    oracles, o_feats, feat_names, vs_ind, offsets = create_oracles(parser,
                                                           seg_weights={'line': {
                                                               'fermata': 1, 'basic.rest': 1}},
                                                           model_weights=None,
                                                           phrases=[0],
                                                           use_vertical=False)
+    
+    multi_gen.sync_generate(oracles, offsets)
+    # key = 0
+    # score = ScoreConversor()
+    # sequence, end, k_trace = gen.generate(
+    #     oracles[key], seq_len=30, p=0.3, k=0, LRS=5)
+    # sequenced_events = [LinearEvent(
+    #     from_list=o_feats[key][state-1], features=feat_names[key]) for state in sequence]
+    # score.parse_events(sequenced_events, new_part=True, new_voice=True)
+    # score.stream.show()
 
-    key = 0
-    score = ScoreConversor()
-    sequence, end, k_trace = gen.generate(
-        oracles[key], seq_len=30, p=0.3, k=0, LRS=5)
-    sequenced_events = [LinearEvent(
-        from_list=o_feats[key][state-1], features=feat_names[key]) for state in sequence]
-    score.parse_events(sequenced_events, new_part=True, new_voice=True)
-    score.stream.show()
-
-    score = ScoreConversor()
-    sequence, end, k_trace = gen.generate(
-        oracles[0], seq_len=30, p=0.3, k=0, LRS=5)
-    sequenced_events = [LinearEvent(
-        from_list=o_feats[0][state-1], features=feat_names[0]) for state in sequence]
-    score.parse_events(sequenced_events, new_part=True, new_voice=True)
-    score.stream.show()
+    # score = ScoreConversor()
+    # sequence, end, k_trace = gen.generate(
+    #     oracles[0], seq_len=30, p=0.3, k=0, LRS=5)
+    # sequenced_events = [LinearEvent(
+    #     from_list=o_feats[0][state-1], features=feat_names[0]) for state in sequence]
+    # score.parse_events(sequenced_events, new_part=True, new_voice=True)
+    # score.stream.show()
 
     # score = ScoreConversor()
     # for key, oracle in oracles.items():
@@ -310,14 +312,14 @@ def create_oracles(parser, seg_weights=None, model_weights=None, parts=None, phr
     Creator of oracles
     """
     vertical_start_indexes = {}
+    offsets = {}
     original_features = {}
     oracles = {}
     total_features_names = {}
 
-    vertical_offsets = []
     if parser.get_vertical_events() is not None:
-        vertical_offsets = [ev.get_offset()
-                            for ev in parser.get_vertical_events()]
+        offsets['vertical'] = [ev.get_offset()
+                               for ev in parser.get_vertical_events()]
 
     if parts is None:
         parts = list(parser.get_part_events())
@@ -335,17 +337,18 @@ def create_oracles(parser, seg_weights=None, model_weights=None, parts=None, phr
         if len(events) > 1 and key in parts:
             oracle, vs_ind, o_features, features_names, last_off = create_line_oracle(
                 parser, events, seg_weights, line_mod_weights,
-                vertical_offsets=(None, vertical_offsets)[use_vertical], phrases=phrases)
+                vertical_offsets=(None, offsets['vertical'])[use_vertical], phrases=phrases)
             oracles[key] = oracle
             original_features[key] = o_features
+            offsets[key] = [ev.get_offset() for ev in events]
             vertical_start_indexes[key] = vs_ind
             total_features_names[key] = features_names
 
-            if (last_offset < last_off and last_off in vertical_offsets):
+            if (last_offset < last_off and last_off in offsets['vertical']):
                 last_offset = last_off
 
     if parser.get_vertical_events() is not None:
-        index = vertical_offsets.index(last_offset)
+        index = offsets['vertical'].index(last_offset)
         vert_oracle = create_vertical_oracle(
             parser, model_weights=vert_mod_weights, dim2=index)
         oracles['vertical'] = vert_oracle
@@ -356,7 +359,7 @@ def create_oracles(parser, seg_weights=None, model_weights=None, parts=None, phr
             name = r'data\myexamples\oracle of part ' + str(key) + '.PNG'
             image.save(name)
 
-    return oracles, original_features, total_features_names, vertical_start_indexes
+    return oracles, original_features, total_features_names, vertical_start_indexes, offsets
 
 
 if __name__ == "__main__":

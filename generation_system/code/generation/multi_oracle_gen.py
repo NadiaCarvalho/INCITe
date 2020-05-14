@@ -9,8 +9,17 @@ import numpy as np
 
 from generation.factor_oracle import FactorOracle
 
-def sync_generate(oracles):
+def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1, LRS=0, weight=None):
     """
     Generate synchronized lines from various oracles
     """
-    pass
+    sync_lrs_oracle = oracles.values()
+    print([(key, len(part)) for key, part in offsets.items()])
+
+
+
+    #trn = oracle.basic_attributes['trn'][:]
+    #sfx = oracle.basic_attributes['sfx'][:]
+    #lrs = oracle.basic_attributes['lrs'][:]
+    #rsfx = oracle.basic_attributes['rsfx'][:]
+

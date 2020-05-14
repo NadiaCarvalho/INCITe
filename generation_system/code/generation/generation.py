@@ -12,7 +12,8 @@ from generation.factor_oracle import FactorOracle
 
 
 def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
-    """ Generate a sequence based on traversing an oracle.
+    """ 
+    Generate a sequence based on traversing an oracle.
     :param oracle: a indexed vmo object
     :param seq_len: the length of the returned improvisation sequence
     :param p: a float between (0,1) representing the probability using the forward links.

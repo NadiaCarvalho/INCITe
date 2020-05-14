@@ -1,26 +1,38 @@
+"""
+Main Window for Interface
+"""
+
 import sys
 
-from PyQt5.QtCore import Qt
-from PyQt5 import Qt, QtWidgets, QtGui
+from PyQt5 import Qt, QtGui, QtWidgets
 
+from interface.menus.first_menu import FirstMenu
+from interface.menus.second_menu import SecondMenu
+from interface.menus.third_menu import ThirdMenu
 
 class MainWindow(QtWidgets.QMainWindow):
+    """
+    Main Window of Application
+    """
 
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setWindowTitle("My Awesome App")
         self.setWindowIcon(QtGui.QIcon('web.png'))
 
-        self.resize(400,800)
+        self.resize(400, 800)
 
         # Central Widget
         self.central_wid = QtWidgets.QWidget()
-        self.layout_for_wids =  QtWidgets.QStackedLayout()
+        self.layout_for_wids = QtWidgets.QStackedLayout()
 
         self.addToolBar(self.init_toolbar())
 
         # LAYOUT CONTAINER FOR WIDGETS
-        self.wids = [self.first_menu(), self.second_menu(), self.third_menu()]
+        f_m = FirstMenu(self.width(), self.height())
+        s_m = SecondMenu(self.width(), self.height())
+        t_m = ThirdMenu(self.width(), self.height())
+        self.wids = [f_m, s_m, t_m]
         for wind in self.wids:
             self.layout_for_wids.addWidget(wind)
 
@@ -32,7 +44,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # CHOOSE YOUR CENTRAL WIDGET
         self.setCentralWidget(self.central_wid)
-        
 
     def resizeEvent(self, event):
         """
@@ -77,39 +88,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         return toolbar
 
-    def first_menu(self):
-        """
-        Initiation of first Menu:
-        - Choosing Database
-        """
-        wid = QtWidgets.QWidget()
-        wid.setStyleSheet("""background: blue;""")
-        wid.resize(self.width(), self.height())
-        return wid
-
-    def second_menu(self):
-        """
-        Initiation of second Menu:
-        - Presentation of statistics 
-        - Choosing Weights
-        """
-        wid = QtWidgets.QWidget()
-        wid.setStyleSheet("""background: red;""")
-        wid.resize(self.width(), self.height())
-        return wid
-
-    def third_menu(self):
-        """
-        Initiation of third Menu
-        - Oracles constructed (maybe show?)
-        - Choosing number of sequences to generate
-        - Generate
-        """
-        wid = QtWidgets.QWidget()
-        wid.setStyleSheet("""background: green;""")
-        wid.resize(self.width(), self.height())
-        return wid
-
     def next_wid(self):
         # LOGIC TO SWITCH NEXT
         if self.front_wid != len(self.wids)-1:
@@ -134,17 +112,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.btn_back.setEnabled(True)
 
         if self.front_wid == len(self.wids)-1:
-            self.btn_next.setEnabled(False)            
+            self.btn_next.setEnabled(False)
         if self.front_wid == 0:
             self.btn_back.setEnabled(False)
-            
-
-
-if __name__ == "__main__":
-    app = Qt.QApplication(sys.argv)
-    app.setStyle('Fusion')
-
-    window = MainWindow()
-    window.show()
-
-    sys.exit(app.exec_())
