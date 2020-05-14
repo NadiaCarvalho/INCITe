@@ -51,29 +51,29 @@ def main():
             'duration.length': 1,
             'duration.type': 1,
             'pitch.cpitch': 1,
-            'pitch.dnote': 1,
-            'pitch.accidental': 1,
-            'pitch.octave': 1,
-            'pitch.chordPitches': 1,
-            'time.timesig': 1,
-            'metro.value': 1,
-            'fermata': 1,
+            # 'pitch.dnote': 1,
+            # 'pitch.accidental': 1,
+            # 'pitch.octave': 1,
+            # 'pitch.chordPitches': 1,
+            # 'time.timesig': 1,
+            # 'metro.value': 1,
+            # 'fermata': 1,
 
-            'derived.seq_int': 1,
-            'derived.contour': 1,
-            'derived.contour_hd': 1,
-            'derived.closure': 1,
-            'derived.registral_direction': 1,
-            'derived.intervallic_difference': 1,
-            'derived.upwards': 1,
-            'derived.downwards': 1,
-            'derived.no_movement': 1,
+            # 'derived.seq_int': 1,
+            # 'derived.contour': 1,
+            # 'derived.contour_hd': 1,
+            # 'derived.closure': 1,
+            # 'derived.registral_direction': 1,
+            # 'derived.intervallic_difference': 1,
+            # 'derived.upwards': 1,
+            # 'derived.downwards': 1,
+            # 'derived.no_movement': 1,
             'derived.fib': 1,
             'derived.posinbar': 1,
-            'derived.beat_strength': 1,
-            'derived.tactus': 1,
-            'derived.intfib': 1,
-            'derived.thrbar': 1,
+            # 'derived.beat_strength': 1,
+            # 'derived.tactus': 1,
+            # 'derived.intfib': 1,
+            # 'derived.thrbar': 1,
         },
         'vertical': {
             'basic.root': 1,
@@ -93,20 +93,23 @@ def main():
     # parts=[0,1,2],
     oracles, o_feats, feat_names, vs_ind, offsets = create_oracles(parser,
                                                                    seg_weights={'line': {
-                                                                       'fermata': 1}},
-                                                                   model_weights=None,
-                                                                   phrases=[0],
+                                                                       'fermata': 1,
+                                                                       'basic.rest': 1}},
+                                                                   model_weights=weights,
+                                                                   phrases=None,
                                                                    use_vertical=False)
 
     sequences, ktraces = multi_gen.sync_generate(
-        oracles, offsets, seq_len=30, p=0.3, k=1)
-    # score = ScoreConversor()
-    # for key, sequence in sequences.items():
-    #     if key != 'vertical':
-    #         sequenced_events = [LinearEvent(
-    #             from_list=o_feats[key][state-1], features=feat_names[key]) for state in sequence]
-    #         score.parse_events(sequenced_events, new_part=True, new_voice=True)
-    # score.stream.show()
+        oracles, offsets, seq_len=30, p=0.5, k=0)
+    print(sequences)
+    score = ScoreConversor()
+    for key, sequence in sequences.items():
+        if key != 'vertical':
+            print(len(o_feats[key]))
+            sequenced_events = [LinearEvent(
+                from_list=o_feats[key][state-2], features=feat_names[key]) for state in sequence]
+            score.parse_events(sequenced_events, new_part=True, new_voice=True)
+    score.stream.show()
 
     # key = 0
     # score = ScoreConversor()
@@ -367,15 +370,14 @@ def create_oracles(parser, seg_weights=None, model_weights=None, parts=None, phr
         ev_offsets['vertical'] = ev_offsets['vertical'][index_min:index_max]
 
     if print:
-        if len(np.unique(np.array([offs[-1] for key, offs in ev_offsets.items()]))) == 1: 
-            image = gen_plot.start_draw(oracles, ev_offsets)
-            name = r'data\myexamples\oracle' + '.PNG'
+        image = gen_plot.start_draw(oracles, ev_offsets)
+        name = r'data\myexamples\oracle' + '.PNG'
+        image.save(name)
+
+        for key, oracle in oracles.items():
+            image = gen_plot.start_draw(oracle)
+            name = r'data\myexamples\oracle of part ' + str(key) + '.PNG'
             image.save(name)
-        else:
-            for key, oracle in oracles.items():
-                image = gen_plot.start_draw(oracle)
-                name = r'data\myexamples\oracle of part ' + str(key) + '.PNG'
-                image.save(name)
 
     return oracles, original_features, total_features_names, vertical_start_indexes, ev_offsets
 

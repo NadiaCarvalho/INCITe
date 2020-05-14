@@ -10,15 +10,14 @@ import numpy as np
 from generation.oracles.factor_oracle import FactorOracle
 
 
-def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1, LRS=0, weight=None):
+def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
     """
     Generate synchronized lines from various oracles
     """
     len_events_by_part = [(key, len(part)) for key, part in offsets.items()]
     len_events_by_part.sort(key=lambda tup: tup[1], reverse=True)
-
-    sync_lrs_oracle = np.zeros(len_events_by_part[0][1] + 1)
     principal_key = len_events_by_part[0][0]
+    max_size = len_events_by_part[0][1] + 1
 
     trns = {}
     sfxs = {}
@@ -26,7 +25,7 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1, LRS=0, weight=None):
     rsfxs = {}
     sequences = {}
     ktraces = {}
-    
+
     for key, oracle in oracles.items():
         trns[key] = oracle.basic_attributes['trn'][:]
         sfxs[key] = oracle.basic_attributes['sfx'][:]
@@ -40,12 +39,37 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1, LRS=0, weight=None):
 
         # generate each state
         if sfxs[principal_key][k] != 0 and sfxs[principal_key][k] is not None:
-            if (random.random() < p): 
+            if (random.random() < p):
                 # copy forward according to transitions
                 I = trns[principal_key][k]
+                if len(I) == 0:
+                    # if last state, choose a suffix
+                    k = sfxs[principal_key][k]
+                    ktraces[principal_key].append(k)
+                    I = trns[principal_key][k]
+                sym = I[int(np.floor(random.random() * len(I)))]
+                new_ks = _find_ks(offsets, principal_key, sym)
+                _ = [sequences[key].append(value) for key, value in new_ks.items()]
+                _ = [ktraces[key].append(value) for key, value in ks_at_offset_k.items()]
+                k = sym
             else:
                 # copy any of the next symbols
-                pass
+                _ = [ktraces[key].append(value) for key, value in ks_at_offset_k.items()]
+                k_vecs = dict([(key, []) for key in sfxs.keys()])
+                k_vecs = dict([(key, _find_links(k_vecs[key], sfxs[key], rsfxs[key], ks_at_offset_k[key]))
+                               for key in ks_at_offset_k.keys()])
+                lrs_vecs = dict([(key, [lrss[key][_i] for _i in k_vec]) for key, k_vec in k_vecs.items()])
+                sym = get_max_lrs_position(
+                    k_vecs, lrs_vecs, max_size)
+
+                k_symbols = _find_ks(offsets, principal_key, sym)
+                if sym == len(sfxs[principal_key]) - 1:
+                        sym = sfxs[principal_key][sym] + 1
+                else:
+                    _ = [sequences[key].append(ks + 1) for key, ks in k_symbols.items()]
+                
+                k = sym + 1
+                _ = [ktraces[key].append(ks + 1) for key, ks in k_symbols.items()]
         else:
             if k < len(sfxs[principal_key]) - 1:
                 # copy forward
@@ -60,14 +84,27 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1, LRS=0, weight=None):
                     ktraces[key].append(ks + 1)
                 k = sym
 
+        if k > len(sfxs[principal_key]) - 1:
+            k = 0
+
     return sequences, ktraces
 
+def get_max_lrs_position(k_vecs, lrs_vecs, length):
+    """
+    """
+    max_lrss = [0] * length
+    for key, k_vec in k_vecs.items():
+        for i, k in enumerate(k_vec):
+            if lrs_vecs[key][i] > max_lrss[k]:
+                max_lrss[k] = lrs_vecs[key][i]
+    return max_lrss.index(max(max_lrss))
 
 def _find_ks(offsets, principal_key, k):
     """
     Find k for parts at offset x
     """
-    return dict([(key, off.index(offsets[principal_key][k-1])+1) for key, off in offsets.items()])
+    return dict([(key, off.index(offsets[principal_key][k-1])+1) for key, off in offsets.items() if offsets[principal_key][k-1] in off])
+
 
 def _find_links(k_vec, sfx, rsfx, k):
     """Find sfx/rsfx recursively."""

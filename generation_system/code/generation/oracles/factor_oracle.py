@@ -18,7 +18,7 @@ class FactorOracle:
         rsfx: a list containing the reverse suffix links of each state
             as a list.
         lrs: the value of longest repeated suffix of each state.
-        data: the symobols associated with the direct link
+        data: the symbols associated with the direct link
             connected to each state.
         compror: a list of tuples (i, i-j), i is the current coded position,
             i-j is the length of the corresponding coded words.
@@ -200,7 +200,8 @@ class FactorOracle:
                     self.comp_attributes['seg'].append(
                         (_i - j, self.basic_attributes['sfx'][i] - i + j + 1))
                     _j = _i
-                    num = self.basic_attributes['lrs'][_i + 1] - self.basic_attributes['lrs'][_j]
+                    num = self.basic_attributes['lrs'][_i +
+                                                       1] - self.basic_attributes['lrs'][_j]
                     while (_i < i) and (num >= _i - _j + 1):
                         _i += 1
                     if _i == _j:
@@ -378,7 +379,8 @@ class FactorOracle:
         """docstring"""
         self.basic_attributes['rsfx'][self.basic_attributes['sfx'][i]].sort()
         for j in self.basic_attributes['rsfx'][self.basic_attributes['sfx'][i]]:
-            new_symbol = self.basic_attributes['data'][j - self.basic_attributes['lrs'][i]]
+            new_symbol = self.basic_attributes['data'][j -
+                                                       self.basic_attributes['lrs'][i]]
             if (self.basic_attributes['lrs'][j] == self.basic_attributes['lrs'][i]
                     and new_symbol == symbol):
                 return j
