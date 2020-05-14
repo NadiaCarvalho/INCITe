@@ -7,8 +7,7 @@ import random
 
 import numpy as np
 
-from generation.factor_oracle import FactorOracle
-
+from generation.oracles.factor_oracle import FactorOracle
 
 
 def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):

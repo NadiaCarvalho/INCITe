@@ -4,16 +4,22 @@ This script is the main script of the generation system
 """
 
 import os
-from representation.conversor.score_conversor import ScoreConversor
-from representation.parsers.music_parser import MusicParser
-from representation.parsers.segmentation import segmentation, apply_segmentation_info, get_phrases_from_events
-from representation.events.linear_event import LinearEvent
-import representation.utils as rep_utils
-import generation.utils as gen_utils
-import generation.plot_fo as gen_plot
-import generation.generation as gen
-import generation.multi_oracle_gen as multi_gen
+
 import numpy as np
+
+import generation.gen_algorithms.generation as gen
+import generation.gen_algorithms.multi_oracle_gen as multi_gen
+import generation.plot_fo as gen_plot
+import generation.utils as gen_utils
+
+import representation.utils as rep_utils
+from representation.conversor.score_conversor import ScoreConversor
+from representation.events.linear_event import LinearEvent
+from representation.parsers.music_parser import MusicParser
+from representation.parsers.segmentation import (apply_segmentation_info,
+                                                 get_phrases_from_events,
+                                                 segmentation)
+
 
 # 'MicrotonsExample.mxl'
 # 'VoiceExample.mxl'
@@ -28,7 +34,8 @@ def main():
     Main function for extracting the viewpoints for examples
     """
     # name = 'lg-199757.mxl'
-    # parser = MusicParser(name, folders=['data','database','ScoresOfScores-master', '3-Corpus'])
+    # # 'database', 'ScoresOfScores-master', '3-Corpus'
+    # parser = MusicParser(name, folders=['data', 'myexamples'])
     # parser.parse(parts=True, vertical=True)
     # parser.to_pickle(name[:-4])
 
@@ -84,27 +91,27 @@ def main():
     }
     # parts=[0,1,2],
     oracles, o_feats, feat_names, vs_ind, offsets = create_oracles(parser,
-                                                          seg_weights={'line': {
-                                                              'fermata': 1, 'basic.rest': 1}},
-                                                          model_weights=None,
-                                                          phrases=[0],
-                                                          use_vertical=False)
-    
-    multi_gen.sync_generate(oracles, offsets)
+                                                                   seg_weights={'line': {
+                                                                       'fermata': 1, 'basic.rest': 1}},
+                                                                   model_weights=None,
+                                                                   phrases=[0],
+                                                                   use_vertical=False)
+
+    sequences, ktraces =multi_gen.sync_generate(oracles, offsets, seq_len=30, p=0.3, k=1, LRS=0)
+    score = ScoreConversor()
+    for key, sequence in sequences.items():
+        if key != 'vertical':
+            sequenced_events = [LinearEvent(
+                from_list=o_feats[key][state-1], features=feat_names[key]) for state in sequence]
+            score.parse_events(sequenced_events, new_part=True, new_voice=True)
+    score.stream.show()
+
     # key = 0
     # score = ScoreConversor()
     # sequence, end, k_trace = gen.generate(
     #     oracles[key], seq_len=30, p=0.3, k=0, LRS=5)
     # sequenced_events = [LinearEvent(
     #     from_list=o_feats[key][state-1], features=feat_names[key]) for state in sequence]
-    # score.parse_events(sequenced_events, new_part=True, new_voice=True)
-    # score.stream.show()
-
-    # score = ScoreConversor()
-    # sequence, end, k_trace = gen.generate(
-    #     oracles[0], seq_len=30, p=0.3, k=0, LRS=5)
-    # sequenced_events = [LinearEvent(
-    #     from_list=o_feats[0][state-1], features=feat_names[0]) for state in sequence]
     # score.parse_events(sequenced_events, new_part=True, new_voice=True)
     # score.stream.show()
 

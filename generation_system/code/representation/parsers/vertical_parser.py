@@ -38,18 +38,18 @@ class VerticalParser:
         Returns the events from vertical relations between parts
         """
         print('Parsing chords')
-        chords = self.music_to_parse.flat.getElementsByClass('Chord')
+        chords = self.music_to_parse.flat.getElementsByClass(['Chord', 'Rest'])
         for i, chord in enumerate(chords):
             self.events.append(VerticalEvent(chord.offset))
 
-            # self.extract_
             self.extract_duration(i, chord)
-            self.extract_chord_table_info(i, chord)
-            self.pitch_class_info(i, chord)
-            self.chord_info(i, chord)
-            self.chord_elements_info(i, chord)
-            self.key_signatures_parsing(i, chord)
-            self.perceived_key_at_measure_parsing(i, chord)
+            if not isinstance(chord, music21.note.Rest):            
+                self.extract_chord_table_info(i, chord)
+                self.pitch_class_info(i, chord)
+                self.chord_info(i, chord)
+                self.chord_elements_info(i, chord)
+                self.key_signatures_parsing(i, chord)
+                self.perceived_key_at_measure_parsing(i, chord)
 
         return self.events
 

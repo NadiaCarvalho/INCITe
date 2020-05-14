@@ -9,7 +9,7 @@ import math
 import numpy as np
 import scipy.spatial.distance as dist
 
-from generation.factor_oracle import FactorOracle
+from generation.oracles.factor_oracle import FactorOracle
 from generation.feature_array import FeatureArray
 
 

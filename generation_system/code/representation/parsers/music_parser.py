@@ -150,9 +150,9 @@ class MusicParser:
                 voice, name=name, first=(False, True)[i == 0])
 
     def process_voiced_part(self, part, i, real_in):
-        #if isinstance(part, music21.stream.PartStaff):
-        #    part = music21.stream.Part(part)
-
+        """
+        Process a part that has voices: divide voices in new parts
+        """
         part.recurse().flattenUnnecessaryVoices(inPlace=True, force=True)
 
         new_parts = part
