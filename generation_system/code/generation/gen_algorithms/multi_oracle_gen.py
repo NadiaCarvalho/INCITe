@@ -18,6 +18,7 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1, LRS=0, weight=None):
     len_events_by_part.sort(key=lambda tup: tup[1], reverse=True)
 
     sync_lrs_oracle = np.zeros(len_events_by_part[0][1] + 1)
+    principal_key = len_events_by_part[0][0]
 
     trns = {}
     sfxs = {}
@@ -25,6 +26,7 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1, LRS=0, weight=None):
     rsfxs = {}
     sequences = {}
     ktraces = {}
+    
     for key, oracle in oracles.items():
         trns[key] = oracle.basic_attributes['trn'][:]
         sfxs[key] = oracle.basic_attributes['sfx'][:]
@@ -34,18 +36,66 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1, LRS=0, weight=None):
         ktraces[key] = [k]
 
     for _i in range(seq_len):
-        trn_k = dict([(key, trn[ktraces[key][-1]])
+        ks_at_offset_k = _find_ks(offsets, principal_key, k)
+
+        # generate each state
+        if sfxs[principal_key][k] != 0 and sfxs[principal_key][k] is not None:
+            if (random.random() < p): 
+                # copy forward according to transitions
+                I = trns[principal_key][k]
+            else:
+                # copy any of the next symbols
+                pass
+        else:
+            if k < len(sfxs[principal_key]) - 1:
+                # copy forward
+                for key, ks in ks_at_offset_k.items():
+                    sequences[key].append(ks + 1)
+                    ktraces[key].append(ks + 1)
+                k += 1
+            else:
+                sym = sfxs[principal_key][k] + 1
+                for key, ks in _find_ks(offsets, principal_key, sym).items():
+                    sequences[key].append(ks + 1)
+                    ktraces[key].append(ks + 1)
+                k = sym
+
+    return sequences, ktraces
+
+
+def _find_ks(offsets, principal_key, k):
+    """
+    Find k for parts at offset x
+    """
+    return dict([(key, off.index(offsets[principal_key][k-1])+1) for key, off in offsets.items()])
+
+def _find_links(k_vec, sfx, rsfx, k):
+    """Find sfx/rsfx recursively."""
+    k_vec.sort()
+    if 0 in k_vec:
+        return k_vec
+    else:
+        if sfx[k] not in k_vec:
+            k_vec.append(sfx[k])
+        for i in range(len(rsfx[k])):
+            if rsfx[k][i] not in k_vec:
+                k_vec.append(rsfx[k][i])
+        for i in range(len(k_vec)):
+            k_vec = _find_links(k_vec, sfx, rsfx, k_vec[i])
+            if 0 in k_vec:
+                break
+        return k_vec
+
+
+""" 
+trn_k = dict([(key, trn[ktraces[key][-1]])
                       for key, trn in trns.items()])
-        print('trn: ' + str(trn_k))
         sfx_k = dict([(key, sfx[ktraces[key][-1]])
                       for key, sfx in sfxs.items()])
-        print('sfx: ' + str(sfx_k))
         lrs_k = dict([(key, lrs[ktraces[key][-1]])
                       for key, lrs in lrss.items()])
-        print('lrs: ' + str(lrs_k))
         rsfxs_k = dict([(key, rsfx[ktraces[key][-1]])
                         for key, rsfx in rsfxs.items()])
-        print('rsfx: ' + str(rsfxs_k))
 
         if all(sfx_k[oracle] != 0 and sfx_k[oracle] is not None for oracle in oracles.keys()):
             if (random.random() < p):
@@ -118,24 +168,5 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1, LRS=0, weight=None):
 
         for oracle in oracles.keys():
             if ktraces[oracle][-1] >= len(sfxs[oracle]) - 1:
-                ktraces[oracle][-1] = 0
-
-    return sequences, ktraces
-
-
-def _find_links(k_vec, sfx, rsfx, k):
-    """Find sfx/rsfx recursively."""
-    k_vec.sort()
-    if 0 in k_vec:
-        return k_vec
-    else:
-        if sfx[k] not in k_vec:
-            k_vec.append(sfx[k])
-        for i in range(len(rsfx[k])):
-            if rsfx[k][i] not in k_vec:
-                k_vec.append(rsfx[k][i])
-        for i in range(len(k_vec)):
-            k_vec = _find_links(k_vec, sfx, rsfx, k_vec[i])
-            if 0 in k_vec:
-                break
-        return k_vec
+                ktraces[oracle][-1] = 0 
+"""
