@@ -4,11 +4,14 @@ Main Window for Interface
 
 import sys
 
-from PyQt5 import Qt, QtGui, QtWidgets
+from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
 from interface.menus.first_menu import FirstMenu
 from interface.menus.second_menu import SecondMenu
 from interface.menus.third_menu import ThirdMenu
+
+from application import Application
+
 
 class MainWindow(QtWidgets.QMainWindow):
     """
@@ -22,6 +25,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.resize(400, 800)
 
+        self.application = Application()
+
         # Central Widget
         self.central_wid = QtWidgets.QWidget()
         self.layout_for_wids = QtWidgets.QStackedLayout()
@@ -29,9 +34,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addToolBar(self.init_toolbar())
 
         # LAYOUT CONTAINER FOR WIDGETS
-        f_m = FirstMenu(self.width(), self.height())
-        s_m = SecondMenu(self.width(), self.height())
-        t_m = ThirdMenu(self.width(), self.height())
+        f_m = FirstMenu(self.width(), self.height(), self)
+        s_m = SecondMenu(self.width(), self.height(), self)
+        t_m = ThirdMenu(self.width(), self.height(), self)
         self.wids = [f_m, s_m, t_m]
         for wind in self.wids:
             self.layout_for_wids.addWidget(wind)

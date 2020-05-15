@@ -16,7 +16,7 @@ class MyMenu(QtWidgets.QWidget):
     - Choosing Weights
     """
 
-    def __init__(self, width, height, *args, **kwargs):
+    def __init__(self, width, height, parent, *args, **kwargs):
         super(MyMenu, self).__init__(*args, **kwargs)
 
         self.resize(width, height)

@@ -39,12 +39,14 @@ class MusicParser:
         self.first_part = None
 
         if filename is not None:
-            file_path = os.sep.join(folders + [filename])
-            if os.path.realpath('.').find('code') != -1:
-                file_path.replace('code', '')
-                file_path = os.sep.join(['..', file_path])
+            if not os.path.exists(filename):
+                file_path = os.sep.join(folders + [filename])
+                if os.path.realpath('.').find('code') != -1:
+                    file_path.replace('code', '')
+                    file_path = os.sep.join(['..', file_path])
+            else:
+                file_path = filename
 
-            
             self.music = music21.converter.parse(file_path)
             if filename.endswith('.mid'):
                 try:
@@ -77,10 +79,11 @@ class MusicParser:
                 instrument = part.getInstrument().instrumentName
                 real_in = music21.instrument.Instrument()
                 try:
-                    if instrument in ['Brass', 'Woodwind', 'Keyboard', 'String']:
-                        instrument += 'Instrument'
-                    inst_name = ''.join(instrument.split(' '))
-                    real_in = getattr(music21.instrument, inst_name)()
+                    if instrument is not None:
+                        if instrument in ['Brass', 'Woodwind', 'Keyboard', 'String']:
+                            instrument += 'Instrument'
+                        inst_name = ''.join(instrument.split(' '))
+                        real_in = getattr(music21.instrument, inst_name)()
                 except AttributeError:
                     print('Wrong Instrument: ' + instrument)
                     try:
@@ -292,6 +295,9 @@ class MusicParser:
         """
         Parses Music To cpickle object
         """
+        if not os.path.exists(os.sep.join(folders)):
+            os.makedirs(os.sep.join(folders))
+
         file_path = os.sep.join(folders + [filename])
         if os.path.realpath('.').find('code') != -1:
             file_path.replace('code', '')

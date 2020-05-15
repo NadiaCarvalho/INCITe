@@ -33,14 +33,15 @@ def main():
     """
     Main function for extracting the viewpoints for examples
     """
-    # name = 'bwv67.4.mxl'
-    # # 'database', 'ScoresOfScores-master', '3-Corpus'
-    # parser = MusicParser(name, folders=['data', 'myexamples'])
-    # parser.parse(parts=True, vertical=True)
-    # parser.to_pickle(name[:-4])
+    name = 'bwv67.4.mxl'
+    # 'database', 'ScoresOfScores-master', '3-Corpus'
+    parser = MusicParser(name, folders=['data', 'myexamples'])
+    parser.parse(parts=True, vertical=True)
+    print(parser.music.metadata.all())
+    #parser.to_pickle(name[:-4])
 
     # lg-199757
-    parser = MusicParser()
+    """ parser = MusicParser()
     parser.from_pickle('bwv67.4')
 
     weights = {
@@ -110,7 +111,7 @@ def main():
                 from_list=o_feats[key][state-2], features=feat_names[key]) for state in sequence]
             score.parse_events(sequenced_events, new_part=True, new_voice=True)
     score.stream.show()
-
+ """
     # key = 0
     # score = ScoreConversor()
     # sequence, end, k_trace = gen.generate(

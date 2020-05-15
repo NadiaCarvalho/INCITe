@@ -14,6 +14,6 @@ class SecondMenu(MyMenu):
     - Present Statistics
     - Choosing Weights
     """
-    def __init__(self, width, height, *args, **kwargs):
-        super(SecondMenu, self).__init__(width, height, *args, **kwargs)
+    def __init__(self, width, height, parent, *args, **kwargs):
+        super(SecondMenu, self).__init__(width, height, parent, *args, **kwargs)
         self.setStyleSheet("""background: green;""")

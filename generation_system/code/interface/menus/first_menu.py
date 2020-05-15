@@ -14,16 +14,16 @@ class OnOffWidget(QtWidgets.QWidget):
     def __init__(self, name):
         super(OnOffWidget, self).__init__()
 
-        self.name = name  # Name of widget used for searching.
+        self.name = name  # Name of widget used
 
         self.lbl = QtWidgets.QLabel(self.name)  # The widget label
-        self.btn_del = QtWidgets.QPushButton("Del")  # The Del button
+        self.btn_del = QtWidgets.QPushButton("Del")  # The DEL button
         self.btn_del.clicked.connect(self.on_delete)
 
         # A horizontal layout to encapsulate the above
         self.hbox = QtWidgets.QHBoxLayout()
         self.hbox.addWidget(self.lbl)   # Add the label to the layout
-        self.hbox.addWidget(self.btn_del)    # Add the ON button to the layout
+        self.hbox.addWidget(self.btn_del)    # Add the DEL button to the layout
         self.setLayout(self.hbox)
 
     def on_delete(self):
@@ -49,26 +49,70 @@ class FirstMenu(MyMenu):
     - Choosing Database
     """
 
-    def __init__(self, width, height, *args, **kwargs):
-        super(FirstMenu, self).__init__(width, height, *args, **kwargs)
+    def __init__(self, width, height, parent, *args, **kwargs):
+        super(FirstMenu, self).__init__(width, height, parent, *args, **kwargs)
         self.setStyleSheet("""background: gray;""")
 
-        self.left_group_box = self.create_database_group()
+        self.top_group = self.create_settings(parent)
+        self.left_group_box = self.create_database_group(parent)
         self.right_group_box = self.create_add_your_own_group()
 
-        self.main_layout.setRowStretch(1, 15)
-        self.main_layout.setRowStretch(2, 1)
+        self.main_layout.setRowStretch(1, 1)
+        self.main_layout.setRowStretch(2, 15)
+        self.main_layout.setRowStretch(3, 1)
+        self.main_layout.setColumnStretch(0, 3)
         self.main_layout.setColumnStretch(1, 3)
-        self.main_layout.setVerticalSpacing(10)
+        self.main_layout.setVerticalSpacing(2)
         self.main_layout.setContentsMargins(2, 5, 2, 5)
 
-        self.main_layout.addWidget(self.left_group_box)
-        self.main_layout.addWidget(self.right_group_box)
+        self.main_layout.addWidget(self.top_group, 0, 0, 1, 3)
+        self.main_layout.addWidget(self.left_group_box, 1, 0, 15, 0) # TODO: ver aqui
+        self.main_layout.addWidget(self.right_group_box, 1, 1, 15, 3)
 
         self.files_to_parse = []
         self.database_selected = []
 
-    def create_database_group(self):
+    def create_settings(self, parent):
+        """
+        """
+        database_group = QtWidgets.QWidget()
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(3, 3, 3, 3)
+
+        button = QtWidgets.QPushButton('Select Database Path')
+        button.clicked.connect(self.database_path)
+        layout.addWidget(button)
+
+        label = QtWidgets.QLabel(parent.application.database_path)
+        #label.setFixedWidth(200)
+        label.setWordWrap(True)
+        layout.addWidget(label)
+
+        database_group.setLayout(layout)
+
+        return database_group
+
+
+    def database_path(self):
+        """
+        """
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        directory = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory", options=options)
+
+        if directory:
+            application = self.parentWidget().parentWidget().application
+            application.database_path = directory
+            self.children()[2].children()[2].setText(directory)
+
+            for i in range(self.left_group_box.children()[2].widget().layout().count()): 
+                self.left_group_box.children()[2].widget().layout().itemAt(i).widget().close()
+
+            self.create_toggables_database(directory, self.left_group_box.children()[2])
+
+    def create_database_group(self, parent):
+        """
+        """
         database_group = QtWidgets.QGroupBox("Database")
 
         layout = QtWidgets.QVBoxLayout()
@@ -81,22 +125,28 @@ class FirstMenu(MyMenu):
 
         scrollable_container = self.create_container_files()
 
-        selectables = []
-        for music in ['Bach', 'Beethoven', 'Chopin', 'Corelli', 'Handel', 'Haydn', 'Joplin', 'Josquin', 'Montverdi', 'Mozart', 'Palestrina', 'Schoenberg', 'Schubert', 'Schumann', 'Verdi', 'Weber']:
-            selectables.append(QtWidgets.QCheckBox(music))
-            selectables[-1].setChecked(True)
-            selectables[-1].toggled.connect(
-                lambda checked: not checked and check_box.setChecked(QtCore.Qt.PartiallyChecked))
-            scrollable_container.widget().layout().addWidget(selectables[-1])
-
+        selectables = self.create_toggables_database(parent.application.database_path, scrollable_container)
         check_box.toggled.connect(lambda checked: checked and [
-                                  sel.setChecked(True) for sel in selectables])
+                            sel.setChecked(True) for sel in selectables])
 
         layout.addWidget(scrollable_container)
         layout.setContentsMargins(1, 1, 1, 1)
 
         database_group.setLayout(layout)
         return database_group
+
+    def create_toggables_database(self, database_path, container):
+        """
+        """
+        selectables = []
+        for folder in [f.path for f in os.scandir(database_path) if f.is_dir() and any('.pbz2' in _file for _file in os.listdir(f.path))]:
+            name = os.path.normpath(folder).split(os.path.sep)[-1]
+            selectables.append(QtWidgets.QCheckBox(name))
+            selectables[-1].setChecked(True)
+            selectables[-1].toggled.connect(
+                lambda checked: not checked and check_box.setChecked(QtCore.Qt.PartiallyChecked))
+            container.widget().layout().addWidget(selectables[-1])
+        return selectables
 
     def create_add_your_own_group(self):
         add_your_own = QtWidgets.QGroupBox("Add Your Own")
@@ -106,11 +156,11 @@ class FirstMenu(MyMenu):
         buttons_layer = QtWidgets.QHBoxLayout()
 
         button = QtWidgets.QPushButton('Choose Files')
-        button.clicked.connect(self.openFileNamesDialog)
+        button.clicked.connect(self.open_filenames_dialog)
         buttons_layer.addWidget(button)
 
         button = QtWidgets.QPushButton('Parse')
-        button.clicked.connect(self.openFileNamesDialog)
+        button.clicked.connect(self.parse_files)
         button.setVisible(False)
         buttons_layer.addWidget(button)
 
@@ -149,7 +199,10 @@ class FirstMenu(MyMenu):
 
         return scroll
 
-    def openFileNamesDialog(self):
+    def open_filenames_dialog(self):
+        """
+        Open File Dialog for adding 
+        """
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         files, _ = QtWidgets.QFileDialog.getOpenFileNames(
@@ -163,5 +216,10 @@ class FirstMenu(MyMenu):
                     self.right_group_box.children()[3].widget(
                     ).layout().addWidget(OnOffWidget(file_n))
 
-    def database_checkbox_clicked(self, checkbox):
-        print(checkbox)
+    def parse_files(self):
+        """
+        Parse Files
+        """
+        application = self.parentWidget().parentWidget().application
+        application.parse_files(self.files_to_parse)
+

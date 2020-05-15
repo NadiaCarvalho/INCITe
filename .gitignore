@@ -8,6 +8,7 @@
 
 # Ignore database
 generation_system/data/database
+generation_system/data/database_2
 
 # Ignore pycache
 *.pyc

@@ -13,6 +13,6 @@ class ThirdMenu(MyMenu):
     Third Menu:
     - Choosing 
     """
-    def __init__(self, width, height, *args, **kwargs):
-        super(ThirdMenu, self).__init__(width, height, *args, **kwargs)
+    def __init__(self, width, height, parent, *args, **kwargs):
+        super(ThirdMenu, self).__init__(width, height, parent, *args, **kwargs)
         self.setStyleSheet("""background: red;""")
