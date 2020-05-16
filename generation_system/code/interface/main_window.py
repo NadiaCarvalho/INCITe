@@ -30,18 +30,19 @@ class MainWindow(QtWidgets.QMainWindow):
         # Central Widget
         self.central_wid = QtWidgets.QWidget()
         self.layout_for_wids = QtWidgets.QStackedLayout()
-
-        self.addToolBar(self.init_toolbar())
-
-        # LAYOUT CONTAINER FOR WIDGETS
+        
         f_m = FirstMenu(self.width(), self.height(), self)
         s_m = SecondMenu(self.width(), self.height(), self)
         t_m = ThirdMenu(self.width(), self.height(), self)
         self.wids = [f_m, s_m, t_m]
+        self.front_wid = 0
+
+        self.addToolBar(self.init_toolbar())
+
+        # LAYOUT CONTAINER FOR WIDGETS
         for wind in self.wids:
             self.layout_for_wids.addWidget(wind)
 
-        self.front_wid = 0
         self.wids[self.front_wid].show()
 
         # ENTERING LAYOUT
@@ -77,7 +78,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Next Window Button
         self.btn_next = QtWidgets.QAction("Next", self)
-        self.btn_next.triggered.connect(self.next_wid)
+        self.btn_next.triggered.connect(self.wids[self.front_wid].next)
         self.btn_next.setShortcut('Ctrl+Q')
         self.btn_next.setToolTip('Go to next window')
 

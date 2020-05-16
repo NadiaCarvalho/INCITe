@@ -34,3 +34,15 @@ class MyMenu(QtWidgets.QWidget):
         o.initFrom(self)
         p = Qt.QPainter(self)
         self.style().drawPrimitive(Qt.QStyle.PE_Widget, o, p, self)
+    
+    def next(self):
+        """
+        To Override
+        """
+        pass
+
+    def back(self):
+        """
+        To Override
+        """
+        pass

@@ -7,6 +7,7 @@ To comunicate with interface
 import os
 
 import numpy as np
+from PyQt5 import QtCore
 
 import generation.gen_algorithms.generation as gen
 import generation.gen_algorithms.multi_oracle_gen as multi_gen
@@ -21,15 +22,19 @@ from representation.parsers.segmentation import (apply_segmentation_info,
                                                  get_phrases_from_events,
                                                  segmentation)
 
-class Application():
+
+class Application(QtCore.QObject):
     """
     Class Application,
     Communicates with interface to deal with the 
     main part of the logistics of the app
     """
-    def __init__(self):
+    signal = QtCore.pyqtSignal(int)
 
-        self.database_path = os.getcwd()
+    def __init__(self):
+        QtCore.QObject.__init__(self)
+
+        self.database_path = os.sep.join([os.getcwd(), 'data', 'database'])
 
         # Music To Use
         self.music = {}
@@ -44,34 +49,60 @@ class Application():
             'vertical': {}
         }
 
-        # Music Generated 
+        # Music Generated
         self.generation_sequences = {}
-    
+
     def parse_database(self):
         """
         Parses Music
         """
         pass
 
-    def parse_files(self, filenames):
+    def parse_files(self, filenames, interface):
         """
         Parses Music
         """
-        print(self.database_path)
-        for filename in filenames:
+        self.signal.connect(interface.increase_progress_bar)
+
+        reversed_filenames = reversed(filenames)
+
+        n_processed = 0
+        for filename in reversed_filenames:
             if '.mxl' in filename:
                 self.music[filename] = MusicParser(filename)
                 self.music[filename].parse()
 
-                folder_name = ['']
+                folder_name = ['Other']
                 if self.music[filename].music.metadata.composer is not None:
-                    folder_name = [self.music[filename].music.metadata.composer.split(' ')[-1]]
-                
+                    folder_name = [
+                        self.music[filename].music.metadata.composer.split(' ')[-1]]
                 name = os.path.normpath(filename).split(os.path.sep)[-1]
                 name = '.'.join(name.split('.')[:-1])
-
                 folders = self.database_path.split(os.path.sep) + folder_name
-
-
                 self.music[filename].to_pickle(name, folders)
-                
+
+                n_processed += 1
+                perc = int((n_processed/len(filenames))*100)
+                self.signal.emit(perc)
+
+    def retrieve_database(self, folders, interface):
+        """
+        Retrieves Music from Database
+        """
+        folders_in_database_path = [f.path for f in os.scandir(
+            self.database_path) if f.is_dir() and any(folder in f.path for folder in folders)]
+        for folder in folders_in_database_path:
+            self.recover_parsed_folder(folder)
+
+    def recover_parsed_folder(self, folder):
+        """
+        Recover parsed music in folder
+        """
+        if os.path.isdir(folder):
+            for root, _, files in os.walk(folder):
+                for filename in files:
+                    name = '.'.join(filename.split('.')[:-1])
+                    if not name in self.music and '.pbz2' in filename:
+                        music_parser = MusicParser()
+                        music_parser.from_pickle(name, root.split(os.sep))
+                        self.music[name] = music_parser

@@ -4,10 +4,27 @@ Main Window for Interface
 
 import os
 import sys
+import textwrap
 
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
 from interface.menus.menu import MyMenu
+
+
+def wrap_text(text, max_char):
+    """
+    Wrap Text by x chars if text has separators
+    """
+    text_to_split = ''.join([str.strip() for str in text.splitlines(True)])
+    path = text_to_split.split(os.sep)
+    text_to_wrap = []
+    for p in path:
+        if len(text_to_wrap) > 0 and (len(text_to_wrap[-1] + (p + os.sep)) < max_char):
+            text_to_wrap[-1] += (p + os.sep)
+        else:
+            text_to_wrap.append((p + os.sep))
+    text_to_wrap[-1] = text_to_wrap[-1][:-1]
+    return '\n'.join(text_to_wrap)
 
 
 class OnOffWidget(QtWidgets.QWidget):
@@ -34,10 +51,8 @@ class OnOffWidget(QtWidgets.QWidget):
             if self.name in filename:
                 menu.files_to_parse.remove(filename)
                 break
-
         if len([widget for widget in self.parentWidget().children() if isinstance(widget, OnOffWidget)]) == 1:
             group_box.children()[2].setVisible(False)
-
         self.parentWidget().layout().removeWidget(self)
         self.deleteLater()
         self = None
@@ -53,7 +68,7 @@ class FirstMenu(MyMenu):
         super(FirstMenu, self).__init__(width, height, parent, *args, **kwargs)
         self.setStyleSheet("""background: gray;""")
 
-        self.top_group = self.create_settings(parent)
+        self.top_group = self.create_settings(parent, width)
         self.left_group_box = self.create_database_group(parent)
         self.right_group_box = self.create_add_your_own_group()
 
@@ -66,52 +81,66 @@ class FirstMenu(MyMenu):
         self.main_layout.setContentsMargins(2, 5, 2, 5)
 
         self.main_layout.addWidget(self.top_group, 0, 0, 1, 3)
-        self.main_layout.addWidget(self.left_group_box, 1, 0, 15, 0) # TODO: ver aqui
+        self.main_layout.addWidget(self.left_group_box, 1, 0, 15, 0)
         self.main_layout.addWidget(self.right_group_box, 1, 1, 15, 3)
 
         self.files_to_parse = []
-        self.database_selected = []
 
-    def create_settings(self, parent):
+    def resizeEvent(self, event):
         """
+        Override of resizeEvent for override path text
+        """
+        text = self.top_group.children()[2].text()
+        self.top_group.children()[2].setText(
+            wrap_text(text, int(self.width()*30/420)))
+
+    def create_settings(self, parent, width):
+        """
+        Create database settings Grouping
+        - Choose and Show database path
         """
         database_group = QtWidgets.QWidget()
-        layout = QtWidgets.QHBoxLayout()
+        database_group.setStyleSheet("margin-left: 10px; padding: 15px;")
+        layout = QtWidgets.QGridLayout()
         layout.setContentsMargins(3, 3, 3, 3)
+
+        self.main_layout.setRowStretch(1, 1)
+        self.main_layout.setColumnStretch(0, 2)
+        self.main_layout.setColumnStretch(1, 10)
 
         button = QtWidgets.QPushButton('Select Database Path')
         button.clicked.connect(self.database_path)
-        layout.addWidget(button)
+        layout.addWidget(button, 0, 0, 1, 1)
 
-        label = QtWidgets.QLabel(parent.application.database_path)
-        #label.setFixedWidth(200)
-        label.setWordWrap(True)
-        layout.addWidget(label)
+        label = QtWidgets.QLabel(
+            wrap_text(parent.application.database_path, int(self.width()*30/420)))
+        label.setStyleSheet(
+            "margin-left: 10px; border-radius: 25px; color: #4A0C46;")
+        layout.addWidget(label, 0, 1, 1, 2)
 
         database_group.setLayout(layout)
-
         return database_group
-
 
     def database_path(self):
         """
+        File Dialog for selecting database path, called with button
+        - Choose database path, using a file dialog
         """
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
-        directory = QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory", options=options)
-
+        directory = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "Select Directory", options=options)
         if directory:
             application = self.parentWidget().parentWidget().application
             application.database_path = directory
-            self.children()[2].children()[2].setText(directory)
-
-            for i in range(self.left_group_box.children()[2].widget().layout().count()): 
-                self.left_group_box.children()[2].widget().layout().itemAt(i).widget().close()
-
-            self.create_toggables_database(directory, self.left_group_box.children()[2])
+            self.children()[2].children()[2].setText(
+                wrap_text(directory, int(self.width()*30/420)))
+            self.create_toggables_database(
+                directory, self.left_group_box.children()[2])
 
     def create_database_group(self, parent):
         """
+        Creates a viewer and chooser for already existent database
         """
         database_group = QtWidgets.QGroupBox("Database")
 
@@ -120,14 +149,15 @@ class FirstMenu(MyMenu):
         check_box = QtWidgets.QCheckBox("Select All")
         check_box.setTristate(True)
         check_box.setCheckState(QtCore.Qt.Checked)
+        check_box.stateChanged.connect(self.select_all)
+        check_box.clicked.connect(self.click_pass_semi)
 
         layout.addWidget(check_box)
 
         scrollable_container = self.create_container_files()
 
-        selectables = self.create_toggables_database(parent.application.database_path, scrollable_container)
-        check_box.toggled.connect(lambda checked: checked and [
-                            sel.setChecked(True) for sel in selectables])
+        selectables = self.create_toggables_database(
+            parent.application.database_path, scrollable_container)
 
         layout.addWidget(scrollable_container)
         layout.setContentsMargins(1, 1, 1, 1)
@@ -137,18 +167,55 @@ class FirstMenu(MyMenu):
 
     def create_toggables_database(self, database_path, container):
         """
+        Toggables Database for specified path
         """
         selectables = []
         for folder in [f.path for f in os.scandir(database_path) if f.is_dir() and any('.pbz2' in _file for _file in os.listdir(f.path))]:
             name = os.path.normpath(folder).split(os.path.sep)[-1]
             selectables.append(QtWidgets.QCheckBox(name))
             selectables[-1].setChecked(True)
-            selectables[-1].toggled.connect(
-                lambda checked: not checked and check_box.setChecked(QtCore.Qt.PartiallyChecked))
+            selectables[-1].toggled.connect(self.select_one)
             container.widget().layout().addWidget(selectables[-1])
         return selectables
 
+    def select_all(self, state):
+        """
+        Deal with Select All
+        """
+        if self.left_group_box:
+            checkboxes = [child for child in self.left_group_box.children(
+            )[2].widget().children() if isinstance(child, QtWidgets.QCheckBox)]
+            if state == 2:
+                _ = [check.setChecked(True) for check in checkboxes]
+            elif state == 0:
+                _ = [check.setChecked(False) for check in checkboxes]
+
+    def select_one(self, checked):
+        """
+        Deal with checkboxes
+        """
+        if self.left_group_box:
+            states = [child.checkState() for child in self.left_group_box.children(
+            )[2].widget().children() if isinstance(child, QtWidgets.QCheckBox)]
+            if checked and all(state == 2 for state in states):
+                self.left_group_box.children()[1].setCheckState(2)
+            elif not checked and all(state == 0 for state in states):
+                self.left_group_box.children()[1].setCheckState(0)
+            else:
+                self.left_group_box.children()[1].setCheckState(1)
+
+    def click_pass_semi(self, clicked):
+        """
+        Deal with semi_state on clicking on Select All
+        """
+        if self.left_group_box:
+            if clicked and self.left_group_box.children()[1].checkState() == 1:
+                self.left_group_box.children()[1].setCheckState(2)
+
     def create_add_your_own_group(self):
+        """
+        Add Your Own Group
+        """
         add_your_own = QtWidgets.QGroupBox("Add Your Own")
 
         layout = QtWidgets.QGridLayout()
@@ -166,14 +233,14 @@ class FirstMenu(MyMenu):
 
         layout.addItem(buttons_layer)
 
-        scrollable_container = self.create_container_files()
-        layout.addWidget(scrollable_container)
-
         progressBar = QtWidgets.QProgressBar()
-        progressBar.setRange(0, 10000)
+        progressBar.setRange(0, 100)
         progressBar.setValue(0)
         progressBar.setVisible(False)
         layout.addWidget(progressBar)
+
+        scrollable_container = self.create_container_files()
+        layout.addWidget(scrollable_container)
 
         # timer = QTimer(self)
         # timer.timeout.connect(self.advanceProgressBar)
@@ -185,6 +252,9 @@ class FirstMenu(MyMenu):
         return add_your_own
 
     def create_container_files(self):
+        """
+        Scrollable container 
+        """
         container = QtWidgets.QWidget()
 
         container_layout = QtWidgets.QVBoxLayout()
@@ -196,13 +266,13 @@ class FirstMenu(MyMenu):
         scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scroll.setWidgetResizable(True)
         scroll.setWidget(container)
-
         return scroll
 
     def open_filenames_dialog(self):
         """
         Open File Dialog for adding 
         """
+        self.right_group_box.children()[3].setVisible(False)
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         files, _ = QtWidgets.QFileDialog.getOpenFileNames(
@@ -213,13 +283,43 @@ class FirstMenu(MyMenu):
                 if not filename in self.files_to_parse:
                     self.files_to_parse.append(filename)
                     file_n = os.path.normpath(filename).split(os.path.sep)[-1]
-                    self.right_group_box.children()[3].widget(
+                    self.right_group_box.children()[4].widget(
                     ).layout().addWidget(OnOffWidget(file_n))
 
     def parse_files(self):
         """
         Parse Files
         """
-        application = self.parentWidget().parentWidget().application
-        application.parse_files(self.files_to_parse)
+        self.increase_progress_bar(0)
+        _ = [child.btn_del.setEnabled(False) for child in self.right_group_box.children(
+        )[4].widget().children() if isinstance(child, OnOffWidget)]
 
+        application = self.parentWidget().parentWidget().application
+        application.parse_files(self.files_to_parse, self)
+
+        for i in range(self.left_group_box.children()[2].widget().layout().count()):
+            self.left_group_box.children()[2].widget(
+            ).layout().itemAt(i).widget().close()
+        self.create_toggables_database(
+            application.database_path, self.left_group_box.children()[2])
+
+    def increase_progress_bar(self, value):
+        """
+        """
+        self.right_group_box.children()[3].setVisible(True)
+        self.right_group_box.children()[3].setValue(value)
+
+        if value >= 100:
+            _ = [child.on_delete() for child in self.right_group_box.children(
+            )[4].widget().children() if isinstance(child, OnOffWidget)]
+
+    def next(self):
+        """
+        To Override
+        """
+        checkboxes = [child for child in self.left_group_box.children(
+        )[2].widget().children() if isinstance(child, QtWidgets.QCheckBox)]
+        folders = [checkbox.text()
+                   for checkbox in checkboxes if checkbox.checkState() == 2]
+        self.parentWidget().parentWidget().application.retrieve_database(folders, self)
+        self.parentWidget().parentWidget().next_wid()
