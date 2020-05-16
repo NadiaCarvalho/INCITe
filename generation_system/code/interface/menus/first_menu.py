@@ -321,5 +321,5 @@ class FirstMenu(MyMenu):
         )[2].widget().children() if isinstance(child, QtWidgets.QCheckBox)]
         folders = [checkbox.text()
                    for checkbox in checkboxes if checkbox.checkState() == 2]
-        self.parentWidget().parentWidget().application.retrieve_database(folders, self)
+        self.parentWidget().parentWidget().application.retrieve_database(folders)
         self.parentWidget().parentWidget().next_wid()

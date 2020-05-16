@@ -85,7 +85,7 @@ class Application(QtCore.QObject):
                 perc = int((n_processed/len(filenames))*100)
                 self.signal.emit(perc)
 
-    def retrieve_database(self, folders, interface):
+    def retrieve_database(self, folders):
         """
         Retrieves Music from Database
         """
@@ -106,3 +106,8 @@ class Application(QtCore.QObject):
                         music_parser = MusicParser()
                         music_parser.from_pickle(name, root.split(os.sep))
                         self.music[name] = music_parser
+
+    def calculate_statistics(self):
+        """
+        Calculate Statistics For Viewpoints
+        """
