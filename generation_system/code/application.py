@@ -76,6 +76,7 @@ class Application(QtCore.QObject):
                 if self.music[filename].music.metadata.composer is not None:
                     folder_name = [
                         self.music[filename].music.metadata.composer.split(' ')[-1]]
+                    folder_name[-1].capitalize()
                 name = os.path.normpath(filename).split(os.path.sep)[-1]
                 name = '.'.join(name.split('.')[:-1])
                 folders = self.database_path.split(os.path.sep) + folder_name
@@ -111,3 +112,11 @@ class Application(QtCore.QObject):
         """
         Calculate Statistics For Viewpoints
         """
+        entire_music_to_learn_statistics = []
+
+        for music, parser in self.music.items():
+            for key, part in parser.get_part_events().items():
+                entire_music_to_learn_statistics.extend(part)
+
+        print(len(entire_music_to_learn_statistics))
+

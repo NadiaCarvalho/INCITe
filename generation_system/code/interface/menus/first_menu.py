@@ -69,20 +69,14 @@ class FirstMenu(MyMenu):
         self.setStyleSheet("""background: gray;""")
 
         self.top_group = self.create_settings(parent, width)
-        self.left_group_box = self.create_database_group(parent)
+        self.left_group_box = self.create_database_group(parent)   
         self.right_group_box = self.create_add_your_own_group()
 
-        self.main_layout.setRowStretch(1, 1)
-        self.main_layout.setRowStretch(2, 15)
-        self.main_layout.setRowStretch(3, 1)
-        self.main_layout.setColumnStretch(0, 3)
-        self.main_layout.setColumnStretch(1, 3)
-        self.main_layout.setVerticalSpacing(2)
-        self.main_layout.setContentsMargins(2, 5, 2, 5)
+        self.main_layout.setContentsMargins(5, 5, 5, 5)
 
-        self.main_layout.addWidget(self.top_group, 0, 0, 1, 3)
-        self.main_layout.addWidget(self.left_group_box, 1, 0, 15, 0)
-        self.main_layout.addWidget(self.right_group_box, 1, 1, 15, 3)
+        self.main_layout.addWidget(self.top_group, 0, 0, 1, 2)
+        self.main_layout.addWidget(self.left_group_box, 1, 0, 14, 1)
+        self.main_layout.addWidget(self.right_group_box, 1, 1, 14, 1)
 
         self.files_to_parse = []
 
@@ -90,6 +84,7 @@ class FirstMenu(MyMenu):
         """
         Override of resizeEvent for override path text
         """
+        self.main_layout.setContentsMargins(5, 5, 5, 5)
         text = self.top_group.children()[2].text()
         self.top_group.children()[2].setText(
             wrap_text(text, int(self.width()*30/420)))
@@ -104,9 +99,8 @@ class FirstMenu(MyMenu):
         layout = QtWidgets.QGridLayout()
         layout.setContentsMargins(3, 3, 3, 3)
 
-        self.main_layout.setRowStretch(1, 1)
-        self.main_layout.setColumnStretch(0, 2)
-        self.main_layout.setColumnStretch(1, 10)
+        layout.setColumnStretch(0, 2)
+        layout.setColumnStretch(1, 10)
 
         button = QtWidgets.QPushButton('Select Database Path')
         button.clicked.connect(self.database_path)
@@ -143,7 +137,6 @@ class FirstMenu(MyMenu):
         Creates a viewer and chooser for already existent database
         """
         database_group = QtWidgets.QGroupBox("Database")
-
         layout = QtWidgets.QVBoxLayout()
 
         check_box = QtWidgets.QCheckBox("Select All")
@@ -160,7 +153,7 @@ class FirstMenu(MyMenu):
             parent.application.database_path, scrollable_container)
 
         layout.addWidget(scrollable_container)
-        layout.setContentsMargins(1, 1, 1, 1)
+        layout.setContentsMargins(3, 3, 3, 3)
 
         database_group.setLayout(layout)
         return database_group
@@ -169,6 +162,9 @@ class FirstMenu(MyMenu):
         """
         Toggables Database for specified path
         """
+        for i in range(container.widget().layout().count()):
+            container.widget().layout().itemAt(i).widget().close()
+
         selectables = []
         for folder in [f.path for f in os.scandir(database_path) if f.is_dir() and any('.pbz2' in _file for _file in os.listdir(f.path))]:
             name = os.path.normpath(folder).split(os.path.sep)[-1]
@@ -283,8 +279,7 @@ class FirstMenu(MyMenu):
                 if not filename in self.files_to_parse:
                     self.files_to_parse.append(filename)
                     file_n = os.path.normpath(filename).split(os.path.sep)[-1]
-                    self.right_group_box.children()[4].widget(
-                    ).layout().addWidget(OnOffWidget(file_n))
+                    self.right_group_box.children()[4].widget().layout().addWidget(OnOffWidget(file_n))
 
     def parse_files(self):
         """
