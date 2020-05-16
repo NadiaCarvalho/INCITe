@@ -468,31 +468,64 @@ def process_voiced_measure(measure, max_voice_count):
 
 def statistic_features(events):
     """
+    Get Statistics from Features
     """
-    norm_features, o_features, features_names, weighted_fit = create_feature_array_events(
-        events=events, offset=False)
+    events_dict = [event.to_feature_dict(None, True) for event in events]
 
-    columns_values = list(zip(*o_features))
+    vec = DictVectorizer()
+    features = vec.fit_transform(events_dict).toarray()
+    features_names = vec.get_feature_names()
+
+    imp = SimpleImputer(missing_values=np.nan,
+                        strategy='constant', fill_value=10000)
+    features = imp.fit_transform(features)
+
+    columns_values = list(zip(*features))
     statistic_dict = {}
     for i, feat in enumerate(features_names):
+        values = list(
+            zip(*np.unique(list(columns_values[i]), return_counts=True)))
+
         if '=' in feat:
             info = feat.split('=')
             if not info[0] in statistic_dict:
                 statistic_dict[info[0]] = []
-
-            values = list(
-                zip(*np.unique(list(columns_values[i]), return_counts=True)))
             if len(values) == 1:
                 statistic_dict[info[0]].append((info[1], values[0][1]))
             else:
                 ret = [item for item in values if item[0] == 1.0]
                 if len(ret) > 0:
                     statistic_dict[info[0]].append((info[1], ret[0][1]))
-        else:
-            statistic_dict[feat] = list(
-                zip(*np.unique(list(columns_values[i]), return_counts=True)))
+        elif any(s in feat for s in ['articulation', 'expressions.expression', 'ornamentation',
+                                     'dynamic', 'chordPitches', 'pitches', 'pitch_class',
+                                     'prime_form', 'pc_ordered']):
+            cat = [s for s in ['articulation', 'expressions.expression', 'ornamentation', 'dynamic',
+                               'chordPitches', 'pitches', 'pitch_class', 'prime_form', 'pc_ordered'] if s in feat]
+            if not cat[0] in statistic_dict:
+                statistic_dict[cat[0]] = []
+            value_1 = list(filter(lambda x: 1.0 in x, values))
+            if value_1 != []:
+                statistic_dict[cat[0]].append(
+                    (feat.split('_')[-1], value_1[0][1]))
+        elif feat != 'offset':
+            statistic_dict[feat] = values
 
-    for feat, value in statistic_dict.items():
-        print(feat + ': ' + str(value))
+    return get_percentage_from_statistics(statistic_dict, len(events)), features, features_names
 
-    return statistic_dict
+
+def get_percentage_from_statistics(statistic_dict, len_events):
+    """
+    """
+    new_stats_dict = {}
+    for key, values in statistic_dict.items():
+        unique_percentages = [float(x[1])/len_events * 100 for x in values]
+        new_stats_dict[key] = {
+            'unique_values': [x[0] for x in values],
+            'unique': len(values),
+            'total_percentages': float(sum([x[1] for x in values]))/len_events * 100,
+            'unique_percentages': unique_percentages,
+            'media_percentages': sum(unique_percentages)/len(unique_percentages),
+            'median_percentages': np.median(unique_percentages),
+            'variance': np.var(unique_percentages),
+        }
+    return new_stats_dict

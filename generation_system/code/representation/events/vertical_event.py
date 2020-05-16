@@ -78,27 +78,26 @@ class VerticalEvent(Event):
         """
         Transforms event in a dict of features
         """
+        viewpoints_flat = utils.flatten_dict(self.viewpoints, sep='.')
         if features is None:
-            features = ['.'.join(path.split('.')[-2:])
-                        for path in utils.get_all_inner_keys(self.viewpoints)]
+            features = viewpoints_flat.keys()
 
         features_dict = {}
         if offset:
             features_dict['offset'] = self.offset_time
 
         for feat in features:
-            category = None
-            real_feat = feat
-            if '.' in feat:
-                category = feat.split('.')[0]
-                real_feat = feat.split('.')[1]
+            content = None
+            views = [v for v in viewpoints_flat.keys() if feat in v]
+            if views != []:
+                content = viewpoints_flat[views[0]]
 
             # add features that are arrays
-            if real_feat in ['pitches', 'pitch_class', 'prime_form', 'pc_ordered']:
-                for a_feat in enumerate(self.get_viewpoint(real_feat, category)):
+            if content is not None and any(s in ['pitches', 'pitch_class', 'prime_form', 'pc_ordered'] for s in feat.split('.')):
+                for a_feat in enumerate(content):
                     if isinstance(a_feat, tuple):
                         a_feat = a_feat[1]
-                    features_dict[real_feat + '_' + str(a_feat)] = True
+                    features_dict[feat + '_' + str(a_feat)] = True
             else:
-                features_dict[feat] = self.get_viewpoint(real_feat, category)
+                features_dict[feat] = content
         return features_dict

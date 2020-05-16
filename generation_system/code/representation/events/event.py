@@ -22,62 +22,37 @@ class Event:
         elif (from_list is not None) and (features is not None):
             self.from_feature_list(from_list, features)
 
-    def get_view_aux(self, name, category, info=None, add=False):
-        """
-        Aux function for get/add viewpoint
-        """
-        paths = utils.retrieve_path_to_key(
-            self.viewpoints, name)
-
-        if add and len(paths) == 0:
-            self.viewpoints[name] = info
-        elif len(paths) > 0:
-            viewpoint_path = paths[0].split('.')
-
-            if category is not None:
-                for path in paths:
-                    list_paths = path.split('.')
-                    if category in list_paths:
-                        viewpoint_path = list_paths
-                        break
-
-            v_to_process = viewpoint_path
-            if add:
-                v_to_process = viewpoint_path[:-1]
-
-            view_cat = self.viewpoints
-            for viewpoint in v_to_process:
-                view_cat = view_cat[viewpoint]
-            return view_cat
-        return None
-
     def add_viewpoint(self, name, info, category=None):
         """
         Adds a viewpoint to event
         """
         new_name = name
-        new_category = category
-        if '.' in name:
-            splitted = name.split('.')
-            new_name = splitted[1]
-            new_category = splitted[0]
+        if not '.' in name and category is not None:
+            new_name = category + '.' + name
 
-        view_cat = self.get_view_aux(new_name, new_category, info, add=True)
-        if view_cat is not None:
-            utils._add_viewpoint(view_cat, new_name, info)
+        viewpoints_flat = utils.flatten_dict(self.viewpoints, sep='.')
+        views = [v for v in viewpoints_flat.keys() if new_name in v]
+
+        if views != []:
+            path = views[0].split('.')
+            view_cat = self.viewpoints
+            for key in path[:-1]:
+                view_cat = view_cat[key]
+            utils._add_viewpoint(view_cat, path[-1], info)
 
     def get_viewpoint(self, name, category=None):
         """
         Returns a viewpoint of event
         """
         new_name = name
-        new_category = category
-        if '.' in name:
-            splitted = name.split('.')
-            new_name = splitted[1]
-            new_category = splitted[0]
+        if not '.' in name and category is not None:
+            new_name = category + '.' + name
 
-        return self.get_view_aux(new_name, new_category)
+        viewpoints_flat = utils.flatten_dict(self.viewpoints, sep='.')
+        views = [v for v in viewpoints_flat.keys() if new_name in v]
+        if views != []:
+            return viewpoints_flat[views[0]]
+        return None
 
     def get_offset(self):
         """
@@ -134,16 +109,18 @@ class Event:
         """
         Transforms event in a dict of features
         """
+        viewpoints_flat = utils.flatten_dict(self.viewpoints, sep='.')
         if features is None:
-            features = list(self.viewpoints)
+            features = viewpoints_flat.keys()
 
         features_dict = {}
-
         if offset:
             features_dict['offset'] = self.offset_time
 
         for feat in features:
-            features_dict[feat] = self.get_viewpoint(feat)
+            views = [v for v in viewpoints_flat.keys() if feat in v]
+            if views != []:
+                features_dict[feat] = viewpoints_flat[views[0]]
         return features_dict
 
     def from_feature_dict(self, from_dict, features):

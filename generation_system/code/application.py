@@ -29,7 +29,8 @@ class Application(QtCore.QObject):
     Communicates with interface to deal with the 
     main part of the logistics of the app
     """
-    signal = QtCore.pyqtSignal(int)
+    signal_parsed = QtCore.pyqtSignal(int)
+    signal_viewpoints = QtCore.pyqtSignal(dict)
 
     def __init__(self):
         QtCore.QObject.__init__(self)
@@ -62,7 +63,7 @@ class Application(QtCore.QObject):
         """
         Parses Music
         """
-        self.signal.connect(interface.increase_progress_bar)
+        self.signal_parsed.connect(interface.increase_progress_bar)
 
         reversed_filenames = reversed(filenames)
 
@@ -108,15 +109,40 @@ class Application(QtCore.QObject):
                         music_parser.from_pickle(name, root.split(os.sep))
                         self.music[name] = music_parser
 
-    def calculate_statistics(self):
+    def calculate_statistics(self, interface, calc_weights=False):
         """
         Calculate Statistics For Viewpoints
         """
-        entire_music_to_learn_statistics = []
+        self.indexes = {}
+        self.entire_part_music_to_learn_statistics = []
+        self.vertical_music_to_learn = []
+
+        self.signal_viewpoints.connect(interface.create_statistics_overview)
 
         for music, parser in self.music.items():
+            self.indexes[music] = {}
             for key, part in parser.get_part_events().items():
-                entire_music_to_learn_statistics.extend(part)
+                self.indexes[music][key] = len(
+                    self.entire_part_music_to_learn_statistics)
+                self.entire_part_music_to_learn_statistics.extend(part)
 
-        print(len(entire_music_to_learn_statistics))
+            self.vertical_part = parser.get_vertical_events()
+            if self.vertical_part is not None:
+                self.indexes[music]['vertical'] = len(
+                    self.vertical_music_to_learn)
+                self.vertical_music_to_learn.extend(self.vertical_part)
 
+        statistic_part_dict_percentages, part_features, part_features_names = rep_utils.statistic_features(
+            self.entire_part_music_to_learn_statistics)
+        statistic_vert_dict_percentages, vert_features, vert_features_names = rep_utils.statistic_features(
+            self.vertical_music_to_learn)
+
+        statistic_dict = {
+            'parts': statistic_part_dict_percentages,
+            'vert': statistic_vert_dict_percentages
+        }
+
+        if calc_weights:
+            pass
+
+        self.signal_viewpoints.emit(statistic_dict)

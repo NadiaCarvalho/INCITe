@@ -27,15 +27,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.resize(500, 800)
 
-        self.status_bar = QtWidgets.QStatusBar()
-        self.status_bar.setFixedHeight(5)
-        self.setStatusBar(self.status_bar)
-
         # Central Widget
         self.central_wid = QtWidgets.QWidget()
         self.layout_for_wids = QtWidgets.QStackedLayout()
-        self.layout_for_wids.setContentsMargins(0,0,0, 2)
-        self.layout_for_wids.setSpacing(6)
+        self.layout_for_wids.setContentsMargins(0, 0, 0, 4)
+        self.layout_for_wids.setSpacing(15)
 
         f_m = FirstMenu(self.width(), self.height(), self)
         s_m = SecondMenu(self.width(), self.height(), self)
@@ -63,8 +59,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         for wind in self.wids:
             wind.resize(self.width(), self.height())
-        self.layout_for_wids.setContentsMargins(0,0,0, 2)
-        self.layout_for_wids.setSpacing(6)
+        self.layout_for_wids.setContentsMargins(0, 0, 0, 4)
+        self.layout_for_wids.setSpacing(15)
 
     def init_toolbar(self):
         """
@@ -99,7 +95,6 @@ class MainWindow(QtWidgets.QMainWindow):
         toolbar.addAction(self.btn_back)
         toolbar.addAction(self.btn_next)
         toolbar.addWidget(right_spacer)
-
         return toolbar
 
     def next_wid(self):
