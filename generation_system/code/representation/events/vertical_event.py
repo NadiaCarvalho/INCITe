@@ -29,13 +29,13 @@ class VerticalEvent(Event):
                 'pitches': [],
                 'cardinality': 0,
                 'inversion': '',
-                'prime_form': '',
+                'primeForm': '',
                 'quality': '',
             },
             'classes': {
-                'pc_ordered': '',
+                'pcOrdered': '',
                 'pc_cardinality': 0,
-                'pitch_class': '',
+                'pitchClass': '',
                 'forte_class': '',
                 'forte_class_number': 0,
             },
@@ -93,7 +93,7 @@ class VerticalEvent(Event):
                 content = viewpoints_flat[views[0]]
 
             # add features that are arrays
-            if content is not None and any(s in ['pitches', 'pitch_class', 'prime_form', 'pc_ordered'] for s in feat.split('.')):
+            if content is not None and any(s in ['pitches', 'pitchClass', 'primeForm', 'pcOrdered'] for s in feat.split('.')):
                 for a_feat in enumerate(content):
                     if isinstance(a_feat, tuple):
                         a_feat = a_feat[1]

@@ -99,11 +99,11 @@ class VerticalParser:
         self.events[index].add_viewpoint(
             'pc_cardinality', chord.pitchClassCardinality)
         self.events[index].add_viewpoint(
-            'pitch_class', chord.pitchClasses)
+            'pitchClass', chord.pitchClasses)
         self.events[index].add_viewpoint(
-            'prime_form', chord.primeForm)
+            'primeForm', chord.primeForm)
         self.events[index].add_viewpoint(
-            'pc_ordered', chord.orderedPitchClasses)
+            'pcOrdered', chord.orderedPitchClasses)
 
     def chord_info(self, index, chord):
         """

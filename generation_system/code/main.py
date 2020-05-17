@@ -111,7 +111,7 @@ def main():
                 from_list=o_feats[key][state-2], features=feat_names[key]) for state in sequence]
             score.parse_events(sequenced_events, new_part=True, new_voice=True)
     score.stream.show()
- """
+"""
     # key = 0
     # score = ScoreConversor()
     # sequence, end, k_trace = gen.generate(
@@ -291,7 +291,6 @@ def create_line_oracle(parser, events, seg_weights=None, model_weights=None, dim
                      indexes=vertical_start_indexes)
     else:
         segmentation(events, weights_line=line_seg_weights)
-
     apply_segmentation_info(events)
 
     new_events = []

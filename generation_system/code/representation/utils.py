@@ -12,6 +12,11 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.impute import SimpleImputer
 
 
+"""
+Basic/Maths Functions
+"""
+
+
 def flatten(newlist):
     """
     flatten a list with strings
@@ -76,6 +81,11 @@ def contour_hd(midi_viewpoint_1, midi_viewpoint_2):
     return int(0)
 
 
+"""
+Offset Related
+"""
+
+
 def get_last_x_events_that_are_notes_before_index(events, number=1, actual_index=None):
     """
     Returns the first event that is a note but not a rest before an event
@@ -113,6 +123,31 @@ def offset_info(event, viewpoint):
     return to_print
 
 
+def get_events_at_offset(events, offset):
+    """
+    Returns all events that happen at a specified offset
+    """
+    return [event for event in events if event.get_offset() == offset]
+
+
+def get_evs_bet_offs_inc(events, offset1, offset2=None):
+    """
+    Returns all events that happen between (and including) two specified offsets
+    """
+    if len(events) < 1:
+        return events
+
+    if offset2 is None:
+        offset2 = events[-1].get_offset()
+
+    return [event for event in events if offset1 <= event.get_offset() <= offset2]
+
+
+"""
+Printing Utilities
+"""
+
+
 def show_sequence_of_viewpoint_with_offset(events, viewpoint):
     """
     Returns a string of a specific viewpoint for all events and offset of event
@@ -144,24 +179,9 @@ def show_part_viewpoint(viewpoint, part, offset=False):
         print(show_sequence_of_viewpoint_without_offset(part, viewpoint))
 
 
-def get_events_at_offset(events, offset):
-    """
-    Returns all events that happen at a specified offset
-    """
-    return [event for event in events if event.get_offset() == offset]
-
-
-def get_evs_bet_offs_inc(events, offset1, offset2=None):
-    """
-    Returns all events that happen between (and including) two specified offsets
-    """
-    if len(events) < 1:
-        return events
-
-    if offset2 is None:
-        offset2 = events[-1].get_offset()
-
-    return [event for event in events if offset1 <= event.get_offset() <= offset2]
+"""
+Parsing Utilities
+"""
 
 
 def not_rest_or_grace(event):
@@ -190,6 +210,42 @@ def harmonic_functions_key(chord, key):
     Parses the harmonic key signatures information for a key
     """
     return music21.roman.romanNumeralFromChord(chord, key)
+
+
+def part_name_parser(music_to_parse):
+    """
+    Return the name and voice of the part
+    """
+    part_name_voice = [music_to_parse.partName, 'v0']
+    if music_to_parse.partName is None and type(music_to_parse.id) == str:
+        part_name_voice = music_to_parse.id.split('-')
+    return part_name_voice
+
+
+def get_analysis_keys_stream_bet_offsets(music_to_parse, off1, off2):
+    """
+    Gets an analysis of key for a stream
+    """
+    k = music_to_parse.getElementsByOffset(
+        off1, off2).stream().analyze('key')
+    return (off1, k)
+
+
+def has_value_viewpoint_events(events, viewpoint):
+    """
+    For a sequence of events, evaluate
+    if all None (False) or not (True)
+    """
+    for event in events:
+        view = event.get_viewpoint(viewpoint)
+        if not view is None:
+            return True
+    return False
+
+
+"""
+Event Similarity (not used anymore)
+"""
 
 
 def get_all_events_similar_to_event(events, event, weights=None, threshold=0.5, offset_thresh=None):
@@ -233,106 +289,9 @@ def create_similarity_matrix(events, weights=None):
     return np.array(matrix)
 
 
-def normalize_column(col, x_min, x_max):
-
-    if max(col) == min(col) and max(col) != 0:
-        return [1. for item in col]
-
-    nom = (col - min(col))*(x_max-x_min)
-    denom = max(col) - min(col)
-    if denom == 0:
-        denom = 1
-    return (nom/denom) + x_min
-
-
-def normalize(feat_list, x_min, x_max):
-    """
-    Get Normalization for 
-    """
-    normalized_columns = []
-    for col in list(zip(*feat_list)):
-        normalized_columns.append(normalize_column(list(col), x_min, x_max))
-    return [list(line) for line in list(zip(*normalized_columns))]
-
-
-def normalize_weights(weights):
-    """
-    Normalize weight list
-    """
-    if len(weights) < 1:
-        return weights
-
-    if any(w < 0 for w in weights):
-        weights = [float(w) + abs(min(weights)) for w in weights]
-    return [float(w)/sum(weights) for w in weights]
-
-
-def create_feature_array_events(events, weights=None, normalization='st1-mt0', offset=True, flatten=True):
-    """
-    Creating Feature Array and Weights for Oracle
-    """
-    events_dict = [event.to_feature_dict(weights, offset) for event in events]
-
-    vec = DictVectorizer()
-    features = vec.fit_transform(events_dict).toarray()
-    features_names = vec.get_feature_names()
-
-    imp = SimpleImputer(missing_values=np.nan,
-                        strategy='constant', fill_value=10000)
-    features = imp.fit_transform(features)
-
-    norm_features = []
-    if normalization == 'st1-mt0':
-        norm_features = normalize(features, -1, 1)
-    else:
-        norm_features = normalize(features, 0, 1)
-
-    if len(features_names) == 1 and flatten:
-        features = [x for [x] in features]
-        norm_features = [x for [x] in norm_features]
-
-    weighted_fit = None
-    if weights is not None:
-        weighted_fit = np.zeros(len(features_names))
-        for i, feat in enumerate(features_names):
-            w_feat = [key for key in weights if feat.find(key) != -1]
-            if len(w_feat) == 0:
-                weighted_fit[i] = 0
-            else:
-                weighted_fit[i] = weights[w_feat[0]]
-
-    return norm_features, features, features_names, weighted_fit
-
-
-def part_name_parser(music_to_parse):
-    """
-    Return the name and voice of the part
-    """
-    part_name_voice = [music_to_parse.partName, 'v0']
-    if music_to_parse.partName is None and type(music_to_parse.id) == str:
-        part_name_voice = music_to_parse.id.split('-')
-    return part_name_voice
-
-
-def get_analysis_keys_stream_bet_offsets(music_to_parse, off1, off2):
-    """
-    Gets an analysis of key for a stream
-    """
-    k = music_to_parse.getElementsByOffset(
-        off1, off2).stream().analyze('key')
-    return (off1, k)
-
-
-def has_value_viewpoint_events(events, viewpoint):
-    """
-    For a sequence of events, evaluate
-    if all None (False) or not (True)
-    """
-    for event in events:
-        view = event.get_viewpoint(viewpoint)
-        if not view is None:
-            return True
-    return False
+"""
+Voice Utils
+"""
 
 
 def get_number_voices(stream):
@@ -466,11 +425,76 @@ def process_voiced_measure(measure, max_voice_count):
         measure.insert(0, v)
 
 
-def statistic_features(events):
+"""
+Normalization And Arrays
+"""
+
+
+def normalize_column(col, x_min, x_max):
+
+    if max(col) == min(col) and max(col) != 0:
+        return [1. for item in col]
+
+    nom = (col - min(col))*(x_max-x_min)
+    denom = max(col) - min(col)
+    if denom == 0:
+        denom = 1
+    return (nom/denom) + x_min
+
+
+def normalize(feat_list, x_min, x_max):
     """
-    Get Statistics from Features
+    Get Normalization for 
     """
-    events_dict = [event.to_feature_dict(None, True) for event in events]
+    normalized_columns = []
+    for col in list(zip(*feat_list)):
+        normalized_columns.append(normalize_column(list(col), x_min, x_max))
+    return [list(line) for line in list(zip(*normalized_columns))]
+
+
+def normalize_weights(weights):
+    """
+    Normalize weight list
+    """
+    if len(weights) < 1:
+        return weights
+
+    if any(w < 0 for w in weights):
+        weights = [float(w) + abs(min(weights)) for w in weights]
+    return [float(w)/sum(weights) for w in weights]
+
+
+def create_feature_array_events(events, weights=None, normalization='st1-mt0', offset=True, flatten=True):
+    """
+    Creating Feature Array and Weights for Oracle
+    """
+    features, features_names = create_feat_array(events, weights, offset)
+
+    norm_features = []
+    if normalization == 'st1-mt0':
+        norm_features = normalize(features, -1, 1)
+    else:
+        norm_features = normalize(features, 0, 1)
+
+    if len(features_names) == 1 and flatten:
+        features = [x for [x] in features]
+        norm_features = [x for [x] in norm_features]
+
+    weighted_fit = None
+    if weights is not None:
+        weighted_fit = np.zeros(len(features_names))
+        for i, feat in enumerate(features_names):
+            w_feat = [key for key in weights if feat.find(key) != -1]
+            if len(w_feat) == 0:
+                weighted_fit[i] = 0
+            else:
+                weighted_fit[i] = weights[w_feat[0]]
+
+    return norm_features, features, features_names, weighted_fit
+
+
+def create_feat_array(events, weights=None, offset=True):
+    events_dict = [event.to_feature_dict(weights, offset) for event in events]
 
     vec = DictVectorizer()
     features = vec.fit_transform(events_dict).toarray()
@@ -478,7 +502,19 @@ def statistic_features(events):
 
     imp = SimpleImputer(missing_values=np.nan,
                         strategy='constant', fill_value=10000)
-    features = imp.fit_transform(features)
+    return imp.fit_transform(features), features_names
+
+
+"""
+Statistics
+"""
+
+
+def statistic_features(events):
+    """
+    Get Statistics from Features
+    """
+    features, features_names = create_feat_array(events)
 
     columns_values = list(zip(*features))
     statistic_dict = {}
@@ -497,10 +533,9 @@ def statistic_features(events):
                 if len(ret) > 0:
                     statistic_dict[info[0]].append((info[1], ret[0][1]))
         elif any(s in feat for s in ['articulation', 'expressions.expression', 'ornamentation',
-                                     'dynamic', 'chordPitches', 'pitches', 'pitch_class',
-                                     'prime_form', 'pc_ordered']):
+                                     'dynamic', 'chordPitches', 'pitches', 'pitchClass', 'primeForm', 'pcOrdered']):
             cat = [s for s in ['articulation', 'expressions.expression', 'ornamentation', 'dynamic',
-                               'chordPitches', 'pitches', 'pitch_class', 'prime_form', 'pc_ordered'] if s in feat]
+                               'chordPitches', 'pitches', 'pitchClass', 'primeForm', 'pcOrdered'] if s in feat]
             if not cat[0] in statistic_dict:
                 statistic_dict[cat[0]] = []
             value_1 = list(filter(lambda x: 1.0 in x, values))

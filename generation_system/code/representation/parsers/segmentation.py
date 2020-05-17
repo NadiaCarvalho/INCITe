@@ -163,7 +163,7 @@ def apply_segmentation_info(events):
     """
     #print('Parse Segmentation')
     boundary_indexes = [
-        i for i, event in enumerate(events) if event.get_viewpoint('pharse.boundary') == 1]
+        i for i, event in enumerate(events) if event.get_viewpoint('phrase.boundary') == 1]
 
     for k, event in enumerate(events):
         if k != 0:

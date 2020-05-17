@@ -22,7 +22,7 @@ class ShowStatsWidget(QtWidgets.QWidget):
 
         self.name = name
         self.statistics = statistics
-        self.weight = 1
+        self.weight = 0
 
         self.vbox = QtWidgets.QVBoxLayout()
         self.vbox.setAlignment(QtCore.Qt.AlignTop)
@@ -49,7 +49,7 @@ class ShowStatsWidget(QtWidgets.QWidget):
                     self.vbox.addWidget(s_label)
             else:
                 s_label = QtWidgets.QLabel(
-                    ''.join(key.split('_')) + ' : ' + str(stat))
+                    ' '.join(key.split('_')) + ' : ' + str(stat))
                 s_label.setWordWrap(True)
                 if 'percentage' in key:
                     s_label.setText(s_label.text() + ' %')
@@ -100,6 +100,8 @@ class SecondMenu(MyMenu):
         self.container = QtWidgets.QWidget()
         self.container.setLayout(QtWidgets.QVBoxLayout(self.container))
         self.container.layout().setContentsMargins(5, 5, 5, 5)
+        self.tab_parts = None
+        self.tab_vertical = None
 
         self.main_layout.setContentsMargins(5, 5, 5, 5)
         self.main_layout.setSpacing(35)
@@ -136,7 +138,7 @@ class SecondMenu(MyMenu):
         button.clicked.connect(self.calculate_statistics)
         layout.addWidget(button, 0, 0, 1, 1)
 
-        button = QtWidgets.QPushButton('Choose Automatic Viewpoints')
+        button = QtWidgets.QPushButton('View Automatic Viewpoints')
         button.clicked.connect(self.calculate_automatic_weights)
         layout.addWidget(button, 0, 1, 1, 1)
 
@@ -166,12 +168,12 @@ class SecondMenu(MyMenu):
 
         # Initialize tab screen
         tabs = QtWidgets.QTabWidget()
-        tab_parts = self.create_statistics_folder(statistics['parts'], tabs)
-        tab_vert = self.create_statistics_folder(statistics['vert'], tabs)
+        self.tab_parts = self.create_statistics_folder(statistics['parts'], tabs)
+        self.tab_vertical = self.create_statistics_folder(statistics['vertical'], tabs)
 
         # Add tabs
-        tabs.addTab(tab_parts, "Part Events")
-        tabs.addTab(tab_vert, "Vertical Events")
+        tabs.addTab(self.tab_parts, "Part Events")
+        tabs.addTab(self.tab_vertical, "Vertical Events")
 
         # Add tabs to widget
         self.container.layout().addWidget(tabs)
@@ -203,23 +205,22 @@ class SecondMenu(MyMenu):
         To Override
         """
         weights_dict = {
-            'part': {},
-            'vert': {},
+            'parts': {},
+            'vertical': {},
         }
 
-        print(self.container.children()[1].children()[0].children()[1])
-        part_widget = self.container.children()[1].children()[
-            0].children()[1].children()[2]
-        for i in range(part_widget.count()):
-            widget = part_widget.widget(i)
-            if isinstance(widget, ShowStatsWidget):
-                weights_dict['part'][widget.name] = widget.weight
+        if self.tab_parts:
+            part_widget = self.tab_parts.children()[2]
+            for i in range(part_widget.count()):
+                widget = part_widget.widget(i)
+                if isinstance(widget, ShowStatsWidget):
+                    weights_dict['parts'][widget.name] = widget.weight
 
-        vert_widget = self.container.children()[1].children()[
-            0].children()[2].children()[2]
-        for i in range(vert_widget.count()):
-            widget = vert_widget.widget(i)
-            if isinstance(widget, ShowStatsWidget):
-                weights_dict['vert'][widget.name] = widget.weight
+        if self.tab_vertical:
+            vertical_widget = self.tab_vertical.children()[2]
+            for i in range(vertical_widget.count()):
+                widget = vertical_widget.widget(i)
+                if isinstance(widget, ShowStatsWidget):
+                    weights_dict['vertical'][widget.name] = widget.weight
 
         self.parentWidget().parentWidget().application.apply_viewpoint_weights(weights_dict)
