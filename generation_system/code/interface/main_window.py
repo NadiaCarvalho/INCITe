@@ -82,7 +82,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Next Window Button
         self.btn_next = QtWidgets.QAction("Next", self)
-        self.btn_next.triggered.connect(self.wids[self.front_wid].next)
+        self.btn_next.triggered.connect(self.next_wid)
         self.btn_next.setShortcut('Ctrl+Q')
         self.btn_next.setToolTip('Go to next window')
 
@@ -98,6 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return toolbar
 
     def next_wid(self):
+        self.wids[self.front_wid].next()
         # LOGIC TO SWITCH NEXT
         if self.front_wid != len(self.wids)-1:
             self.wids[self.front_wid].hide()
@@ -106,6 +107,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.switch_state_buttons()
 
     def last_wid(self):
+        self.wids[self.front_wid].back()
         # LOGIC TO SWITCH BACK
         if self.front_wid > 0:
             self.wids[self.front_wid].hide()

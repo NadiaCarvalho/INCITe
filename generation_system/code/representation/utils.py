@@ -520,7 +520,7 @@ def get_percentage_from_statistics(statistic_dict, len_events):
     for key, values in statistic_dict.items():
         unique_percentages = [float(x[1])/len_events * 100 for x in values]
         new_stats_dict[key] = {
-            'unique_values': [x[0] for x in values],
+            'unique_values': values,
             'unique': len(values),
             'total_percentages': float(sum([x[1] for x in values]))/len_events * 100,
             'unique_percentages': unique_percentages,

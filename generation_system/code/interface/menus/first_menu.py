@@ -69,7 +69,7 @@ class FirstMenu(MyMenu):
         self.setStyleSheet("""background: gray;""")
 
         self.top_group = self.create_settings(parent, width)
-        self.left_group_box = self.create_database_group(parent)   
+        self.left_group_box = self.create_database_group(parent)
         self.right_group_box = self.create_add_your_own_group()
 
         self.main_layout.setContentsMargins(5, 5, 5, 5)
@@ -238,10 +238,6 @@ class FirstMenu(MyMenu):
         scrollable_container = self.create_container_files()
         layout.addWidget(scrollable_container)
 
-        # timer = QTimer(self)
-        # timer.timeout.connect(self.advanceProgressBar)
-        # timer.start(1000)
-
         layout.setContentsMargins(1, 1, 1, 1)
 
         add_your_own.setLayout(layout)
@@ -254,6 +250,7 @@ class FirstMenu(MyMenu):
         container = QtWidgets.QWidget()
 
         container_layout = QtWidgets.QVBoxLayout()
+        container_layout.setAlignment(QtCore.Qt.AlignTop)
         container.setLayout(container_layout)
 
         # Scroll Area Properties.
@@ -279,7 +276,8 @@ class FirstMenu(MyMenu):
                 if not filename in self.files_to_parse:
                     self.files_to_parse.append(filename)
                     file_n = os.path.normpath(filename).split(os.path.sep)[-1]
-                    self.right_group_box.children()[4].widget().layout().addWidget(OnOffWidget(file_n))
+                    self.right_group_box.children()[4].widget(
+                    ).layout().addWidget(OnOffWidget(file_n))
 
     def parse_files(self):
         """
@@ -317,4 +315,3 @@ class FirstMenu(MyMenu):
         folders = [checkbox.text()
                    for checkbox in checkboxes if checkbox.checkState() == 2]
         self.parentWidget().parentWidget().application.retrieve_database(folders)
-        self.parentWidget().parentWidget().next_wid()

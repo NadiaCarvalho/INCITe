@@ -39,10 +39,10 @@ class MyMenu(QtWidgets.QWidget):
         """
         To Override
         """
-        self.parentWidget().parentWidget().next_wid()
+        pass
 
     def back(self):
         """
         To Override
         """
-        self.parentWidget().parentWidget().last_wid()
+        pass

@@ -146,3 +146,9 @@ class Application(QtCore.QObject):
             pass
 
         self.signal_viewpoints.emit(statistic_dict)
+
+    def apply_viewpoint_weights(self, weight_dict):
+        """
+        Apply choosen weights
+        """
+        pass
