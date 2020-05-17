@@ -8,11 +8,14 @@ from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
 from interface.menus.menu import MyMenu
 
+
 class QHLine(QtWidgets.QFrame):
     def __init__(self):
         super(QHLine, self).__init__()
         self.setFrameShape(QtWidgets.QFrame.HLine)
         self.setFrameShadow(QtWidgets.QFrame.Sunken)
+
+
 class ShowStatsWidget(QtWidgets.QWidget):
     def __init__(self, name, statistics):
         super(ShowStatsWidget, self).__init__()
@@ -60,12 +63,14 @@ class ShowStatsWidget(QtWidgets.QWidget):
             self.weight = self.statistics['weight']
 
         label = QtWidgets.QLabel('Choose Weight: ')
-        label.setStyleSheet("""color: blue; font: bold 18px; margin-top: 5px""")
+        label.setStyleSheet(
+            """color: blue; font: bold 18px; margin-top: 5px""")
         self.vbox.addWidget(label)
 
         self.weight_box = QtWidgets.QSpinBox(self)
         self.weight_box.setValue(self.weight)
-        self.weight_box.setStyleSheet("""color: blue; font: bold 18px; background: white""")
+        self.weight_box.setStyleSheet(
+            """color: blue; font: bold 18px; background: white""")
         self.weight_box.valueChanged.connect(self.change_weight)
         self.vbox.addWidget(self.weight_box)
 
@@ -203,17 +208,18 @@ class SecondMenu(MyMenu):
         }
 
         print(self.container.children()[1].children()[0].children()[1])
-        part_widget = self.container.children()[1].children()[0].children()[1].children()[2]
+        part_widget = self.container.children()[1].children()[
+            0].children()[1].children()[2]
         for i in range(part_widget.count()):
             widget = part_widget.widget(i)
             if isinstance(widget, ShowStatsWidget):
                 weights_dict['part'][widget.name] = widget.weight
 
-        vert_widget = self.container.children()[1].children()[0].children()[2].children()[2]
+        vert_widget = self.container.children()[1].children()[
+            0].children()[2].children()[2]
         for i in range(vert_widget.count()):
             widget = vert_widget.widget(i)
             if isinstance(widget, ShowStatsWidget):
                 weights_dict['vert'][widget.name] = widget.weight
-
 
         self.parentWidget().parentWidget().application.apply_viewpoint_weights(weights_dict)
