@@ -5,8 +5,9 @@ This script presents the class LineParser that processes the events of a single 
 
 import music21
 
-import representation.utils as utils
+import representation.parsers.utils as utils
 from representation.events.linear_event import LinearEvent
+
 
 class LineParser:
     """
@@ -110,7 +111,8 @@ class LineParser:
                 note_to_parse = note_or_rest
                 if is_chord:
                     note_to_parse = music21.note.Note(note_or_rest.bass())
-                    self.events[i].add_viewpoint('chordPitches',  [str(p) for p in note_or_rest.pitches])
+                    self.events[i].add_viewpoint(
+                        'chordPitches',  [str(p) for p in note_or_rest.pitches])
 
                 self.note_basic_info_parsing(i, note_to_parse)
                 self.contours_parsing(i)
@@ -436,7 +438,8 @@ class LineParser:
         time_sigs = list(self.music_to_parse.flat.getElementsByClass(
             music21.meter.TimeSignature))
         for i, sig in enumerate(time_sigs):
-            offset = (None if i == (len(time_sigs)-1) else time_sigs[i+1].offset)
+            offset = (None if i == (len(time_sigs)-1)
+                      else time_sigs[i+1].offset)
             for event in utils.get_evs_bet_offs_inc(self.events, sig.offset, offset):
                 event.add_viewpoint(
                     'timesig', sig.ratioString)
@@ -474,7 +477,8 @@ class LineParser:
         Parses the existent Metronome Markings
         """
         #print('Parse Metro')
-        self.metronome_marks_parsing(metro_marks=list(self.music_to_parse.flat.metronomeMarkBoundaries()))
+        self.metronome_marks_parsing(metro_marks=list(
+            self.music_to_parse.flat.metronomeMarkBoundaries()))
 
     def double_barline_parsing(self):
         """

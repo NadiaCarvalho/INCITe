@@ -6,7 +6,7 @@ from collections import defaultdict
 
 import music21
 
-import representation.utils as utils
+import representation.parsers.utils as utils
 from representation.events.vertical_event import VerticalEvent
 
 
@@ -43,7 +43,7 @@ class VerticalParser:
             self.events.append(VerticalEvent(chord.offset))
 
             self.extract_duration(i, chord)
-            if not isinstance(chord, music21.note.Rest):            
+            if not isinstance(chord, music21.note.Rest):
                 self.extract_chord_table_info(i, chord)
                 self.pitch_class_info(i, chord)
                 self.chord_info(i, chord)
@@ -57,7 +57,7 @@ class VerticalParser:
         """
         Processes the duration information for a chord
         """
-        
+
         try:
             self.events[index].add_viewpoint(
                 'duration.length', chord.duration.quarterLength)

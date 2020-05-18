@@ -7,7 +7,8 @@ import math
 
 import numpy as np
 
-import representation.utils as utils
+import representation.parsers.utils as basic_utils
+import representation.utils.features as utils
 
 
 def change_degree(event_1, event_2):
@@ -183,7 +184,7 @@ def apply_segmentation_info(events):
                 if last_index < len(boundary_indexes)-2:
                     length = boundary_indexes[last_index+2] - k
 
-            event.add_viewpoint('intphrase',  utils.seq_int(
+            event.add_viewpoint('intphrase',  basic_utils.seq_int(
                 event.get_viewpoint('pitch.cpitch'), events[last_index].get_viewpoint('pitch.cpitch')))
             event.add_viewpoint('phrase.length', length)
 

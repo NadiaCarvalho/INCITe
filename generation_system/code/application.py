@@ -14,7 +14,9 @@ import generation.gen_algorithms.multi_oracle_gen as multi_gen
 import generation.plot_fo as gen_plot
 import generation.utils as gen_utils
 
-import representation.utils as rep_utils
+import representation.utils.features as rep_utils
+import representation.utils.statistics as statistics
+
 from representation.conversor.score_conversor import ScoreConversor
 from representation.events.linear_event import LinearEvent
 from representation.parsers.music_parser import MusicParser
@@ -141,9 +143,9 @@ class Application(QtCore.QObject):
                     vertical_music_to_learn)
                 vertical_music_to_learn.extend(vertical_part)
 
-        statistic_part_dict_percentages, self.part_features, self.part_features_names = rep_utils.statistic_features(
+        statistic_part_dict_percentages, self.part_features, self.part_features_names = statistics.statistic_features(
             entire_part_music_to_learn_statistics)
-        statistic_vert_dict_percentages, self.vertical_features, self.vert_features_names = rep_utils.statistic_features(
+        statistic_vert_dict_percentages, self.vertical_features, self.vert_features_names = statistics.statistic_features(
             vertical_music_to_learn)
 
         statistic_dict = {
@@ -290,7 +292,6 @@ class Application(QtCore.QObject):
                         sequenced_events, new_part=True, new_voice=True)
         score.stream.show()
 
-
     def get_columns_from_weights(self, weights, features_names):
         """
         Get Columns and Weights (non-normalized)
@@ -322,7 +323,9 @@ class Application(QtCore.QObject):
         not yet normalized
         """
         new_part_features = []
-        for music, parser in self.music.items():
+        for music, _tuple in self.music.items():
+            parser = _tuple[0]
+
             vertical_offsets = None
             if parser.get_vertical_events() is not None:
                 vertical_offsets = [ev.get_offset()

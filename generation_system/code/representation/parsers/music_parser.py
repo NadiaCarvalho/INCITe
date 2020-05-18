@@ -3,19 +3,21 @@
 This script presents the class Parser that tries different approaches to segment a melodic line
 """
 
-import os
 import bz2
-import pickle
 import json
+import os
+import pickle
 
 import music21
 
-import representation.utils as utils
-from representation.parsers.line_parser import LineParser
-from representation.parsers.vertical_parser import VerticalParser
+import representation.utils.printing as printing
+import representation.utils.voice as voice_utils
 
 from representation.events.linear_event import LinearEvent
 from representation.events.vertical_event import VerticalEvent
+
+from representation.parsers.line_parser import LineParser
+from representation.parsers.vertical_parser import VerticalParser
 
 
 class MusicParser:
@@ -50,7 +52,8 @@ class MusicParser:
             self.music = music21.converter.parse(file_path)
             if filename.endswith('.mid'):
                 try:
-                    self.music = music21.converter.parse(file_path, makeNotation=False)
+                    self.music = music21.converter.parse(
+                        file_path, makeNotation=False)
                     self.music.makeNotation(inPlace=True)
                     len(self.music.getElementsByClass('Measure'))
 
@@ -75,7 +78,7 @@ class MusicParser:
             if number_parts is None or number_parts > len(self.music_parts):
                 number_parts = len(self.music_parts)
             for i in range(number_parts):
-                part = self.music_parts[i]                
+                part = self.music_parts[i]
                 instrument = part.getInstrument().instrumentName
                 real_in = music21.instrument.Instrument()
                 try:
@@ -92,8 +95,9 @@ class MusicParser:
                         print("Can't convert from this instrument: " + instrument)
 
                 if (any(val in real_in.classes for val in ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']) and
-                    (len(part.recurse(classFilter='Chord')) > 0 or part.hasVoices())):
-                    self.process_voiced_part_linear_instruments(part, i, real_in)
+                        (len(part.recurse(classFilter='Chord')) > 0 or part.hasVoices())):
+                    self.process_voiced_part_linear_instruments(
+                        part, i, real_in)
                 elif not part.isSequence() or part.hasVoices():
                     self.process_voiced_part(part, i, real_in)
                 else:
@@ -134,14 +138,14 @@ class MusicParser:
         """
         Process a part that has overlappings
         """
-        max_voice_count = utils.get_number_voices(part)
+        max_voice_count = voice_utils.get_number_voices(part)
         for measure in list(part.recurse(classFilter='Measure')):
             measure.flattenUnnecessaryVoices(inPlace=True)
             if measure.hasVoices():
-                utils.process_voiced_measure(measure, max_voice_count)
+                voice_utils.process_voiced_measure(measure, max_voice_count)
             else:
-                utils.make_voices(measure, in_place=True,
-                                  number_voices=max_voice_count)
+                voice_utils.make_voices(measure, in_place=True,
+                                        number_voices=max_voice_count)
 
         part.flattenUnnecessaryVoices(inPlace=True)
         new_parts = part.voicesToParts()
@@ -159,7 +163,7 @@ class MusicParser:
         part.recurse().flattenUnnecessaryVoices(inPlace=True, force=True)
 
         new_parts = part
-        if len(part.recurse(classFilter='Voice')) > 0:  
+        if len(part.recurse(classFilter='Voice')) > 0:
             try:
                 new_parts = part.voicesToParts(separateById=True)
             except Exception:
@@ -217,20 +221,20 @@ class MusicParser:
         Shows only a viewpoint sequence
         """
         if events == 'one part':
-            utils.show_part_viewpoint(
+            printing.show_part_viewpoint(
                 viewpoint, self.music_events['part_events'][part_number], offset)
         elif events == 'some parts':
             for part in parts:
                 print('Part ' + str(part))
-                utils.show_part_viewpoint(
+                printing.show_part_viewpoint(
                     viewpoint, self.music_events['part_events'][part], offset)
                 print('')
             print('')
         if events in ('all parts', 'all'):
-            _ = [utils.show_part_viewpoint(viewpoint, part, offset)
+            _ = [printing.show_part_viewpoint(viewpoint, part, offset)
                  for key, part in self.music_events['part_events'].items()]
         if events in ('vertical', 'all'):
-            utils.show_part_viewpoint(
+            printing.show_part_viewpoint(
                 viewpoint, self.music_events['vertical_events'], offset)
 
     def get_part_events(self):
