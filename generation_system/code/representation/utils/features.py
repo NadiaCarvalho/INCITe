@@ -6,6 +6,19 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.impute import SimpleImputer
 
 
+def flatten(newlist):
+    """
+    flatten a list with strings
+    """
+    rt = []
+    for item in newlist:
+        if isinstance(item, list):
+            rt.extend(flatten(item))
+        else:
+            rt.append(item)
+    return rt
+
+
 def normalize_column(col, x_min, x_max):
     """
     Normalize a column of a matrix

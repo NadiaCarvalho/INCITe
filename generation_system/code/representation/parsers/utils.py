@@ -15,20 +15,6 @@ Basic/Maths Functions
 """
 
 
-def flatten(newlist):
-    """
-    flatten a list with strings
-    """
-    rt = []
-    for item in newlist:
-        if isinstance(item, list):
-            rt.extend(flatten(item))
-        else:
-            rt.append(item)
-    return rt
-
-
-
 def sign(x): return x and (1, -1)[x < 0]
 
 

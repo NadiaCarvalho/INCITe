@@ -55,12 +55,6 @@ class Application(QtCore.QObject):
         # Music Generated
         self.generation_sequences = {}
 
-    def parse_database(self):
-        """
-        Parses Music
-        """
-        pass
-
     def parse_files(self, filenames, interface):
         """
         Parses Music
@@ -72,18 +66,18 @@ class Application(QtCore.QObject):
         n_processed = 0
         for filename in reversed_filenames:
             if '.mxl' in filename:
-                self.music[filename] = MusicParser(filename)
-                self.music[filename].parse()
+                self.music[filename] = (MusicParser(filename), filenames)
+                self.music[filename][0].parse()
 
                 folder_name = ['Other']
-                if self.music[filename].music.metadata.composer is not None:
+                if self.music[filename][0].music.metadata.composer is not None:
                     folder_name = [
-                        self.music[filename].music.metadata.composer.split(' ')[-1]]
+                        self.music[filename][0].music.metadata.composer.split(' ')[-1]]
                     folder_name[-1].capitalize()
                 name = os.path.normpath(filename).split(os.path.sep)[-1]
                 name = '.'.join(name.split('.')[:-1])
                 folders = self.database_path.split(os.path.sep) + folder_name
-                self.music[filename].to_pickle(name, folders)
+                self.music[filename][0].to_pickle(name, folders)
 
                 n_processed += 1
 
@@ -99,7 +93,7 @@ class Application(QtCore.QObject):
         for folder in folders_in_database_path:
             self.recover_parsed_folder(folder)
 
-        for key in list(self.music.keys()):
+        for key in list(self.music.keys()) and folders_in_database_path:
             if self.music[key][1] not in folders_in_database_path:
                 self.music.pop(key, None)
 

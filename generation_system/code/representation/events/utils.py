@@ -5,7 +5,7 @@ This script presents utility functions for dealing with events
 
 import collections
 import copy
-import representation.utils as utils
+import representation.utils.features as utils
 
 
 def convert_note_name(dnote):
