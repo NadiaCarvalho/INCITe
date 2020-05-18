@@ -553,14 +553,14 @@ def get_percentage_from_statistics(statistic_dict, len_events):
     """
     new_stats_dict = {}
     for key, values in statistic_dict.items():
-        unique_percentages = [float(x[1])/len_events * 100 for x in values]
+        unique_percentages = [round(float(x[1])/len_events * 100, 2) for x in values]
         new_stats_dict[key] = {
             'unique_values': values,
-            'unique': len(values),
-            'total_percentages': float(sum([x[1] for x in values]))/len_events * 100,
+            'number_of_unique_values': len(values),
+            'total_percentages': round(float(sum([x[1] for x in values]))/len_events * 100, 2),
             'unique_percentages': unique_percentages,
             'media_percentages': sum(unique_percentages)/len(unique_percentages),
             'median_percentages': np.median(unique_percentages),
-            'variance': np.var(unique_percentages),
+            'variance': round(np.var(unique_percentages), 2),
         }
     return new_stats_dict

@@ -5,6 +5,7 @@ Main Window for Interface
 import os
 import sys
 import textwrap
+import copy
 
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
@@ -129,6 +130,7 @@ class FirstMenu(MyMenu):
             application.database_path = directory
             self.children()[2].children()[2].setText(
                 wrap_text(directory, int(self.width()*30/420)))
+
             self.create_toggables_database(
                 directory, self.left_group_box.children()[2])
 
@@ -158,20 +160,26 @@ class FirstMenu(MyMenu):
         database_group.setLayout(layout)
         return database_group
 
-    def create_toggables_database(self, database_path, container):
+    def create_toggables_database(self, database_path, container, same=False):
         """
         Toggables Database for specified path
         """
-        for i in range(container.widget().layout().count()):
-            container.widget().layout().itemAt(i).widget().close()
-
         selectables = []
+        if same:
+            selectables = [container.widget().layout().itemAt(i).widget()
+                           for i in range(container.widget().layout().count())]
+        else:
+            for i in range(container.widget().layout().count()):
+                container.widget().layout().itemAt(i).widget().close()
+        folders = [widget.text() for widget in selectables]
+
         for folder in [f.path for f in os.scandir(database_path) if f.is_dir() and any('.pbz2' in _file for _file in os.listdir(f.path))]:
             name = os.path.normpath(folder).split(os.path.sep)[-1]
-            selectables.append(QtWidgets.QCheckBox(name))
-            selectables[-1].setChecked(True)
-            selectables[-1].toggled.connect(self.select_one)
-            container.widget().layout().addWidget(selectables[-1])
+            if name not in folders:
+                selectables.append(QtWidgets.QCheckBox(name))
+                selectables[-1].setChecked(True)
+                selectables[-1].toggled.connect(self.select_one)
+                container.widget().layout().addWidget(selectables[-1])
         return selectables
 
     def select_all(self, state):
@@ -290,11 +298,8 @@ class FirstMenu(MyMenu):
         application = self.parentWidget().parentWidget().application
         application.parse_files(self.files_to_parse, self)
 
-        for i in range(self.left_group_box.children()[2].widget().layout().count()):
-            self.left_group_box.children()[2].widget(
-            ).layout().itemAt(i).widget().close()
         self.create_toggables_database(
-            application.database_path, self.left_group_box.children()[2])
+            application.database_path, self.left_group_box.children()[2], same=True)
 
     def increase_progress_bar(self, value):
         """

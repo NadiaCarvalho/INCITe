@@ -97,6 +97,10 @@ class Application(QtCore.QObject):
         for folder in folders_in_database_path:
             self.recover_parsed_folder(folder)
 
+        for key in list(self.music.keys()):
+            if self.music[key][1] not in folders_in_database_path:
+                self.music.pop(key, None)
+
     def recover_parsed_folder(self, folder):
         """
         Recover parsed music in folder
@@ -108,7 +112,7 @@ class Application(QtCore.QObject):
                     if not name in self.music and '.pbz2' in filename:
                         music_parser = MusicParser()
                         music_parser.from_pickle(name, root.split(os.sep))
-                        self.music[name] = music_parser
+                        self.music[name] = (music_parser, folder)
 
     def calculate_statistics(self, interface, calc_weights=False):
         """
@@ -119,7 +123,8 @@ class Application(QtCore.QObject):
         entire_part_music_to_learn_statistics = []
         vertical_music_to_learn = []
 
-        for music, parser in self.music.items():
+        for music, _tuple in self.music.items():
+            parser = _tuple[0]
             self.indexes_first[music] = {}
 
             for key, part in parser.get_part_events().items():
@@ -213,7 +218,8 @@ class Application(QtCore.QObject):
         self.normed_info_for_oracles = {}
         self.ev_offsets = {}
 
-        for music, parser in self.music.items():
+        for music, _tuple in self.music.items():
+            parser = _tuple[0]
             last_offset = 0
             if self.ev_offsets != {}:
                 last_offset = max([part_off[-1]

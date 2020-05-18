@@ -21,7 +21,6 @@ class ShowStatsWidget(QtWidgets.QWidget):
         super(ShowStatsWidget, self).__init__()
 
         self.name = name
-        self.statistics = statistics
         self.weight = 0
 
         self.vbox = QtWidgets.QVBoxLayout()
@@ -32,35 +31,15 @@ class ShowStatsWidget(QtWidgets.QWidget):
         self.lbl.setStyleSheet("""color: blue; font: bold 20px;""")
         self.vbox.addWidget(self.lbl)   # Add the label to the layout
 
-        for key, stat in self.statistics.items():
-            if isinstance(stat, list):
-                plus_text = ''
-                s_label = QtWidgets.QLabel('')
-                if key == 'unique_values' and len(stat) < 5:
-                    for _tuple in stat:
-                        plus_text += str(_tuple[0]) + ' : ' + \
-                            str(_tuple[1]) + ' times\n'
-                elif key == 'unique_percentages' and len(stat) < 5:
-                    for perc in stat:
-                        plus_text += str(perc) + ' %\n'
-                if plus_text != '':
-                    s_label.setText(''.join(key.split('_')) +
-                                    ' : ' + '\n' + plus_text)
-                    self.vbox.addWidget(s_label)
-            else:
-                s_label = QtWidgets.QLabel(
-                    ' '.join(key.split('_')) + ' : ' + str(stat))
-                s_label.setWordWrap(True)
-                if 'percentage' in key:
-                    s_label.setText(s_label.text() + ' %')
-
-                self.vbox.addWidget(s_label)
+        for key, stat in statistics.items():
+            self.vbox.addWidget(self.handle_stat(
+                key, stat, QtWidgets.QLabel('')))
 
         line_splitter = QHLine()
         self.vbox.addWidget(line_splitter)
 
-        if 'weight' in self.statistics:
-            self.weight = self.statistics['weight']
+        if 'weight' in statistics:
+            self.weight = statistics['weight']
 
         label = QtWidgets.QLabel('Choose Weight: ')
         label.setStyleSheet(
@@ -81,6 +60,41 @@ class ShowStatsWidget(QtWidgets.QWidget):
         Handle for spinbox of weight
         """
         self.weight = value
+
+    def handle_stat(self, key, stat, label):
+        """
+        Handle statistics labeling
+        """
+        if isinstance(stat, list):
+            plus_text = ''
+            if key == 'unique_values' and len(stat) < 5:
+                for _tuple in stat:
+                    plus_text += str(_tuple[0]) + ' : ' + \
+                        str(_tuple[1]) + ' times\n'
+            elif key == 'unique_percentages' and len(stat) < 5:
+                for perc in stat:
+                    plus_text += str(perc) + ' %\n'
+
+            if plus_text != '':
+                label.setText(' '.join(key.split('_')) +
+                              ' : ' + '\n' + plus_text)
+        else:
+            label.setText(' '.join(key.split('_')) + ' : ' + str(stat))
+            label.setWordWrap(True)
+            if 'percentage' in key:
+                label.setText(label.text() + ' %')
+
+        return label
+
+    def change_stats(self, stats):
+        if 'weight' in stats:
+            self.weight_box.setValue(stats['weight'])
+        
+        for widget in self.children():
+            if isinstance(widget, QtWidgets.QLabel):
+                if ' : ' in widget.text():
+                    key = '_'.join(widget.text().split(' : ')[0].split(' '))
+                    widget = self.handle_stat(key, stats[key], widget)
 
 
 class SecondMenu(MyMenu):
@@ -162,21 +176,34 @@ class SecondMenu(MyMenu):
         """
         Receive signal for presenting statistics
         """
-        if self.container.layout() is not None:
-            for i in range(self.container.layout().count()):
-                self.container.layout().itemAt(i).widget().close()
+        if self.tab_parts is not None:
+            part_widget = self.tab_parts.children()[2]
+            for i in range(part_widget.count()):
+                widget = part_widget.widget(i)
+                if isinstance(widget, ShowStatsWidget):
+                    widget.change_stats(list(statistics['parts'].items())[i][1])
 
-        # Initialize tab screen
-        tabs = QtWidgets.QTabWidget()
-        self.tab_parts = self.create_statistics_folder(statistics['parts'], tabs)
-        self.tab_vertical = self.create_statistics_folder(statistics['vertical'], tabs)
+        if self.tab_vertical is not None:
+            vertical_widget = self.tab_vertical.children()[2]
+            for i in range(vertical_widget.count()):
+                widget = vertical_widget.widget(i)
+                if isinstance(widget, ShowStatsWidget):
+                    widget.change_stats(list(statistics['vertical'].items())[i][1])
 
-        # Add tabs
-        tabs.addTab(self.tab_parts, "Part Events")
-        tabs.addTab(self.tab_vertical, "Vertical Events")
+        else:
+            # Initialize tab screen
+            tabs = QtWidgets.QTabWidget()
+            self.tab_parts = self.create_statistics_folder(
+                statistics['parts'], tabs)
+            self.tab_vertical = self.create_statistics_folder(
+                statistics['vertical'], tabs)
 
-        # Add tabs to widget
-        self.container.layout().addWidget(tabs)
+            # Add tabs
+            tabs.addTab(self.tab_parts, "Part Events")
+            tabs.addTab(self.tab_vertical, "Vertical Events")
+
+            # Add tabs to widget
+            self.container.layout().addWidget(tabs)
 
     def create_statistics_folder(self, statistics, tabs):
         """
