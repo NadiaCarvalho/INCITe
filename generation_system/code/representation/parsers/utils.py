@@ -28,26 +28,6 @@ def flatten(newlist):
     return rt
 
 
-def is_power(x, y):
-    """
-    Check if number is power of another
-    """
-
-    # The only power of 1
-    # is 1 itself
-    if (x == 1):
-        return (y == 1)
-
-    # Repeatedly compute
-    # power of x
-    _pow = 1
-    while (_pow < y):
-        _pow = _pow * x
-
-    # Check if power of x
-    # becomes y
-    return (_pow == y)
-
 
 def sign(x): return x and (1, -1)[x < 0]
 
@@ -110,15 +90,6 @@ def get_last_x_events_that_are_notes_before_index(events, number=1, actual_index
             else:
                 return events_to_return
     return None
-
-
-def offset_info(event, viewpoint):
-    """
-    Returns a string of offset : specific viewpoint for an event
-    """
-    to_print = 'Off ' + str(event.get_offset()) + ': '
-    to_print += str(event.get_viewpoint(viewpoint)) + '; '
-    return to_print
 
 
 def get_events_at_offset(events, offset):

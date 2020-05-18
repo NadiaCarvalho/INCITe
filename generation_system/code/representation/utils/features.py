@@ -7,7 +7,9 @@ from sklearn.impute import SimpleImputer
 
 
 def normalize_column(col, x_min, x_max):
-
+    """
+    Normalize a column of a matrix
+    """
     if max(col) == min(col) and max(col) != 0:
         return [1. for item in col]
 
@@ -20,7 +22,7 @@ def normalize_column(col, x_min, x_max):
 
 def normalize(feat_list, x_min, x_max):
     """
-    Get Normalization for
+    Get Normalization for a matrix between [x_min, x_max]
     """
     normalized_columns = []
     for col in list(zip(*feat_list)):
@@ -40,7 +42,24 @@ def normalize_weights(weights):
     return [float(w)/sum(weights) for w in weights]
 
 
-def create_feature_array_events(events, weights=None, normalization='st1-mt0', offset=True, flatten=True):
+def create_feat_array(events, weights=None, offset=True):
+    """
+    Create a feature Array from Events and clean values.
+    Can use weights for which features to extract and offset
+    if offset can be counted as a feature
+    """
+    events_dict = [event.to_feature_dict(weights, offset) for event in events]
+
+    vec = DictVectorizer()
+    features = vec.fit_transform(events_dict).toarray()
+    features_names = vec.get_feature_names()
+
+    imp = SimpleImputer(missing_values=np.nan,
+                        strategy='constant', fill_value=10000)
+    return imp.fit_transform(features), features_names
+
+
+def events_to_features(events, weights=None, normalization='st1-mt0', offset=True, flatten=True):
     """
     Creating Feature Array and Weights for Oracle
     """
@@ -67,15 +86,3 @@ def create_feature_array_events(events, weights=None, normalization='st1-mt0', o
                 weighted_fit[i] = weights[w_feat[0]]
 
     return norm_features, features, features_names, weighted_fit
-
-
-def create_feat_array(events, weights=None, offset=True):
-    events_dict = [event.to_feature_dict(weights, offset) for event in events]
-
-    vec = DictVectorizer()
-    features = vec.fit_transform(events_dict).toarray()
-    features_names = vec.get_feature_names()
-
-    imp = SimpleImputer(missing_values=np.nan,
-                        strategy='constant', fill_value=10000)
-    return imp.fit_transform(features), features_names

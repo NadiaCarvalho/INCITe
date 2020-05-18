@@ -133,7 +133,7 @@ def main():
 
 
 def oracle_and_generator(events, seq_len, weights=None, dim=-1):
-    norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
+    norm_features, o_features, features_names, weighted_fit = rep_utils.events_to_features(
         events=events, weights=weights)
 
     thresh = gen_utils.find_threshold(
@@ -253,7 +253,7 @@ def create_vertical_oracle(parser, model_weights=None, dim1=0, dim2=None):
     """
     Create the vertical oracle
     """
-    norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
+    norm_features, o_features, features_names, weighted_fit = rep_utils.events_to_features(
         events=parser.get_vertical_events()[dim1:dim2], weights=model_weights)
     thresh = gen_utils.find_threshold(
         norm_features, weights=weighted_fit, dim=len(features_names), entropy=True)
@@ -305,7 +305,7 @@ def create_line_oracle(parser, events, seg_weights=None, model_weights=None, dim
     if dim2 is None:
         dim2 = len(new_events)
 
-    norm_features, o_features, features_names, weighted_fit = rep_utils.create_feature_array_events(
+    norm_features, o_features, features_names, weighted_fit = rep_utils.events_to_features(
         events=new_events, weights=model_weights)
     thresh = gen_utils.find_threshold(
         norm_features[dim1:dim2], weights=weighted_fit, dim=len(features_names), entropy=True)

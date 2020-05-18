@@ -6,6 +6,11 @@ import numpy as np
 import representation.utils.features as utils
 
 
+ARRAY_VALUES = ['articulation', 'expressions.expression',
+                'ornamentation', 'dynamic', 'chordPitches', 'pitches',
+                'pitchClass', 'primeForm', 'pcOrdered']
+
+
 def statistic_features(events):
     """
     Get Statistics from Features
@@ -28,10 +33,8 @@ def statistic_features(events):
                 ret = [item for item in values if item[0] == 1.0]
                 if len(ret) > 0:
                     statistic_dict[info[0]].append((info[1], ret[0][1]))
-        elif any(s in feat for s in ['articulation', 'expressions.expression', 'ornamentation',
-                                     'dynamic', 'chordPitches', 'pitches', 'pitchClass', 'primeForm', 'pcOrdered']):
-            cat = [s for s in ['articulation', 'expressions.expression', 'ornamentation', 'dynamic',
-                               'chordPitches', 'pitches', 'pitchClass', 'primeForm', 'pcOrdered'] if s in feat]
+        elif any(s in feat for s in ARRAY_VALUES):
+            cat = [s for s in ARRAY_VALUES if s in feat]
             if not cat[0] in statistic_dict:
                 statistic_dict[cat[0]] = []
             value_1 = list(filter(lambda x: 1.0 in x, values))
@@ -46,6 +49,8 @@ def statistic_features(events):
 
 def get_percentage_from_statistics(statistic_dict, len_events):
     """
+    Get Percentages as Specific Statistics from
+    Viewpoint Statistics
     """
     new_stats_dict = {}
     for key, values in statistic_dict.items():

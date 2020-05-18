@@ -102,7 +102,7 @@ def segmentation(events, weights_line=None, vertical_events=None, weights_vert=N
         }
 
     # Get all events as a set of normalized features
-    norm_features, _, _, weights = utils.create_feature_array_events(
+    norm_features, _, _, weights = utils.events_to_features(
         events, weights=weights_line, normalization='from_0',
         offset=False, flatten=False)
 
@@ -126,7 +126,7 @@ def segmentation(events, weights_line=None, vertical_events=None, weights_vert=N
                 'measure.function': 1,
             }
 
-        normed_vert_features, _, _, weights_vert = utils.create_feature_array_events(
+        normed_vert_features, _, _, weights_vert = utils.events_to_features(
             vertical_events, weights=weights_vert, normalization='from_0',
             offset=False, flatten=False)
 
