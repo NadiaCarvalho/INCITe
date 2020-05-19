@@ -19,6 +19,7 @@ from representation.parsers.line_parser import LineParser
 from representation.parsers.vertical_parser import VerticalParser
 
 FOLDER_DEFAULT = ['data', 'myexamples']
+LINEAR_INSTRUMENTS = ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']
 
 
 class MusicParser:
@@ -86,13 +87,14 @@ class MusicParser:
 
                 instrument = utils.instrument_for_voices(
                     part.getInstrument().instrumentName)
-                if (any(val in real_in.classes for
-                        val in ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']) and
+                is_linear_instrument = any(val in instrument.classes for
+                                           val in LINEAR_INSTRUMENTS)
+                if (is_linear_instrument and
                         (len(part.recurse(classFilter='Chord')) > 0 or part.hasVoices())):
                     self.process_voiced_part_linear_instruments(
-                        part, i, real_in)
+                        part, i, instrument)
                 elif not part.isSequence() or part.hasVoices():
-                    self.process_voiced_part(part, i, real_in)
+                    self.process_voiced_part(part, i, instrument)
                 else:
                     self.music_events['part_events'][i] = self.parse_sequence_part(
                         part, name=str(i), first=(False, True)[i == 0])

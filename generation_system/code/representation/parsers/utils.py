@@ -158,9 +158,10 @@ def has_value_viewpoint_events(events, viewpoint):
     """
     for event in events:
         view = event.get_viewpoint(viewpoint)
-        if not view is None:
+        if view is not None:
             return True
     return False
+
 
 def instrument_for_voices(instrument):
     """

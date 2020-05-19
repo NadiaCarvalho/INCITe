@@ -29,7 +29,7 @@ class Event:
         Adds a viewpoint to event
         """
         new_name = name
-        if not '.' in name and category is not None:
+        if '.' not in name and category is not None:
             new_name = category + '.' + name
 
         viewpoints_flat = utils.flatten_dict(self.viewpoints, sep='.')
@@ -47,7 +47,7 @@ class Event:
         Returns a viewpoint of event
         """
         new_name = name
-        if not '.' in name and category is not None:
+        if '.' not in name and category is not None:
             new_name = category + '.' + name
 
         viewpoints_flat = utils.flatten_dict(self.viewpoints, sep='.')

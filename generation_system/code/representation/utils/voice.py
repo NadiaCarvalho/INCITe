@@ -26,14 +26,14 @@ def get_number_voices(stream):
     """
     Get Ideal Number of Voices from a Music21 Stream
     """
-    max_voice_count = 1
+    voice_count = 1
 
     # To deal with separation of chords
     chords = stream.recurse(classFilter='Chord')
     cardinalities = [len(chord.pitches) for chord in chords]
     for card in cardinalities:
-        if card > max_voice_count:
-            max_voice_count = card
+        if card > voice_count:
+            voice_count = card
 
     old_dict_notes = stream.recurse(classFilter='Note')
     stream_not_hidden = music21.stream.Stream()
