@@ -13,6 +13,7 @@ class ScoreConversor:
 
     Attributes
     ----------
+    TODO: lint
     """
 
     def __init__(self):
