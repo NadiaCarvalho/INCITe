@@ -13,10 +13,12 @@ class Event:
     """
 
     def __init__(self, offset=None, from_dict=None, from_list=None, features=None):
+        # pylint: disable=unused-argument
         self.offset_time = offset
         self.viewpoints = {}
 
     def _init_from_list_or_dict(self, offset=None, from_dict=None, from_list=None, features=None):
+        # pylint: disable=unused-argument
         if from_dict is not None:
             self.from_feature_dict(from_dict, features)
         elif (from_list is not None) and (features is not None):
@@ -31,14 +33,14 @@ class Event:
             new_name = category + '.' + name
 
         viewpoints_flat = utils.flatten_dict(self.viewpoints, sep='.')
-        views = [v for v in viewpoints_flat.keys() if new_name in v]
+        views = [v for v in viewpoints_flat if new_name in v]
 
         if views != []:
             path = views[0].split('.')
             view_cat = self.viewpoints
             for key in path[:-1]:
                 view_cat = view_cat[key]
-            utils._add_viewpoint(view_cat, path[-1], info)
+            utils.add_viewpoint(view_cat, path[-1], info)
 
     def get_viewpoint(self, name, category=None):
         """
@@ -49,7 +51,7 @@ class Event:
             new_name = category + '.' + name
 
         viewpoints_flat = utils.flatten_dict(self.viewpoints, sep='.')
-        views = [v for v in viewpoints_flat.keys() if new_name in v]
+        views = [v for v in viewpoints_flat if new_name in v]
         if views != []:
             return viewpoints_flat[views[0]]
         return None
@@ -93,7 +95,7 @@ class Event:
 
         return [self.offset_time] + features_list, features
 
-    def from_feature_list(self, from_list, features, nan_value=1000):
+    def from_feature_list(self, from_list, features, nan_value=10000):
         """
         Transforms list of features in an event
         """
@@ -118,7 +120,7 @@ class Event:
             features_dict['offset'] = self.offset_time
 
         for feat in features:
-            views = [v for v in viewpoints_flat.keys() if feat in v]
+            views = [v for v in viewpoints_flat if feat in v]
             if views != []:
                 features_dict[feat] = viewpoints_flat[views[0]]
         return features_dict
@@ -142,7 +144,7 @@ class Event:
         """
         to_return = 'Event at offset {}: \n'.format(self.offset_time)
         viewpoints = ['.'.join(path.split('.')[-2:])
-                      for path in utils.get_all_inner_keys(self.viewpoints)]
+                      for path in utils.flatten_dict(self.viewpoints, sep='.')]
 
         to_return += ''.join([str(key) + ': ' + str(self.get_viewpoint(key)) + '; '
                               for key in viewpoints])
@@ -150,7 +152,7 @@ class Event:
 
     def __iter__(self):
         viewpoints = ['.'.join(path.split('.')[-2:])
-                      for path in utils.get_all_inner_keys(self.viewpoints)]
+                      for path in utils.flatten_dict(self.viewpoints, sep='.')]
         yield('offset', self.offset_time)
         for key in viewpoints:
             view = self.get_viewpoint(key)
@@ -164,7 +166,7 @@ class Event:
         Overrides equal function for Event
         """
         viewpoints = ['.'.join(path.split('.')[-2:])
-                      for path in utils.get_all_inner_keys(self.viewpoints)]
+                      for path in utils.flatten_dict(self.viewpoints, sep='.')]
         for viewpoint in viewpoints:
             self_view = self.get_viewpoint(viewpoint)
             other_view = other.get_viewpoint(viewpoint)

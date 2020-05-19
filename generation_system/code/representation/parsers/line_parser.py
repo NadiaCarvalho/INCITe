@@ -38,20 +38,21 @@ class LineParser:
         """
         self.music_to_parse = music_to_parse  # .toSoundingPitch()
 
-        self.composer = metadata.composer
-        self.title = metadata.title
-        self.instrument = music_to_parse.getInstrument()
-
         part_name_voice = utils.part_name_parser(music_to_parse)
-        self.part_name = part_name_voice[0]
-        self.voice = part_name_voice[1]
+        self.metadata = {
+            'composer': metadata.composer,
+            'piece_title': metadata.title,
+            'instrument': music_to_parse.getInstrument(),
+            'part': part_name_voice[0],
+            'voice': part_name_voice[1]
+        }
 
         # Get offsets of beginnings of measures
         measures = self.music_to_parse.recurse(classFilter='Measure')
         self.measure_offsets = [measure.offset for measure in measures]
 
-        ka = music21.analysis.floatingKey.KeyAnalyzer(music_to_parse)
-        self.measure_keys = ka.getRawKeyByMeasure()
+        key_analysis = music21.analysis.floatingKey.KeyAnalyzer(music_to_parse)
+        self.measure_keys = key_analysis.getRawKeyByMeasure()
 
         self.events = []
 
@@ -82,14 +83,11 @@ class LineParser:
 
             self.events.append(LinearEvent(offset=note_or_rest.offset))
 
-            # Basic Part/Voice Names
-            self.events[i].add_viewpoint('piece_title', self.title)
-            self.events[i].add_viewpoint('composer', self.composer)
-            self.events[i].add_viewpoint('instrument', self.instrument)
-            self.events[i].add_viewpoint('part', self.part_name)
-            self.events[i].add_viewpoint('voice', self.voice)
+            # Metadata
+            for key, value in self.metadata.items():
+                self.events[i].add_viewpoint(key, value)
 
-            # # Basic Rest/Grace Notes Information
+            # Basic Rest/Grace Notes Information
             self.events[i].add_viewpoint('rest', note_or_rest.isRest)
             self.events[i].add_viewpoint(
                 'grace', note_or_rest.duration.isGrace)
@@ -112,7 +110,7 @@ class LineParser:
                 if is_chord:
                     note_to_parse = music21.note.Note(note_or_rest.bass())
                     self.events[i].add_viewpoint(
-                        'chordPitches',  [str(p) for p in note_or_rest.pitches])
+                        'chordPitches', [str(p) for p in note_or_rest.pitches])
 
                 self.note_basic_info_parsing(i, note_to_parse)
                 self.contours_parsing(i)
@@ -218,12 +216,9 @@ class LineParser:
                     or (seq_ints[-2] < 6 and signs[-1] == signs[-2])):
                 self.events[index].add_viewpoint('registral_direction', True)
 
-            if ((abs(seq_ints[-2]) >= 7 and
-                 ((abs(seq_ints[-1]) < abs(seq_ints[-2])-3 and signs[-1] != signs[-2])
-                    or (abs(seq_ints[-1]) < abs(seq_ints[-2])-2 and signs[-1] == signs[-2])))
-                    or (abs(seq_ints[-2]) < 6 and seq_ints[-1] == seq_ints[-2])):
-                self.events[index].add_viewpoint(
-                    'intervallic_difference', True)
+            self.events[index].add_viewpoint('intervallic_difference',
+                                             utils.is_intervalic_difference(
+                                                 seq_ints[-1], signs[-1], seq_ints[-2], signs[-2]))
 
             score = 0
             if all(i > 0 for i in signs):
@@ -246,20 +241,21 @@ class LineParser:
         """
         #print('Parse Expression')
         for expression in expressions:
-            if type(expression) is music21.expressions.Fermata:
+            if isinstance(expression, music21.expressions.Fermata):
                 self.events[index].add_viewpoint('fermata', True)
-            elif type(expression) is music21.expressions.RehearsalMark:
+            elif isinstance(expression, music21.expressions.RehearsalMark):
                 self.events[index].add_viewpoint('rehearsal', True)
-            elif type(expression) is music21.expressions.Turn:
+            elif isinstance(expression, music21.expressions.Turn):
                 self.events[index].add_viewpoint(
                     'ornamentation', 'turn:' + expression.name)
-            elif type(expression) is music21.expressions.Trill:
+            elif isinstance(expression, music21.expressions.Trill):
                 self.events[index].add_viewpoint(
                     'ornamentation', 'trill:' + expression.placement + ':' + expression.size.name)
-            elif type(expression) is music21.expressions.Tremolo:
+            elif isinstance(expression, music21.expressions.Tremolo):
                 self.events[index].add_viewpoint(
-                    'ornamentation', 'tremolo:' + str(expression.measured) + ':' + str(expression.numberOfMarks))
-            elif type(expression) is music21.expressions.Schleifer:
+                    'ornamentation', 'tremolo:' + str(expression.measured)
+                    + ':' + str(expression.numberOfMarks))
+            elif isinstance(expression, music21.expressions.Schleifer):
                 self.events[index].add_viewpoint('ornamentation', 'schleifer')
             elif 'GeneralMordent' in expression.classes:
                 self.events[index].add_viewpoint(
@@ -292,7 +288,7 @@ class LineParser:
         if index == 0:
             return None
         fib_candidates = [event for event in utils.get_events_at_offset(
-            self.events, self.measure_offsets[index - 1]) if utils.not_rest_or_grace(event)]
+            self.events, self.measure_offsets[index - 1]) if event.not_rest_or_grace()]
         if len(fib_candidates) > 0:
             return fib_candidates[0]
         return self.get_first_fib_before_fib(self.measure_offsets[index - 1])
@@ -330,7 +326,7 @@ class LineParser:
         last_fib = self.get_first_fib_before_non_fib(note_or_rest)
         if len(last_fib) > 1:
             last_fib = last_fib[0]
-            if not note_or_rest.isRest and utils.not_rest_or_grace(last_fib):
+            if not note_or_rest.isRest and last_fib.not_rest_or_grace():
                 cur_midi = self.events[index].get_viewpoint('cpitch')
                 last_fib_midi = last_fib.get_viewpoint('cpitch')
                 self.events[index].add_viewpoint('intfib', utils.seq_int(
@@ -455,18 +451,20 @@ class LineParser:
         if events is None:
             events = self.events
 
-        for i, metro in enumerate(metro_marks):
+        for metro in metro_marks:
             for event in utils.get_evs_bet_offs_inc(events, metro[0], metro[1]):
                 event.add_viewpoint(
                     'text', metro[2].text, 'metro')
                 event.add_viewpoint(
                     'value', metro[2].number, 'metro')
+
                 if metro[2].numberSounding is not None:
                     event.add_viewpoint(
                         'sound', metro[2].numberSounding)
                 else:
                     event.add_viewpoint(
                         'sound', metro[2].number)
+
                 event.add_viewpoint(
                     'value', metro[2].referent.quarterLength, 'ref')
                 event.add_viewpoint(

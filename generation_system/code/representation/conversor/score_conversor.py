@@ -55,6 +55,8 @@ class ScoreConversor:
                 measures.append(music21.stream.Measure())
 
             instrument = event.get_viewpoint('instrument')
+            if instrument is None:
+                instrument = music21.instrument.Instrument()
             if instrument != last_instrument and not isinstance(instrument, str):
                 stream.append(instrument)
                 last_instrument = instrument

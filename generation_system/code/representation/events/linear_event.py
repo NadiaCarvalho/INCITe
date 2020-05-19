@@ -1,11 +1,18 @@
 #!/usr/bin/env python3.7
 """
-This script presents the class LinearEvent that represents a linear (melodic) event in a piece of music
+This script presents the class LinearEvent
+that represents a linear (melodic) event in a piece of music
 """
 import music21
 
 import representation.events.utils as utils
 from representation.events.event import Event
+
+ARRAY_VALUES = ['articulation', 'expression',
+                'ornamentation', 'dynamic', 'chordPitches']
+
+BOOL_VALUES = ['rest', 'grace', 'chord',
+               'exists_before', 'is_end', 'double', 'fib']
 
 
 class LinearEvent(Event):
@@ -141,7 +148,13 @@ class LinearEvent(Event):
         """
         return self.get_viewpoint('chord')
 
-    def from_feature_list(self, from_list, features):
+    def not_rest_or_grace(self):
+        """
+        Returns True/False if is not rest or grace note
+        """
+        return not (self.is_grace_note() or self.is_rest())
+
+    def from_feature_list(self, from_list, features, nan_value=10000):
         """
         Transforms list of features in an event
         """
@@ -153,39 +166,18 @@ class LinearEvent(Event):
 
             if feat == 'offset':
                 self.offset_time = from_list[i]
-            elif from_list[i] == 10000.0:
-                if 'instrument' in feat:
-                    self.add_viewpoint(
-                        'instrument', music21.instrument.Instrument(), category)
-                else:
-                    self.add_viewpoint(feat, None, category)
-            elif feat in ['rest', 'grace', 'chord', 'exists_before', 'is_end', 'double', 'fib']:
+            elif from_list[i] == nan_value:
+                self.add_viewpoint(feat, None, category)
+            elif feat in BOOL_VALUES:
                 self.add_viewpoint(feat, bool(from_list[i]), category)
-            elif any(val in feat for val in ['articulation', 'expression', 'ornamentation', 'dynamic', 'chordPitches']):
-                if from_list[i] == 1.0:
-                    self.add_viewpoint(feat.split(
-                        '_')[0], feat.split('_')[1:], category)
-            elif '=' in feat:
-                if from_list[i] == 1.0:
-                    info = feat.split('=')
-                    if info[0] == 'instrument' and info[1] != ': ':
-                        if 'Instrument' in info[1]:
-                            info[1] = 'Instrument'
-                        elif info[1] in ['Brass', 'Woodwind', 'Keyboard', 'String']:
-                            info[1] += 'Instrument'
-                        try:
-                            info[1] = getattr(music21.instrument, info[1])()
-                        except AttributeError:
-                            print('Wrong Instrument: ' + info[1])
-                            try:
-                                info[1] = music21.instrument.fromString(
-                                    info[1])
-                            except music21.exceptions21.InstrumentException:
-                                print(
-                                    "Can't convert from this instrument: " + info[1])
-                                info[1] = music21.instrument.Instrument()
-
-                    self.add_viewpoint(info[0], info[1], category)
+            elif any(val in feat for val in ARRAY_VALUES) and from_list[i] == 1.0:
+                self.add_viewpoint(feat.split(
+                    '_')[0], feat.split('_')[1:], category)
+            elif '=' in feat and from_list[i] == 1.0:
+                info = feat.split('=')
+                if info[0] == 'instrument' and info[1] != ': ':
+                    info[1] = utils.instrument_converter(info[1])
+                self.add_viewpoint(info[0], info[1], category)
             elif feat == 'dnote':
                 self.add_viewpoint(
                     feat, utils.convert_note_name(from_list[i]), category)
@@ -206,12 +198,12 @@ class LinearEvent(Event):
 
         for feat in features:
             content = None
-            views = [v for v in viewpoints_flat.keys() if feat in v]
+            views = [v for v in viewpoints_flat if feat in v]
             if views != []:
                 content = viewpoints_flat[views[0]]
 
             # add features that are arrays
-            if content is not None and any(s in ['articulation', 'expression', 'ornamentation', 'dynamic', 'chordPitches'] for s in feat.split('.')):
+            if content is not None and any(s in ARRAY_VALUES for s in feat.split('.')):
                 for a_feat in enumerate(content):
                     if isinstance(a_feat, tuple):
                         a_feat = a_feat[1]

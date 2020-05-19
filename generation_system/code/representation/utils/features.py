@@ -10,13 +10,13 @@ def flatten(newlist):
     """
     flatten a list with strings
     """
-    rt = []
+    ret = []
     for item in newlist:
         if isinstance(item, list):
-            rt.extend(flatten(item))
+            ret.extend(flatten(item))
         else:
-            rt.append(item)
-    return rt
+            ret.append(item)
+    return ret
 
 
 def normalize_column(col, x_min, x_max):
@@ -72,7 +72,8 @@ def create_feat_array(events, weights=None, offset=True):
     return imp.fit_transform(features), features_names
 
 
-def events_to_features(events, weights=None, normalization='st1-mt0', offset=True, flatten=True):
+def events_to_features(events, weights=None,
+                       normalization='st1-mt0', offset=True, flatten_feat=True):
     """
     Creating Feature Array and Weights for Oracle
     """
@@ -84,7 +85,7 @@ def events_to_features(events, weights=None, normalization='st1-mt0', offset=Tru
     else:
         norm_features = normalize(features, 0, 1)
 
-    if len(features_names) == 1 and flatten:
+    if len(features_names) == 1 and flatten_feat:
         features = [x for [x] in features]
         norm_features = [x for [x] in norm_features]
 

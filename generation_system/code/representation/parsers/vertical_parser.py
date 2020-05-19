@@ -25,13 +25,13 @@ class VerticalParser:
                 music21.key.KeySignature)):
             self.keys[k].append(val)
 
-        ka = music21.analysis.floatingKey.KeyAnalyzer(music_to_parse)
-        self.measure_keys = ka.getRawKeyByMeasure()
+        key_analysis = music21.analysis.floatingKey.KeyAnalyzer(music_to_parse)
+        self.measure_keys = key_analysis.getRawKeyByMeasure()
 
         key_offsets = list(self.keys) + [self.music_to_parse.highestTime]
-        self.ks_keys = dict(utils.get_analysis_keys_stream_bet_offsets(
+        self.ks_keys = dict([utils.get_analysis_keys_stream_bet_offsets(
             self.music_to_parse, offset, key_offsets[key+1])
-            for key, offset in enumerate(key_offsets[:-1]))
+                             for key, offset in enumerate(key_offsets[:-1])])
 
     def parse_music(self):
         """

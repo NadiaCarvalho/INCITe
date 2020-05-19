@@ -2,20 +2,18 @@
 """
 This script presents utility functions for dealing with representations
 """
-
-import copy
-import math
-
 import music21
-import numpy as np
+
+#
+# Basic/Maths Functions
+#
 
 
-"""
-Basic/Maths Functions
-"""
-
-
-def sign(x): return x and (1, -1)[x < 0]
+def sign(number):
+    """
+    Returns the sign of a number
+    """
+    return number and (1, -1)[number < 0]
 
 
 def seq_int(midi_viewpoint_1, midi_viewpoint_2):
@@ -45,9 +43,22 @@ def contour_hd(midi_viewpoint_1, midi_viewpoint_2):
     return int(0)
 
 
-"""
-Offset Related
-"""
+def is_intervalic_difference(seq_int_1, sign_1, seq_int_2, sign_2):
+    """
+    Is Intervalic Difference (Defined in IDYOM)
+    """
+    if abs(seq_int_2) >= 7:
+        if sign_1 != sign_2 and abs(seq_int_1) < abs(seq_int_2) - 3:
+            return True
+        if sign_1 == sign_2 and abs(seq_int_1) < abs(seq_int_2) - 2:
+            return True
+    if abs(seq_int_2) < 6 and seq_int_1 == seq_int_2:
+        return True
+    return False
+
+#
+# Offset Related
+#
 
 
 def get_last_x_events_that_are_notes_before_index(events, number=1, actual_index=None):
@@ -56,9 +67,8 @@ def get_last_x_events_that_are_notes_before_index(events, number=1, actual_index
     """
     if len(events) < 2:
         return None
-    elif len(events) < number+1:
+    if len(events) < number + 1:
         number = len(events)-1
-
     if actual_index is None:
         actual_index = len(events) - 1
 
@@ -98,18 +108,9 @@ def get_evs_bet_offs_inc(events, offset1, offset2=None):
     return [event for event in events if offset1 <= event.get_offset() <= offset2]
 
 
-"""
-Parsing Utilities
-"""
-
-
-def not_rest_or_grace(event):
-    """
-    Returns True/False if event is not rest or grace note
-    """
-    return not (event.is_grace_note() or event.is_rest())
-
-
+#
+# Parsing Utilities
+#
 def get_rests(events):
     """
     Returns all events that are rests
@@ -136,7 +137,7 @@ def part_name_parser(music_to_parse):
     Return the name and voice of the part
     """
     part_name_voice = [music_to_parse.partName, 'v0']
-    if music_to_parse.partName is None and type(music_to_parse.id) == str:
+    if music_to_parse.partName is None and isinstance(music_to_parse.id, str):
         part_name_voice = music_to_parse.id.split('-')
     return part_name_voice
 
@@ -160,3 +161,23 @@ def has_value_viewpoint_events(events, viewpoint):
         if not view is None:
             return True
     return False
+
+def instrument_for_voices(instrument):
+    """
+    Recover Instrument for voice dealing
+    """
+    real_in = music21.instrument.Instrument()
+    try:
+        if instrument is not None:
+            if instrument in ['Brass', 'Woodwind', 'Keyboard', 'String']:
+                instrument += 'Instrument'
+            inst_name = ''.join(instrument.split(' '))
+            real_in = getattr(music21.instrument, inst_name)()
+    except AttributeError:
+        print('Wrong Instrument: ' + instrument)
+        try:
+            real_in = music21.instrument.fromString(instrument)
+        except music21.exceptions21.InstrumentException:
+            print("Can't convert from this instrument: " + instrument)
+
+    return real_in

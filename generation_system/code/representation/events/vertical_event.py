@@ -1,9 +1,12 @@
 #!/usr/bin/env python3.7
 """
-This script presents the class VerticalEvent that represents a vertical (harmonic) event in a piece of music
+This script presents the class VerticalEvent
+that represents a vertical (harmonic) event in a piece of music
 """
 import representation.events.utils as utils
 from representation.events.event import Event
+
+ARRAY_VALUES = ['pitches', 'pitchClass', 'primeForm', 'pcOrdered']
 
 
 class VerticalEvent(Event):
@@ -88,12 +91,13 @@ class VerticalEvent(Event):
 
         for feat in features:
             content = None
-            views = [v for v in viewpoints_flat.keys() if feat in v]
+            views = [v for v in viewpoints_flat if feat in v]
             if views != []:
                 content = viewpoints_flat[views[0]]
 
             # add features that are arrays
-            if content is not None and any(s in ['pitches', 'pitchClass', 'primeForm', 'pcOrdered'] for s in feat.split('.')):
+            if (content is not None and
+                    any(s in ARRAY_VALUES for s in feat.split('.'))):
                 for a_feat in enumerate(content):
                     if isinstance(a_feat, tuple):
                         a_feat = a_feat[1]

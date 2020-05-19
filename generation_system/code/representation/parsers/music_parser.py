@@ -10,14 +10,15 @@ import pickle
 
 import music21
 
+import representation.parsers.utils as utils
 import representation.utils.printing as printing
 import representation.utils.voice as voice_utils
-
 from representation.events.linear_event import LinearEvent
 from representation.events.vertical_event import VerticalEvent
-
 from representation.parsers.line_parser import LineParser
 from representation.parsers.vertical_parser import VerticalParser
+
+FOLDER_DEFAULT = ['data', 'myexamples']
 
 
 class MusicParser:
@@ -28,7 +29,10 @@ class MusicParser:
     ----------
     """
 
-    def __init__(self, filename=None, folders=['data', 'myexamples']):
+    def __init__(self, filename=None, folders=None):
+
+        if folders is None:
+            folders = FOLDER_DEFAULT
 
         self.music = None
         self.music_parts = []
@@ -79,22 +83,11 @@ class MusicParser:
                 number_parts = len(self.music_parts)
             for i in range(number_parts):
                 part = self.music_parts[i]
-                instrument = part.getInstrument().instrumentName
-                real_in = music21.instrument.Instrument()
-                try:
-                    if instrument is not None:
-                        if instrument in ['Brass', 'Woodwind', 'Keyboard', 'String']:
-                            instrument += 'Instrument'
-                        inst_name = ''.join(instrument.split(' '))
-                        real_in = getattr(music21.instrument, inst_name)()
-                except AttributeError:
-                    print('Wrong Instrument: ' + instrument)
-                    try:
-                        real_in = music21.instrument.fromString(instrument)
-                    except music21.exceptions21.InstrumentException:
-                        print("Can't convert from this instrument: " + instrument)
 
-                if (any(val in real_in.classes for val in ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']) and
+                instrument = utils.instrument_for_voices(
+                    part.getInstrument().instrumentName)
+                if (any(val in real_in.classes for
+                        val in ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']) and
                         (len(part.recurse(classFilter='Chord')) > 0 or part.hasVoices())):
                     self.process_voiced_part_linear_instruments(
                         part, i, real_in)
@@ -177,11 +170,15 @@ class MusicParser:
                 voice, name=name, first=(False, True)[i == 0])
 
     def clean_hidden_music(self):
-        for e in self.music.recurse():
-            if not isinstance(e.style, str) and e.style.hideObjectOnPrint:
-                self.music.remove(e, recurse=True)
+        """
+        Clean Hidden Elements From Score
+        """
+        for _elm in self.music.recurse():
+            if not isinstance(_elm.style, str) and _elm.style.hideObjectOnPrint:
+                self.music.remove(_elm, recurse=True)
 
-    def show_events(self, events='all parts', part_number=0, parts=[], viewpoints='all', offset=False):
+    def show_events(self, events='all parts', part_number=0,
+                    parts=None, viewpoints='all', offset=False):
         """
         Show sequence of events
         """
@@ -191,14 +188,14 @@ class MusicParser:
             _ = [self.show_single_viewpoints(
                 viewpoint, events, part_number, parts, offset) for viewpoint in viewpoints]
 
-    def show_all_viewpoints(self, events='all parts', parts=[], part_number=0):
+    def show_all_viewpoints(self, events='all parts', parts=None, part_number=0):
         """
         Show all viewpoints
         """
         if events == 'one part':
             _ = [print(str(ev) + '\n')
                  for ev in self.music_events['part_events'][part_number]]
-        elif events == 'some parts':
+        elif events == 'some parts' and parts is not None:
             for part in parts:
                 print('Part ' + str(part))
                 _ = [print(str(ev) + '\n')
@@ -216,7 +213,8 @@ class MusicParser:
             _ = [print(str(ev) + '\n')
                  for ev in self.music_events['vertical_events']]
 
-    def show_single_viewpoints(self, viewpoint, events='all parts', part_number=0, parts=[], offset=False):
+    def show_single_viewpoints(self, viewpoint, events='all parts',
+                               part_number=0, parts=None, offset=False):
         """
         Shows only a viewpoint sequence
         """
@@ -253,10 +251,13 @@ class MusicParser:
             return self.music_events['vertical_events']
         return None
 
-    def to_json(self, filename, folders=['data', 'myexamples'], indent=2):
+    def to_json(self, filename, folders=None, indent=2):
         """
         Parses Music To json object
         """
+        if folders is None:
+            folders = FOLDER_DEFAULT
+
         file_path = os.sep.join(folders + [filename])
         if os.path.realpath('.').find('code') != -1:
             file_path.replace('code', '')
@@ -276,10 +277,13 @@ class MusicParser:
             handle.close()
         print('Dumped to json')
 
-    def from_json(self, filename, folders=['data', 'myexamples']):
+    def from_json(self, filename, folders=None):
         """
         Parses Music from json object
         """
+        if folders is None:
+            folders = FOLDER_DEFAULT
+
         file_path = os.sep.join(folders + [filename])
         if os.path.realpath('.').find('code') != -1:
             file_path.replace('code', '')
@@ -295,10 +299,13 @@ class MusicParser:
                     LinearEvent(from_dict=event) for event in part]
             handle.close()
 
-    def to_pickle(self, filename, folders=['data', 'myexamples']):
+    def to_pickle(self, filename, folders=None):
         """
         Parses Music To cpickle object
         """
+        if folders is None:
+            folders = FOLDER_DEFAULT
+
         if not os.path.exists(os.sep.join(folders)):
             os.makedirs(os.sep.join(folders))
 
@@ -314,10 +321,13 @@ class MusicParser:
             handle.close()
         print('Dumped to pickle')
 
-    def from_pickle(self, filename, folders=['data', 'myexamples']):
+    def from_pickle(self, filename, folders=None):
         """
         Parses Music To cpickle object
         """
+        if folders is None:
+            folders = FOLDER_DEFAULT
+
         file_path = os.sep.join(folders + [filename])
         if os.path.realpath('.').find('code') != -1:
             file_path.replace('code', '')
