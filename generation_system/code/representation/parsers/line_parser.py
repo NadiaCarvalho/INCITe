@@ -75,8 +75,8 @@ class LineParser:
         """
         Parses the note/rest events
         """
-        stream_notes_rests = self.music_to_parse.flat.notesAndRests.stream(
-        )  # Get Notes and Rests only
+        stream_notes_rests = self.music_to_parse.flat.notesAndRests.stream()
+        # Get Notes and Rests only
 
         for i, note_or_rest in enumerate(stream_notes_rests.elements):
 
@@ -94,6 +94,9 @@ class LineParser:
             is_chord = isinstance(note_or_rest, music21.chord.Chord)
             self.events[i].add_viewpoint(
                 'chord', is_chord)
+
+            if len(self.events) > 1:
+                self.events[i].add_viewpoint('bioi', note_or_rest.offset - self.events[-2].get_offset())
 
             # Duration Parsing
             self.duration_info_parsing(i, note_or_rest)
@@ -474,6 +477,16 @@ class LineParser:
                 self.events, d_bar_off)
             if len(events_at_barline) > 0:
                 events_at_barline[0].add_viewpoint('double', True)
+
+    def clefs_parsing(self):
+        """
+        Parses the existent double barlines (because they can be important if delimiting phrases)
+        """
+        for clef in self.music_to_parse.flat.getElementsByClass(music21.clef.Clef):
+            events_at_clef = utils.get_events_at_offset(
+                self.events, clef.off)
+            if len(events_at_clef) > 0:
+                events_at_clef[0].add_viewpoint('clef', str(clef.sign) + str(clef.line))
 
     def repeat_barline_parsing(self):
         """

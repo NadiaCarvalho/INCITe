@@ -43,6 +43,8 @@ class ScoreConversor:
         last_dynamics = []
 
         for event in events:
+
+
             if new_voice and event.get_viewpoint('fib') and len(measures) > 0:
                 # measures[-1].makeNotation(inPlace=True)
                 measures[-1].append(voice)

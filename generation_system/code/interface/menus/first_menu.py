@@ -110,7 +110,7 @@ class FirstMenu(MyMenu):
         label = QtWidgets.QLabel(
             wrap_text(parent.application.database_path, int(self.width()*30/420)))
         label.setStyleSheet(
-            "margin-left: 10px; border-radius: 25px; color: #4A0C46;")
+            "margin-left: 10px; border-radius: 25px; color: blue;")
         layout.addWidget(label, 0, 1, 1, 2)
 
         database_group.setLayout(layout)
@@ -253,7 +253,7 @@ class FirstMenu(MyMenu):
 
     def create_container_files(self):
         """
-        Scrollable container 
+        Scrollable container
         """
         container = QtWidgets.QWidget()
 
@@ -271,7 +271,7 @@ class FirstMenu(MyMenu):
 
     def open_filenames_dialog(self):
         """
-        Open File Dialog for adding 
+        Open File Dialog for adding
         """
         self.right_group_box.children()[3].setVisible(False)
         options = QtWidgets.QFileDialog.Options()

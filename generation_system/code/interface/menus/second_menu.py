@@ -22,6 +22,7 @@ class ShowStatsWidget(QtWidgets.QWidget):
 
         self.name = name
         self.weight = 0
+        self.is_fixed = False
 
         self.vbox = QtWidgets.QVBoxLayout()
         self.vbox.setAlignment(QtCore.Qt.AlignTop)
@@ -49,9 +50,36 @@ class ShowStatsWidget(QtWidgets.QWidget):
         self.weight_box = QtWidgets.QSpinBox(self)
         self.weight_box.setValue(self.weight)
         self.weight_box.setStyleSheet(
-            """color: blue; font: bold 18px; background: white""")
+            """color: blue; font: bold 18px;""")
         self.weight_box.valueChanged.connect(self.change_weight)
         self.vbox.addWidget(self.weight_box)
+
+        hbox = QtWidgets.QHBoxLayout()
+        hbox.setAlignment(QtCore.Qt.AlignTop)
+        hbox.setContentsMargins(5, 5, 5, 5)
+
+        f_label = QtWidgets.QLabel('Fixed Weight ?')
+        f_label.setStyleSheet(
+            """color: blue; font: bold 18px;""")
+
+        self.fixed_box = QtWidgets.QCheckBox(self)
+        # self.fixed_box.setStyleSheet(
+        #     """QCheckBox::indicator
+        #         {
+        #         border : 1px solid black;
+        #         width : 20px;
+        #         height : 20px;
+        #         background: white;
+        #         color: blue;
+        #         font: bold 18px;
+        #         }""")
+        self.fixed_box.stateChanged.connect(self.change_fixed_status)
+
+        f_label.setBuddy(self.fixed_box)
+        hbox.addWidget(f_label)
+        hbox.addWidget(self.fixed_box)
+
+        self.vbox.addLayout(hbox)
 
         self.setLayout(self.vbox)
 
@@ -60,6 +88,13 @@ class ShowStatsWidget(QtWidgets.QWidget):
         Handle for spinbox of weight
         """
         self.weight = value
+
+    def change_fixed_status(self, state):
+        """
+        Handle for checkbox of fixed weight
+        """
+        self.is_fixed = (False, True)[state == 2]
+        self.weight_box.setDisabled(self.is_fixed)
 
     def handle_stat(self, key, stat, label):
         """
@@ -89,7 +124,9 @@ class ShowStatsWidget(QtWidgets.QWidget):
     def change_stats(self, stats):
         if 'weight' in stats:
             self.weight_box.setValue(stats['weight'])
-        
+        if 'fixed' in stats:
+            self.fixed_box.setChecked(stats['fixed'])
+
         for widget in self.children():
             if isinstance(widget, QtWidgets.QLabel):
                 if ' : ' in widget.text():
@@ -181,14 +218,16 @@ class SecondMenu(MyMenu):
             for i in range(part_widget.count()):
                 widget = part_widget.widget(i)
                 if isinstance(widget, ShowStatsWidget):
-                    widget.change_stats(list(statistics['parts'].items())[i][1])
+                    widget.change_stats(
+                        list(statistics['parts'].items())[i][1])
 
         if self.tab_vertical is not None:
             vertical_widget = self.tab_vertical.children()[2]
             for i in range(vertical_widget.count()):
                 widget = vertical_widget.widget(i)
                 if isinstance(widget, ShowStatsWidget):
-                    widget.change_stats(list(statistics['vertical'].items())[i][1])
+                    widget.change_stats(
+                        list(statistics['vertical'].items())[i][1])
 
         else:
             # Initialize tab screen
@@ -236,12 +275,18 @@ class SecondMenu(MyMenu):
             'vertical': {},
         }
 
+        fixed_dict = {
+            'parts': {},
+            'vertical': {},
+        }
+
         if self.tab_parts:
             part_widget = self.tab_parts.children()[2]
             for i in range(part_widget.count()):
                 widget = part_widget.widget(i)
                 if isinstance(widget, ShowStatsWidget):
                     weights_dict['parts'][widget.name] = widget.weight
+                    fixed_dict['parts'][widget.name] = widget.is_fixed
 
         if self.tab_vertical:
             vertical_widget = self.tab_vertical.children()[2]
@@ -249,5 +294,8 @@ class SecondMenu(MyMenu):
                 widget = vertical_widget.widget(i)
                 if isinstance(widget, ShowStatsWidget):
                     weights_dict['vertical'][widget.name] = widget.weight
+                    fixed_dict['vertical'][widget.name] = widget.is_fixed
 
-        self.parentWidget().parentWidget().application.apply_viewpoint_weights(weights_dict)
+        main_window = self.parentWidget().parentWidget()
+        main_window.application.apply_viewpoint_weights(weights_dict, fixed_dict)
+        main_window.wids[main_window.front_wid + 1].set_maximum_spinbox()

@@ -18,10 +18,12 @@ def _create_oracle(oracle_type, **kwargs):
 
 
 def create_oracle(flag, threshold=0, dfunc='euclidean',
-                  dfunc_handle=None, dim=1, weights=None):
+                  dfunc_handle=None, dim=1, weights=None,
+                  fixed_weights=None):
     """docstring"""
     return _create_oracle(flag, threshold=threshold, dfunc=dfunc,
-                          dfunc_handle=dfunc_handle, dim=dim, weights=weights)
+                          dfunc_handle=dfunc_handle, dim=dim, weights=weights,
+                          fixed_weights=fixed_weights)
 
 
 def _build_oracle(flag, oracle, input_data, suffix_method='inc'):
@@ -43,7 +45,7 @@ def _build_oracle(flag, oracle, input_data, suffix_method='inc'):
 
 def build_oracle(input_data, flag,
                  threshold=0, suffix_method='inc',
-                 features=None, weights=None, dfunc='cosine',
+                 features=None, weights=None, fixed_weights=None, dfunc='cosine',
                  dfunc_handle=None, dim=1):
     """docstring"""
     # initialize weights if needed
@@ -53,31 +55,34 @@ def build_oracle(input_data, flag,
 
     if 'f' or 'v' in flag:
         oracle = _create_oracle(flag, threshold=threshold, dfunc=dfunc,
-                                dfunc_handle=dfunc_handle, dim=dim, weights=weights)
+                                dfunc_handle=dfunc_handle, dim=dim, weights=weights,
+                                fixed_weights=fixed_weights)
         oracle = _build_oracle(flag, oracle, input_data)
     else:
         oracle = _create_oracle('a', threshold=threshold, dfunc=dfunc,
-                                dfunc_handle=dfunc_handle, dim=dim, weights=weights)
+                                dfunc_handle=dfunc_handle, dim=dim, weights=weights,
+                                fixed_weights=fixed_weights)
         oracle = _build_oracle(flag, oracle, input_data, suffix_method)
 
     return oracle
 
 
 def find_threshold(input_data, _r=(0, 1, 0.1), method='ir', flag='a',
-                   suffix_method='inc', alpha=1.0, features=None, weights=None, ir_type='cum',
+                   suffix_method='inc', alpha=1.0, features=None, weights=None,
+                   fixed_weights=None, ir_type='cum',
                    dfunc='cosine', dfunc_handle=None, dim=1,
                    verbose=False, entropy=False):
     """docstring"""
     if method == 'ir':
         return find_threshold_ir(input_data, _r, flag, suffix_method, alpha,
-                                 features, weights, ir_type, dfunc, dfunc_handle, dim,
+                                 features, weights, fixed_weights, ir_type, dfunc, dfunc_handle, dim,
                                  verbose, entropy)
     return None
 
 
 def find_threshold_ir(input_data, _r=(0, 1, 0.1), flag='a', suffix_method='inc',
-                      alpha=1.0, features=None, weights=None, ir_type='cum',
-                      dfunc='cosine', dfunc_handle=None, dim=1,
+                      alpha=1.0, features=None, weights=None, fixed_weights=None,
+                      ir_type='cum', dfunc='cosine', dfunc_handle=None, dim=1,
                       verbose=False, entropy=False):
     """docstring"""
     thresholds = np.arange(_r[0], _r[1], _r[2])
@@ -92,7 +97,8 @@ def find_threshold_ir(input_data, _r=(0, 1, 0.1), flag='a', suffix_method='inc',
             print('Testing threshold:', _t)
         tmp_oracle = build_oracle(input_data, flag=flag, threshold=_t,
                                   suffix_method=suffix_method, features=features,
-                                  dfunc=dfunc, dfunc_handle=dfunc_handle, dim=dim, weights=weights)
+                                  dfunc=dfunc, dfunc_handle=dfunc_handle, dim=dim,
+                                  weights=weights, fixed_weights=fixed_weights)
         tmp_ir, h_0, h_1 = tmp_oracle.i_r(ir_type=ir_type, alpha=alpha)
         irs.append(tmp_ir.sum())
         if entropy:

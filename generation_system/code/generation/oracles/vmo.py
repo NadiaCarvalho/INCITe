@@ -11,6 +11,7 @@ import scipy.spatial.distance as dist
 
 from generation.oracles.factor_oracle import FactorOracle
 from generation.feature_array import FeatureArray
+from generation.cdist_fixed import fixed_cdist
 
 
 class VMO(FactorOracle):
@@ -23,7 +24,7 @@ class VMO(FactorOracle):
         self.kind = 'a'
 
         self.f_array = FeatureArray(self.params['dim'])
-        self.f_array.add(np.zeros(self.params['dim'], )) 
+        self.f_array.add(np.zeros(self.params['dim'], ))
 
         self.basic_attributes['data'][0] = None
         self.latent = []
@@ -45,14 +46,19 @@ class VMO(FactorOracle):
             return dist.cdist([new_symbol],
                               self.f_array[self.basic_attributes['trn'][k]],
                               metric=self.params['dfunc_handle'], w=self.params['weights'])[0]
+        if self.params['weights'] is not None and self.params['fixed_weights'] is not None:
+            return fixed_cdist([new_symbol],
+                               self.f_array[self.basic_attributes['trn'][k]],
+                               metric=self.params['dfunc'],
+                               w=self.params['weights'],
+                               fw=self.params['fixed_weights'])[0]
         if self.params['weights'] is not None:
             return dist.cdist([new_symbol],
                               self.f_array[self.basic_attributes['trn'][k]],
                               metric=self.params['dfunc'], w=self.params['weights'])[0]
-        else:
-            return dist.cdist([new_symbol],
-                              self.f_array[self.basic_attributes['trn'][k]],
-                              metric=self.params['dfunc'])[0]
+        return dist.cdist([new_symbol],
+                          self.f_array[self.basic_attributes['trn'][k]],
+                          metric=self.params['dfunc'])[0]
 
     def _complete_method(self, i, pi_1, suffix_candidate):
         """docstring"""

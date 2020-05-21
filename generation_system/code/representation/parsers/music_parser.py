@@ -99,7 +99,9 @@ class MusicParser:
                     self.music_events['part_events'][i] = self.parse_sequence_part(
                         part, name=str(i), first=(False, True)[i == 0])
 
-        if vertical and (len(self.music.parts) > 1 or len(self.music.getOverlaps()) > 0):
+        if vertical and (len(self.music.parts) > 1 or
+                         len(self.music.getOverlaps()) > 0 or
+                         len(self.music.recurse(classFilter='Chord')) > 0):
             print('Processing Vertical Events')
             self.music_events['vertical_events'] = VerticalParser(
                 self.music).parse_music()

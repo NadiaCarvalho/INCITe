@@ -34,7 +34,8 @@ class LinearEvent(Event):
             'basic': {
                 'rest': False,
                 'grace': False,
-                'chord': False
+                'chord': False,
+                'bioi': 0,
             },
             'duration': {
                 'length': 1,
@@ -65,6 +66,7 @@ class LinearEvent(Event):
                     'end': False,
                     'between': False,
                 },
+                'clef': str(music21.clef.TrebleClef().sign) + str(music21.clef.TrebleClef().line),
             },
             'pitch': {
                 'cpitch': 60.0,
