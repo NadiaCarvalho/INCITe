@@ -6,6 +6,7 @@ To comunicate with interface
 
 import os
 import time
+import math
 
 import numpy as np
 from PyQt5 import QtCore
@@ -149,12 +150,22 @@ class Application(QtCore.QObject):
 
         # TODO: Calculate measurement for better viewpoints
         if calc_weights:
+            variances_parts = dict([(key, stats['variance'])
+                                    for key, stats in statistic_dict['parts'].items()])
+            variances_parts = rep_utils.normalize_dictionary(
+                variances_parts, target=100)
+            variances_vert = dict([(key, stats['variance'])
+                                   for key, stats in statistic_dict['vertical'].items()])
+            variances_vert = rep_utils.normalize_dictionary(
+                variances_vert, target=100)
+
             for key, stats in statistic_dict['parts'].items():
-                statistic_dict['parts'][key]['weight'] = 1
-                statistic_dict['parts'][key]['fixed'] = False
+                stats['weight'] = variances_parts[key]
+                stats['fixed'] = False
+
             for key, stats in statistic_dict['vertical'].items():
-                statistic_dict['vertical'][key]['weight'] = 1
-                statistic_dict['vertical'][key]['fixed'] = False
+                stats['weight'] = variances_vert[key]
+                stats['fixed'] = False
 
         if interface is not None:
             self.signal_viewpoints.connect(
@@ -181,10 +192,11 @@ class Application(QtCore.QObject):
             'vertical': None}
         # TODO: Decide from the ones incoming
 
+        max_weight = max(list(weight_dict['parts'].values()))
         res_weights = {
-            'derived.intphrase': 1,
-            'phrase.boundary': 1,
-            'phrase.length': 1
+            'derived.intphrase': max_weight,
+            'phrase.boundary': max_weight,
+            'phrase.length': max_weight
         }
         self.process_and_segment_parts(res_weights)
 

@@ -32,15 +32,18 @@ class ShowStatsWidget(QtWidgets.QWidget):
         self.lbl.setStyleSheet("""color: blue; font: bold 20px;""")
         self.vbox.addWidget(self.lbl)   # Add the label to the layout
 
+
         for key, stat in statistics.items():
-            self.vbox.addWidget(self.handle_stat(
-                key, stat, QtWidgets.QLabel('')))
+            if key == 'weight':
+                self.weight = stat
+            elif key == 'fixed':
+                self.is_fixed = stat
+            else:
+                self.vbox.addWidget(self.handle_stat(
+                    key, stat, QtWidgets.QLabel('')))
 
         line_splitter = QHLine()
         self.vbox.addWidget(line_splitter)
-
-        if 'weight' in statistics:
-            self.weight = statistics['weight']
 
         label = QtWidgets.QLabel('Choose Weight: ')
         label.setStyleSheet(
@@ -48,6 +51,7 @@ class ShowStatsWidget(QtWidgets.QWidget):
         self.vbox.addWidget(label)
 
         self.weight_box = QtWidgets.QSpinBox(self)
+        self.weight_box.setMaximum(100)
         self.weight_box.setValue(self.weight)
         self.weight_box.setStyleSheet(
             """color: blue; font: bold 18px;""")
@@ -229,7 +233,7 @@ class SecondMenu(MyMenu):
                     widget.change_stats(
                         list(statistics['vertical'].items())[i][1])
 
-        else:
+        if self.tab_parts is None and self.tab_vertical is None:
             # Initialize tab screen
             tabs = QtWidgets.QTabWidget()
             self.tab_parts = self.create_statistics_folder(

@@ -33,6 +33,14 @@ def normalize_column(col, x_min, x_max):
     return (nom/denom) + x_min
 
 
+def normalize_dictionary(d, target=1.0):
+    """
+    Normalize a Dictionary
+    """
+    raw = sum(d.values())
+    factor = target/raw
+    return {key:value*factor for key, value in d.items()}
+
 def normalize(feat_list, x_min, x_max):
     """
     Get Normalization for a matrix between [x_min, x_max]
