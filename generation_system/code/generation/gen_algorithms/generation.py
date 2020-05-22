@@ -11,7 +11,7 @@ from generation.oracles.factor_oracle import FactorOracle
 
 
 def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
-    """ 
+    """
     Generate a sequence based on traversing an oracle.
     :param oracle: a indexed vmo object
     :param seq_len: the length of the returned improvisation sequence

@@ -346,16 +346,19 @@ class Application(QtCore.QObject):
         for key, part in self.normed_info_for_oracles.items():
             features_names = self.feat_part_names
             weights = self.normalized_part_weights
+            fixed_weights = self.fixed_part_weights
             if key == 'vertical':
                 features_names = self.feat_vert_names
                 weights = self.normalized_vert_weights
+                fixed_weights = self.fixed_vert_weights
 
             thresh = gen_utils.find_threshold(
-                part, weights=weights, dim=len(features_names), entropy=True)
+                part, weights=weights, fixed_weights=fixed_weights,
+                dim=len(features_names), entropy=True)
             self.oracles[key] = gen_utils.build_oracle(
                 part, flag='a', features=features_names,
-                weights=weights, dim=len(features_names),
-                dfunc='cosine', threshold=thresh[0][1])
+                weights=weights, fixed_weights=fixed_weights,
+                dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
 
         image = gen_plot.start_draw(self.oracles, self.ev_offsets)
         name = r'data\myexamples\oracle' + '.PNG'
@@ -376,7 +379,7 @@ class Application(QtCore.QObject):
         localtime = '-'.join(localtime.split(':'))
         for i in range(num_seq):
             sequences, ktraces = multi_gen.sync_generate(
-                self.oracles, self.ev_offsets, seq_len=100, p=0.2, k=1)
+                self.oracles, self.ev_offsets, seq_len=50, p=0.5, k=0)
             self.multi_sequence_score_generator(
                 sequences, self.orig_info, self.feat_part_names, name='gen_' + localtime + '_' + str(i))
 
