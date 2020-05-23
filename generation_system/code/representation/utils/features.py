@@ -33,13 +33,19 @@ def normalize_column(col, x_min, x_max):
     return (nom/denom) + x_min
 
 
-def normalize_dictionary(d, target=1.0):
+def normalize_dictionary(d, x_min, x_max):
     """
     Normalize a Dictionary
     """
-    raw = sum(d.values())
-    factor = target/raw
-    return {key:value*factor for key, value in d.items()}
+    max_l = max(d.values())
+    min_l = min(d.values())
+
+    denom = max_l - min_l
+    if denom == 0:
+        denom = 1
+
+    return {key: (value - min_l)*(x_max-x_min)/denom for key, value in d.items()}
+
 
 def normalize(feat_list, x_min, x_max):
     """

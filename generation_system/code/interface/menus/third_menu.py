@@ -20,7 +20,7 @@ class ThirdMenu(MyMenu):
         self.setStyleSheet("""background: light gray;""")
 
         self.number_sequences = 15
-        self.number_lines = 1
+        self.line = True
 
         self.container = self.create_container_oracle(parent)
 
@@ -38,7 +38,7 @@ class ThirdMenu(MyMenu):
         """
         Principal Container
         """
-        widget = QtWidgets.QGroupBox("Oracle and Generator")
+        widget = QtWidgets.QGroupBox("Oracle Creation:")
         widget.setStyleSheet("""color: blue; font: bold 20px;""")
 
         layout = QtWidgets.QFormLayout()
@@ -46,14 +46,17 @@ class ThirdMenu(MyMenu):
         layout.setContentsMargins(5, 45, 5, 5)
         layout.setSpacing(50)
 
-        label_2 = QtWidgets.QLabel("Number of lines to generate:")
-        label_2.setStyleSheet("""color: black; font: bold 16px;""")
+        radiobutton1 = QtWidgets.QRadioButton("One Line Oracle")
+        radiobutton1.setChecked(True)
+        radiobutton1.setStyleSheet("""color: black; font: bold 16px;""")
+        radiobutton1.toggled.connect(self.radio_clicked)
 
-        spin_box_2 = QtWidgets.QSpinBox()
-        spin_box_2.setValue(self.number_lines)
-        spin_box_2.valueChanged.connect(self.change_number_lines)
+        radiobutton2 = QtWidgets.QRadioButton("Multiple Line Oracle")
+        radiobutton2.setChecked(False)
+        radiobutton2.setStyleSheet("""color: black; font: bold 16px;""")
+        radiobutton2.toggled.connect(self.radio_clicked)
 
-        layout.addRow(label_2, spin_box_2)
+        layout.addRow(radiobutton1, radiobutton2)
 
         button_box = QtWidgets.QPushButton("Generate Oracle")
         button_box.setStyleSheet("""color: black; font: bold 16px;""")
@@ -84,13 +87,23 @@ class ThirdMenu(MyMenu):
 
         layout.addRow(label_1, spin_box_1)
 
-        button_box = QtWidgets.QPushButton("Generate Oracle")
+        button_box = QtWidgets.QPushButton("Generate Sequences")
         button_box.setStyleSheet("""color: black; font: bold 16px;""")
         button_box.clicked.connect(self.generate_sequences_oracle)
         layout.addWidget(button_box)
 
         widget.setLayout(layout)
         return widget
+
+    def radio_clicked(self):
+        """
+        One/Multiple Button
+        """
+        radio_button = self.sender()
+        if radio_button.isChecked() and 'One' in radio_button.text():
+            self.line = True
+        else:
+            self.line = False
 
     def set_maximum_spinbox(self):
         """
@@ -99,33 +112,28 @@ class ThirdMenu(MyMenu):
         possible_parts = [len(list(_tuple[0].get_part_events()))
                           for music, _tuple in
                           self.parentWidget().parentWidget().application.music.items()]
-        self.children()[2].children()[2].setMaximum(max(possible_parts))
+        if max(possible_parts) == 1:
+            self.children()[2].children()[2].setEnabled(False)
 
     def create_oracle(self):
         """
-        Call Generator
+        Call Oracle Generator
         """
         self.parentWidget().parentWidget().application.generate_oracle(
-            self, self.number_lines)
+            self, self.line)
 
     def generate_sequences_oracle(self):
         """
-        Call Generator
+        Call Sequence Generator
         """
         self.parentWidget().parentWidget().application.generate_sequences(
-            self.number_lines, self.number_sequences)
+            self.line, self.number_sequences)
 
     def change_number_seq(self, value):
         """
         Handle for spinbox sequence number
         """
         self.number_sequences = value
-
-    def change_number_lines(self, value):
-        """
-        Handle for spinbox line number
-        """
-        self.number_lines = value
 
     def handler_create_sequence(self, int):
         """

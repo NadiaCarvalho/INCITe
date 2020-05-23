@@ -4,9 +4,9 @@ This script presents the application class
 To comunicate with interface
 """
 
+import math
 import os
 import time
-import math
 
 import numpy as np
 from PyQt5 import QtCore
@@ -153,11 +153,11 @@ class Application(QtCore.QObject):
             variances_parts = dict([(key, stats['variance'])
                                     for key, stats in statistic_dict['parts'].items()])
             variances_parts = rep_utils.normalize_dictionary(
-                variances_parts, target=100)
+                variances_parts, x_min=0, x_max=100)
             variances_vert = dict([(key, stats['variance'])
                                    for key, stats in statistic_dict['vertical'].items()])
             variances_vert = rep_utils.normalize_dictionary(
-                variances_vert, target=100)
+                variances_vert, x_min=0, x_max=100)
 
             for key, stats in statistic_dict['parts'].items():
                 stats['weight'] = variances_parts[key]
@@ -218,28 +218,72 @@ class Application(QtCore.QObject):
         self.normalized_vert_weights = rep_utils.normalize_weights(
             non_norm_vert_weights)
 
-    def generate_oracle(self, interface, num_lines):
+    def process_and_segment_parts(self, res_weights):
+        """
+        Segment Parts and join segmentation
+        information to part features,
+        not yet normalized
+        """
+        index_of_res_weights = [self.part_features_names.index(
+            key) for key in res_weights.keys() if key in self.part_features_names]
+        for music, _tuple in self.music.items():
+            parser = _tuple[0]
+            vertical_offsets = None
+            if parser.get_vertical_events() is not None:
+                vertical_offsets = [ev.get_offset()
+                                    for ev in parser.get_vertical_events()]
+            number_part = 0
+            for key, events in parser.get_part_events().items():
+                if len(events) > 0:
+                    self.part_segmentation(
+                        events, vertical_offsets, parser.get_vertical_events())
+                    features, _ = rep_utils.create_feat_array(
+                        events, res_weights, False)
+                    first_ind = self.indexes_first[music]['parts'][number_part]
+                    last_ind = first_ind + len(events)
+                    self.part_features[first_ind:last_ind,
+                                       index_of_res_weights] = features
+                    number_part += 1
+
+    def part_segmentation(self, events, vertical_offsets, vertical_events):
+        """
+        Segmentation for a part
+        """
+        if vertical_offsets is not None and self.segmentation_viewpoints['vertical'] is not None:
+            ev_offsets = [ev.get_offset() for ev in events]
+            vertical_start_indexes = [
+                vertical_offsets.index(off) for off in ev_offsets]
+            segmentation(events, weights_line=self.segmentation_viewpoints['parts'],
+                         weights_vert=self.segmentation_viewpoints['vertical'],
+                         vertical_events=vertical_events,
+                         indexes=vertical_start_indexes)
+        else:
+            segmentation(
+                events, weights_line=self.segmentation_viewpoints['parts'])
+        apply_segmentation_info(events)
+
+    def generate_oracle(self, interface, line_oracle):
         """
         Construct oracle and generate
         """
-        if num_lines > 1:
-            self.construct_oracles(num_lines)
-        else:
+        if line_oracle:
             self.construct_single_oracle()
+        else:
+            self.construct_oracles()
 
         if interface is not None:
             self.signal_parsed.connect(
                 interface.handler_create_sequence)
             self.signal_parsed.emit(1)
 
-    def generate_sequences(self, num_lines, num_seq):
+    def generate_sequences(self, line_oracle, num_seq):
         """
         Construct oracle and generate
         """
-        if num_lines > 1:
-            self.generate_from_multiple(num_seq)
-        else:
+        if line_oracle:
             self.generate_from_single(num_seq)
+        else:
+            self.generate_from_multiple(num_seq)
 
     def construct_single_oracle(self):
         """
@@ -305,7 +349,7 @@ class Application(QtCore.QObject):
                 path = os.sep.join([os.getcwd(), 'data', 'generations', name])
                 fp = score.stream.write(fp=path)
 
-    def construct_oracles(self, num_lines):
+    def construct_oracles(self):
         """
         Construct Multiple Oracles from Information
         """
@@ -395,6 +439,26 @@ class Application(QtCore.QObject):
             self.multi_sequence_score_generator(
                 sequences, self.orig_info, self.feat_part_names, name='gen_' + localtime + '_' + str(i))
 
+    def multi_sequence_score_generator(self, sequences, o_information, feature_names, name='', start=-1):
+        """
+        Generate Score
+        """
+        score = ScoreConversor()
+        for key, sequence in sequences.items():
+            if key != 'vertical':
+                sequenced_events = [LinearEvent(
+                    from_list=o_information[key][state + start], features=feature_names)
+                    if (state + start) < len(o_information[key])
+                    else print('key: state ' + str(state + start))
+                    for state in sequence ]
+                if len(sequenced_events) > 0:
+                    score.parse_events(
+                        sequenced_events, new_part=True, new_voice=True)
+        # score.stream.show()
+
+        path = os.sep.join([os.getcwd(), 'data', 'generations', name + '.xml'])
+        fp = score.stream.write(fp=path)
+
     def get_columns_from_weights(self, weights, fixed_weights, features_names):
         """
         Get Columns and Weights (non-normalized)
@@ -429,64 +493,3 @@ class Application(QtCore.QObject):
                 feature_names_per_column.append(key)
 
         return columns_to_retain, weights_per_column, fixed_per_column, feature_names_per_column
-
-    def process_and_segment_parts(self, res_weights):
-        """
-        Segment Parts and join segmentation
-        information to part features,
-        not yet normalized
-        """
-        index_of_res_weights = [self.part_features_names.index(
-            key) for key in res_weights.keys() if key in self.part_features_names]
-        for music, _tuple in self.music.items():
-            parser = _tuple[0]
-            vertical_offsets = None
-            if parser.get_vertical_events() is not None:
-                vertical_offsets = [ev.get_offset()
-                                    for ev in parser.get_vertical_events()]
-            number_part = 0
-            for key, events in parser.get_part_events().items():
-                if len(events) > 0:
-                    self.part_segmentation(
-                        events, vertical_offsets, parser.get_vertical_events())
-                    features, _ = rep_utils.create_feat_array(
-                        events, res_weights, False)
-                    first_ind = self.indexes_first[music]['parts'][number_part]
-                    last_ind = first_ind + len(events)
-                    self.part_features[first_ind:last_ind,
-                                       index_of_res_weights] = features
-                    number_part += 1
-
-    def part_segmentation(self, events, vertical_offsets, vertical_events):
-        """
-        Segmentation for a part
-        """
-        if vertical_offsets is not None and self.segmentation_viewpoints['vertical'] is not None:
-            ev_offsets = [ev.get_offset() for ev in events]
-            vertical_start_indexes = [
-                vertical_offsets.index(off) for off in ev_offsets]
-            segmentation(events, weights_line=self.segmentation_viewpoints['parts'],
-                         weights_vert=self.segmentation_viewpoints['vertical'],
-                         vertical_events=vertical_events,
-                         indexes=vertical_start_indexes)
-        else:
-            segmentation(
-                events, weights_line=self.segmentation_viewpoints['parts'])
-        apply_segmentation_info(events)
-
-    def multi_sequence_score_generator(self, sequences, o_information, feature_names, name='', start=-1):
-        """
-        Generate Score
-        """
-        score = ScoreConversor()
-        for key, sequence in sequences.items():
-            if key != 'vertical':
-                sequenced_events = [LinearEvent(
-                    from_list=o_information[key][state + start], features=feature_names) for state in sequence]
-                if len(sequenced_events) > 0:
-                    score.parse_events(
-                        sequenced_events, new_part=True, new_voice=True)
-        # score.stream.show()
-
-        path = os.sep.join([os.getcwd(), 'data', 'generations', name + '.xml'])
-        fp = score.stream.write(fp=path)
