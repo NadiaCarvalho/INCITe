@@ -4,10 +4,15 @@ Main Window for Interface
 
 import sys
 
-from PyQt5 import Qt, QtGui, QtWidgets
+from PyQt5 import Qt, QtGui, QtWidgets, QtCore
 
 from interface.menus.menu import MyMenu
 
+class QHLine(QtWidgets.QFrame):
+    def __init__(self):
+        super(QHLine, self).__init__()
+        self.setFrameShape(QtWidgets.QFrame.HLine)
+        self.setFrameShadow(QtWidgets.QFrame.Sunken)
 
 class ThirdMenu(MyMenu):
     """
@@ -21,6 +26,7 @@ class ThirdMenu(MyMenu):
 
         self.number_sequences = 15
         self.line = True
+        self.part = 0
 
         self.container = self.create_container_oracle(parent)
 
@@ -42,26 +48,42 @@ class ThirdMenu(MyMenu):
         widget.setStyleSheet("""color: blue; font: bold 20px;""")
 
         layout = QtWidgets.QFormLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
 
         layout.setContentsMargins(5, 45, 5, 5)
         layout.setSpacing(50)
 
-        radiobutton1 = QtWidgets.QRadioButton("One Line Oracle")
-        radiobutton1.setChecked(True)
-        radiobutton1.setStyleSheet("""color: black; font: bold 16px;""")
-        radiobutton1.toggled.connect(self.radio_clicked)
+        radio_button_1 = QtWidgets.QRadioButton("One Line Oracle")
+        radio_button_1.setChecked(True)
+        radio_button_1.setStyleSheet("""color: black; font: bold 16px;""")
+        radio_button_1.toggled.connect(self.radio_clicked)
 
-        radiobutton2 = QtWidgets.QRadioButton("Multiple Line Oracle")
-        radiobutton2.setChecked(False)
-        radiobutton2.setStyleSheet("""color: black; font: bold 16px;""")
-        radiobutton2.toggled.connect(self.radio_clicked)
+        radio_button_2 = QtWidgets.QRadioButton("Multiple Line Oracle")
+        radio_button_2.setChecked(False)
+        radio_button_2.setStyleSheet("""color: black; font: bold 16px;""")
+        radio_button_2.toggled.connect(self.radio_clicked)
 
-        layout.addRow(radiobutton1, radiobutton2)
+        layout.addRow(radio_button_1, radio_button_2)
+
+        line_splitter = QHLine()
+        layout.addWidget(line_splitter)
+
+        label_1 = QtWidgets.QLabel("Part from Which to Generate:")
+        label_1.setStyleSheet("""color: black; font: bold 16px;""")
+
+        spin_box_1 = QtWidgets.QSpinBox()
+        spin_box_1.setValue(self.part)
+        spin_box_1.valueChanged.connect(self.change_number_seq)
+
+        layout.addRow(label_1, spin_box_1)
 
         button_box = QtWidgets.QPushButton("Generate Oracle")
         button_box.setStyleSheet("""color: black; font: bold 16px;""")
         button_box.clicked.connect(self.create_oracle)
         layout.addWidget(button_box)
+
+        line_splitter = QHLine()
+        layout.addWidget(line_splitter)
 
         widget.setLayout(layout)
         return widget
@@ -114,6 +136,8 @@ class ThirdMenu(MyMenu):
                           self.parentWidget().parentWidget().application.music.items()]
         if max(possible_parts) == 1:
             self.children()[2].children()[2].setEnabled(False)
+        else:
+            self.children()[2].children()[3].setEnabled(True)
 
     def create_oracle(self):
         """
