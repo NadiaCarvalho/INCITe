@@ -26,7 +26,7 @@ class ThirdMenu(MyMenu):
 
         self.number_sequences = 15
         self.line = True
-        self.part = 0
+        self.part = 1
 
         self.container = self.create_container_oracle(parent)
 
@@ -73,7 +73,7 @@ class ThirdMenu(MyMenu):
 
         spin_box_1 = QtWidgets.QSpinBox()
         spin_box_1.setValue(self.part)
-        spin_box_1.valueChanged.connect(self.change_number_seq)
+        spin_box_1.valueChanged.connect(self.change_line)
 
         layout.addRow(label_1, spin_box_1)
 
@@ -104,6 +104,7 @@ class ThirdMenu(MyMenu):
         label_1.setStyleSheet("""color: black; font: bold 16px;""")
 
         spin_box_1 = QtWidgets.QSpinBox()
+        spin_box_1.setMinimum(1)
         spin_box_1.setValue(self.number_sequences)
         spin_box_1.valueChanged.connect(self.change_number_seq)
 
@@ -124,8 +125,10 @@ class ThirdMenu(MyMenu):
         radio_button = self.sender()
         if radio_button.isChecked() and 'One' in radio_button.text():
             self.line = True
+            self.children()[2].children()[5].setEnabled(True)
         else:
             self.line = False
+            self.children()[2].children()[5].setEnabled(False)
 
     def set_maximum_spinbox(self):
         """
@@ -135,16 +138,17 @@ class ThirdMenu(MyMenu):
                           for music, _tuple in
                           self.parentWidget().parentWidget().application.music.items()]
         if max(possible_parts) == 1:
-            self.children()[2].children()[2].setEnabled(False)
+            self.children()[2].children()[5].setEnabled(False)
         else:
-            self.children()[2].children()[3].setEnabled(True)
+            self.children()[2].children()[5].setMaximum(max(possible_parts))
+            self.children()[2].children()[5].setEnabled(True)
 
     def create_oracle(self):
         """
         Call Oracle Generator
         """
         self.parentWidget().parentWidget().application.generate_oracle(
-            self, self.line)
+            self, self.line, self.part - 1)
 
     def generate_sequences_oracle(self):
         """
@@ -152,6 +156,13 @@ class ThirdMenu(MyMenu):
         """
         self.parentWidget().parentWidget().application.generate_sequences(
             self.line, self.number_sequences)
+
+    def change_line(self, value):
+        """
+        Handle for spinbox sequence number
+        """
+        if value > 0:
+            self.part = value
 
     def change_number_seq(self, value):
         """

@@ -17,6 +17,7 @@ import generation.plot_fo as gen_plot
 import generation.utils as gen_utils
 import representation.utils.features as rep_utils
 import representation.utils.statistics as statistics
+from generation.cdist_fixed import distance_between_windowed_features
 from representation.conversor.score_conversor import ScoreConversor
 from representation.events.linear_event import LinearEvent
 from representation.parsers.music_parser import MusicParser
@@ -262,12 +263,12 @@ class Application(QtCore.QObject):
                 events, weights_line=self.segmentation_viewpoints['parts'])
         apply_segmentation_info(events)
 
-    def generate_oracle(self, interface, line_oracle):
+    def generate_oracle(self, interface, line_oracle, line=0):
         """
         Construct oracle and generate
         """
         if line_oracle:
-            self.construct_single_oracle()
+            self.construct_single_oracle(line)
         else:
             self.construct_oracles()
 
@@ -285,7 +286,7 @@ class Application(QtCore.QObject):
         else:
             self.generate_from_multiple(num_seq)
 
-    def construct_single_oracle(self):
+    def construct_single_oracle(self, line):
         """
         Construct Oracle from Information
         """
@@ -301,7 +302,7 @@ class Application(QtCore.QObject):
 
             i = 0
             for key, events in parser.get_part_events().items():
-                if len(events) > 0:
+                if len(events) > 0 and i == line:
                     start_index = self.indexes_first[music]['parts'][i]
                     finish_index = start_index + len(events)
                     self.normed_info_for_oracles.extend(
@@ -334,10 +335,22 @@ class Application(QtCore.QObject):
         localtime = time.asctime(time.localtime(time.time()))
         localtime = '_'.join(localtime.split(' '))
         localtime = '-'.join(localtime.split(':'))
-        for i in range(num_seq):
-            sequence, kend, ktrace = gen.generate(
-                oracle=self.oracle, seq_len=100, p=0.5, k=0, LRS=5)
 
+        ordered_sequences = []
+
+        i = 0
+        while i < num_seq:
+            sequence, kend, ktrace = gen.generate(
+                oracle=self.oracle, seq_len=100, p=0.5, k=0, LRS=3)
+            if len(sequence) > 0:
+                dist = distance_between_windowed_features(
+                    [self.normed_info_for_oracles[state-1] for state in sequence], self.normed_info_for_oracles)
+                ordered_sequences.append((sequence, dist))
+                i += 1
+
+        ordered_sequences.sort(key=lambda tup: tup[1])
+
+        for i, (sequence, dist) in enumerate(ordered_sequences):
             sequenced_events = [LinearEvent(
                 from_list=self.orig_info[state-1], features=self.feat_part_names) for state in sequence]
             if len(sequenced_events) > 0:
@@ -345,7 +358,7 @@ class Application(QtCore.QObject):
                 score.parse_events(
                     sequenced_events, new_part=True, new_voice=True)
                 # score.stream.show()
-                name = 'gen_' + localtime + '_' + str(i) + '.xml'
+                name = 'gen_' + localtime + '_' + str(i) + '_distance_' + str(dist) + '.xml'
                 path = os.sep.join([os.getcwd(), 'data', 'generations', name])
                 fp = score.stream.write(fp=path)
 
@@ -450,7 +463,7 @@ class Application(QtCore.QObject):
                     from_list=o_information[key][state + start], features=feature_names)
                     if (state + start) < len(o_information[key])
                     else print('key: state ' + str(state + start))
-                    for state in sequence ]
+                    for state in sequence]
                 if len(sequenced_events) > 0:
                     score.parse_events(
                         sequenced_events, new_part=True, new_voice=True)
