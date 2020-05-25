@@ -358,7 +358,8 @@ class Application(QtCore.QObject):
                 score.parse_events(
                     sequenced_events, new_part=True, new_voice=True)
                 # score.stream.show()
-                name = 'gen_' + localtime + '_' + str(i) + '_distance_' + str(dist) + '.xml'
+                name = 'gen_' + localtime + '_' + \
+                    str(i) + '_distance_' + str(dist) + '.xml'
                 path = os.sep.join([os.getcwd(), 'data', 'generations', name])
                 fp = score.stream.write(fp=path)
 

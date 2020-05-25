@@ -23,6 +23,7 @@ def fixed_cdist(XA, XB, w, fw, metric='euclidean'):
                     result[i][j] = 100000
     return result
 
+
 def distance_between_windowed_features(XA, XB):
     """
     Windowed Distance between two matrixes using Euclidean Distance
@@ -40,10 +41,10 @@ def distance_between_windowed_features(XA, XB):
 
     distances = []
     for i in range(window):
-        distances.append(np.linalg.norm(np.array(min_matrix) - np.array(max_matrix[i : len(min_matrix) + i]), ord='fro'))
+        distances.append(np.linalg.norm(np.array(min_matrix) -
+                                        np.array(max_matrix[i: len(min_matrix) + i]), ord='fro'))
 
     if len(XB) < len(XA):
         return sum(distances)/len(distances)
     else:
         return min(distances)
-

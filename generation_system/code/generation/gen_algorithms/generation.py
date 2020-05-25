@@ -76,6 +76,7 @@ def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
                             _tmp = np.argmin(abs(
                                 np.subtract(lrs_vec, query_lrs)))
                             sym = k_vec[_tmp]
+
                     elif weight == 'max':
                         sym = k_vec[np.argmax([lrs[_i] for _i in k_vec])]
                     else:
