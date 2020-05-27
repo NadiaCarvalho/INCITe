@@ -79,6 +79,7 @@ class Application(QtCore.QObject):
                 name = '.'.join(name.split('.')[:-1])
                 folders = self.database_path.split(os.path.sep) + folder_name
                 self.music[filename][0].to_pickle(name, folders)
+                self.music[filename][0].to_json(name, folders)
 
                 n_processed += 1
 
@@ -101,7 +102,7 @@ class Application(QtCore.QObject):
 
     def recover_parsed_folder(self, folder):
         """
-        Recover parsed music in folder
+        Recover Parsed Music in Folder
         """
         if os.path.isdir(folder):
             for root, _, files in os.walk(folder):
@@ -139,15 +140,17 @@ class Application(QtCore.QObject):
                     vertical_music_to_learn)
                 vertical_music_to_learn.extend(vertical_part)
 
+        statistic_dict = {}
+
         statistic_part_dict_percentages, self.part_features, self.part_features_names = statistics.statistic_features(
             entire_part_music_to_learn_statistics)
-        statistic_vert_dict_percentages, self.vertical_features, self.vert_features_names = statistics.statistic_features(
-            vertical_music_to_learn)
 
-        statistic_dict = {
-            'parts': statistic_part_dict_percentages,
-            'vertical': statistic_vert_dict_percentages
-        }
+        statistic_dict['parts'] = statistic_part_dict_percentages
+
+        if len(vertical_music_to_learn) > 0:
+            statistic_vert_dict_percentages, self.vertical_features, self.vert_features_names = statistics.statistic_features(
+                vertical_music_to_learn)
+            statistic_dict['vertical'] = statistic_vert_dict_percentages
 
         # TODO: Calculate measurement for better viewpoints
         if calc_weights:
@@ -155,18 +158,19 @@ class Application(QtCore.QObject):
                                     for key, stats in statistic_dict['parts'].items()])
             variances_parts = rep_utils.normalize_dictionary(
                 variances_parts, x_min=0, x_max=100)
-            variances_vert = dict([(key, stats['variance'])
-                                   for key, stats in statistic_dict['vertical'].items()])
-            variances_vert = rep_utils.normalize_dictionary(
-                variances_vert, x_min=0, x_max=100)
 
             for key, stats in statistic_dict['parts'].items():
                 stats['weight'] = variances_parts[key]
                 stats['fixed'] = False
 
-            for key, stats in statistic_dict['vertical'].items():
-                stats['weight'] = variances_vert[key]
-                stats['fixed'] = False
+            if 'vertical' in statistic_dict:
+                variances_vert = dict([(key, stats['variance'])
+                                       for key, stats in statistic_dict['vertical'].items()])
+                variances_vert = rep_utils.normalize_dictionary(
+                    variances_vert, x_min=0, x_max=100)
+                for key, stats in statistic_dict['vertical'].items():
+                    stats['weight'] = variances_vert[key]
+                    stats['fixed'] = False
 
         if interface is not None:
             self.signal_viewpoints.connect(
@@ -177,7 +181,7 @@ class Application(QtCore.QObject):
 
     def apply_viewpoint_weights(self, weight_dict, fixed_dict):
         """
-        Apply choosen weights
+        Apply Choosen Weights
         """
         if weight_dict['parts'] == {} and weight_dict['vertical'] == {}:
             statistics_dict = self.calculate_statistics(None, True)
@@ -203,21 +207,21 @@ class Application(QtCore.QObject):
 
         part_columns, non_norm_part_weights, self.fixed_part_weights, self.feat_part_names = self.get_columns_from_weights(
             self.model_viewpoints['parts'], fixed_dict['parts'], self.part_features_names)
-        vertical_cols, non_norm_vert_weights, self.fixed_vert_weights, self.feat_vert_names = self.get_columns_from_weights(
-            self.model_viewpoints['vertical'], fixed_dict['vertical'], self.vert_features_names)
-
         self.sel_part_o_feats = self.part_features[:, part_columns]
-        self.sel_vert_o_feats = self.vertical_features[:,
-                                                       vertical_cols]
-
         self.normed_part_feats = rep_utils.normalize(
             self.sel_part_o_feats, -1, 1)
-        self.normed_vertical_feats = rep_utils.normalize(
-            self.sel_vert_o_feats, -1, 1)
         self.normalized_part_weights = rep_utils.normalize_weights(
             non_norm_part_weights)
-        self.normalized_vert_weights = rep_utils.normalize_weights(
-            non_norm_vert_weights)
+
+        if 'vertical' in self.model_viewpoints:
+            vertical_cols, non_norm_vert_weights, self.fixed_vert_weights, self.feat_vert_names = self.get_columns_from_weights(
+                self.model_viewpoints['vertical'], fixed_dict['vertical'], self.vert_features_names)
+            self.sel_vert_o_feats = self.vertical_features[:,
+                                                           vertical_cols]
+            self.normed_vertical_feats = rep_utils.normalize(
+                self.sel_vert_o_feats, -1, 1)
+            self.normalized_vert_weights = rep_utils.normalize_weights(
+                non_norm_vert_weights)
 
     def process_and_segment_parts(self, res_weights):
         """
@@ -248,7 +252,7 @@ class Application(QtCore.QObject):
 
     def part_segmentation(self, events, vertical_offsets, vertical_events):
         """
-        Segmentation for a part
+        Segmentation for a Part
         """
         if vertical_offsets is not None and self.segmentation_viewpoints['vertical'] is not None:
             ev_offsets = [ev.get_offset() for ev in events]
@@ -265,12 +269,12 @@ class Application(QtCore.QObject):
 
     def generate_oracle(self, interface, line_oracle, line=0):
         """
-        Construct oracle and generate
+        Construct Oracle Handler
         """
         if line_oracle:
             self.construct_single_oracle(line)
         else:
-            self.construct_oracles()
+            self.construct_multi_oracles()
 
         if interface is not None:
             self.signal_parsed.connect(
@@ -279,7 +283,7 @@ class Application(QtCore.QObject):
 
     def generate_sequences(self, line_oracle, num_seq):
         """
-        Construct oracle and generate
+        Generate Sequences Handler
         """
         if line_oracle:
             self.generate_from_single(num_seq)
@@ -330,11 +334,14 @@ class Application(QtCore.QObject):
 
     def generate_from_single(self, num_seq):
         """
-        Generate music from a single oracle
+        Generate Music From a Single Oracle
         """
         localtime = time.asctime(time.localtime(time.time()))
         localtime = '_'.join(localtime.split(' '))
         localtime = '-'.join(localtime.split(':'))
+
+        self.linear_score_generator(range(len(
+            self.orig_info)), self.orig_info, self.feat_part_names, name='original', start=0)
 
         ordered_sequences = []
 
@@ -351,19 +358,12 @@ class Application(QtCore.QObject):
         ordered_sequences.sort(key=lambda tup: tup[1])
 
         for i, (sequence, dist) in enumerate(ordered_sequences):
-            sequenced_events = [LinearEvent(
-                from_list=self.orig_info[state-1], features=self.feat_part_names) for state in sequence]
-            if len(sequenced_events) > 0:
-                score = ScoreConversor()
-                score.parse_events(
-                    sequenced_events, new_part=True, new_voice=True)
-                # score.stream.show()
-                name = 'gen_' + localtime + '_' + \
-                    str(i) + '_distance_' + str(dist) + '.xml'
-                path = os.sep.join([os.getcwd(), 'data', 'generations', name])
-                fp = score.stream.write(fp=path)
+            name = 'gen_' + localtime + '_' + \
+                str(i) + '_distance_' + str(dist) + '.xml'
+            self.linear_score_generator(
+                sequence, self.orig_info, self.feat_part_names, name=name)
 
-    def construct_oracles(self):
+    def construct_multi_oracles(self):
         """
         Construct Multiple Oracles from Information
         """
@@ -436,7 +436,7 @@ class Application(QtCore.QObject):
 
     def generate_from_multiple(self, num_seq):
         """
-        Generate from a multiple oracle
+        Generate Sequences From a Multiple Oracle
         """
         original_sequences = {}
         for key, part in self.orig_info.items():
@@ -472,6 +472,17 @@ class Application(QtCore.QObject):
 
         path = os.sep.join([os.getcwd(), 'data', 'generations', name + '.xml'])
         fp = score.stream.write(fp=path)
+
+    def linear_score_generator(self, sequence, o_information, feature_names, name='', start=-1):
+        sequenced_events = [LinearEvent(
+            from_list=o_information[state+start], features=feature_names) for state in sequence]
+        if len(sequenced_events) > 0:
+            score = ScoreConversor()
+            score.parse_events(
+                sequenced_events, new_part=True, new_voice=True)
+            # score.stream.show()
+            path = os.sep.join([os.getcwd(), 'data', 'generations', name])
+            fp = score.stream.write(fp=path)
 
     def get_columns_from_weights(self, weights, fixed_weights, features_names):
         """

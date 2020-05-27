@@ -169,11 +169,11 @@ class LineParser:
         Parses the duration info for an event
         """
         self.events[index].add_viewpoint(
-            'length', note_or_rest.duration.quarterLength, 'duration')
+            'duration.length', note_or_rest.duration.quarterLength)
         self.events[index].add_viewpoint(
             'duration.type', note_or_rest.duration.type)
         self.events[index].add_viewpoint(
-            'dots', note_or_rest.duration.dots, 'duration')
+            'duration.dots', note_or_rest.duration.dots)
 
         if note_or_rest.duration.isGrace:
             self.events[index].add_viewpoint(

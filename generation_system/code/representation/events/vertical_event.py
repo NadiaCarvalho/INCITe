@@ -3,6 +3,8 @@
 This script presents the class VerticalEvent
 that represents a vertical (harmonic) event in a piece of music
 """
+from fractions import Fraction
+
 import representation.events.utils as utils
 from representation.events.event import Event
 
@@ -87,7 +89,7 @@ class VerticalEvent(Event):
 
         features_dict = {}
         if offset:
-            features_dict['offset'] = self.offset_time
+            features_dict['offset'] = float(self.offset_time)
 
         for feat in features:
             content = None
@@ -95,8 +97,10 @@ class VerticalEvent(Event):
             if views != []:
                 content = viewpoints_flat[views[0]]
 
-            # add features that are arrays
-            if (content is not None and
+            # add features that are arrays~
+            if isinstance(content, Fraction):
+                features_dict[feat] = float(content)
+            elif (content is not None and
                     any(s in ARRAY_VALUES for s in feat.split('.'))):
                 for a_feat in enumerate(content):
                     if isinstance(a_feat, tuple):

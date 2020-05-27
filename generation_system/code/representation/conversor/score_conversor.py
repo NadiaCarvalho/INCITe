@@ -44,16 +44,6 @@ class ScoreConversor:
 
         for event in events:
 
-
-            if new_voice and event.get_viewpoint('fib') and len(measures) > 0:
-                # measures[-1].makeNotation(inPlace=True)
-                measures[-1].append(voice)
-                voice = music21.stream.Voice(id=self.last_voice_id)
-            if (len(measures) == 0 or event.get_viewpoint('fib')
-                    or measures[-1].barDurationProportion(barDuration=bar_duration) == 1.0):
-                # measures[-1].makeNotation(inPlace=True)
-                measures.append(music21.stream.Measure())
-
             instrument = event.get_viewpoint('instrument')
             if instrument is None:
                 instrument = music21.instrument.Instrument()
@@ -82,6 +72,15 @@ class ScoreConversor:
                         number=metro_value,
                         referent=music21.note.Note(type=event.get_viewpoint('ref.type'))))
                 last_metro_value = metro_value
+
+            if new_voice and event.get_viewpoint('fib') and len(measures) > 0:
+                measures[-1].append(voice)
+                voice = music21.stream.Voice(id=self.last_voice_id)
+            # if len(measures) > 0:
+            #     measures[-1].makeNotation(inPlace=True, meterStream=bar_duration)
+            if (len(measures) == 0 or event.get_viewpoint('fib')
+                    or measures[-1].barDurationProportion(barDuration=bar_duration) == 1.0):
+                measures.append(music21.stream.Measure(number=len(measures)))
 
             note = None
             if event.is_rest():
@@ -121,12 +120,12 @@ class ScoreConversor:
                     measure.append(v)
 
         # music21.stream.makeNotation.makeMeasures(stream, inPlace=True, searchContext=True)
+        stream.makeNotation(inPlace=True)
 
         if new_voice:
             self.last_voice_id += 1
         if new_part:
             self.stream.append(stream)
-
         return self.stream
 
     def convert_note_event(self, event):
@@ -148,6 +147,10 @@ class ScoreConversor:
             pitch, quarterLength=event.get_viewpoint('duration.length'),
             type=event.get_viewpoint('duration.type'),
             dots=event.get_viewpoint('duration.dots'))
+
+        if event.get_viewpoint('duration.length') == 1.0/3 or event.get_viewpoint('duration.length') == 1.0/6:
+            note = music21.note.Note(
+                pitch, quarterLength=event.get_viewpoint('duration.length'))
 
         if event.is_chord():
             note = music21.chord.Chord([music21.pitch.Pitch(p) for p in event.get_viewpoint(

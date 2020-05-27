@@ -4,15 +4,11 @@ Main Window for Interface
 
 import sys
 
-from PyQt5 import Qt, QtGui, QtWidgets, QtCore
+from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
+from interface.components.qline import QHLine
 from interface.menus.menu import MyMenu
 
-class QHLine(QtWidgets.QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QtWidgets.QFrame.HLine)
-        self.setFrameShadow(QtWidgets.QFrame.Sunken)
 
 class ThirdMenu(MyMenu):
     """
@@ -65,8 +61,7 @@ class ThirdMenu(MyMenu):
 
         layout.addRow(radio_button_1, radio_button_2)
 
-        line_splitter = QHLine()
-        layout.addWidget(line_splitter)
+        layout.addWidget(QHLine())
 
         label_1 = QtWidgets.QLabel("Part from Which to Generate:")
         label_1.setStyleSheet("""color: black; font: bold 16px;""")
@@ -82,8 +77,7 @@ class ThirdMenu(MyMenu):
         button_box.clicked.connect(self.create_oracle)
         layout.addWidget(button_box)
 
-        line_splitter = QHLine()
-        layout.addWidget(line_splitter)
+        layout.addWidget(QHLine())
 
         widget.setLayout(layout)
         return widget

@@ -3,6 +3,8 @@
 This script presents the class LinearEvent
 that represents a linear (melodic) event in a piece of music
 """
+from fractions import Fraction
+
 import music21
 
 import representation.events.utils as utils
@@ -69,8 +71,8 @@ class LinearEvent(Event):
                 'clef': str(music21.clef.TrebleClef().sign) + str(music21.clef.TrebleClef().line),
             },
             'pitch': {
-                'cpitch': 60.0,
-                'dnote': 'C',  # DNOTES dict values
+                'cpitch': None,
+                'dnote': None,  # DNOTES dict values
                 'octave': 4,
                 'accidental': music21.pitch.Accidental('natural').modifier,
                 'microtonal': 0.0,
@@ -196,7 +198,7 @@ class LinearEvent(Event):
 
         features_dict = {}
         if offset:
-            features_dict['offset'] = self.offset_time
+            features_dict['offset'] = float(self.offset_time)
 
         for feat in features:
             content = None
@@ -205,13 +207,18 @@ class LinearEvent(Event):
                 content = viewpoints_flat[views[0]]
 
             # add features that are arrays
-            if content is not None and any(s in ARRAY_VALUES for s in feat.split('.')):
+            if isinstance(content, Fraction):
+                features_dict[feat] = float(content)
+            elif content is not None and any(s in ARRAY_VALUES for s in feat.split('.')):
                 for a_feat in enumerate(content):
                     if isinstance(a_feat, tuple):
                         a_feat = a_feat[1]
                     features_dict[feat + '_' + a_feat] = True
             elif 'dnote' in feat:
-                features_dict[feat] = utils.convert_note_name(content)
+                if content is None:
+                    features_dict[feat] = None
+                else:
+                    features_dict[feat] = utils.convert_note_name(content)
             elif 'instrument' in feat:
                 features_dict[feat] = content.instrumentName
             else:

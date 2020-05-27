@@ -270,11 +270,11 @@ class MusicParser:
         to_dump = {
             'part_events': {},
             'vertical_events': [
-                dict(event) for event in self.music_events['vertical_events']]
+                event.to_feature_dict() for event in self.music_events['vertical_events']]
         }
 
         for key, part in self.music_events['part_events'].items():
-            to_dump['part_events'][key] = [dict(event) for event in part]
+            to_dump['part_events'][key] = [event.to_feature_dict() for event in part]
 
         with open(file_path + '.json', 'w') as handle:
             json.dump(to_dump, handle, indent=indent)

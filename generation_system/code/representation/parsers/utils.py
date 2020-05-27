@@ -20,28 +20,32 @@ def seq_int(midi_viewpoint_1, midi_viewpoint_2):
     """
     Returns the difference between two midi values
     """
-    return midi_viewpoint_1 - midi_viewpoint_2
+    if midi_viewpoint_1 is not None and midi_viewpoint_2 is not None:
+        return midi_viewpoint_1 - midi_viewpoint_2
+    return None
 
 
 def contour(midi_viewpoint_1, midi_viewpoint_2):
     """
     Returns the signal between two midi values
     """
-    return sign(midi_viewpoint_1 - midi_viewpoint_2)
-
+    if midi_viewpoint_1 is not None and midi_viewpoint_2 is not None:
+        return sign(midi_viewpoint_1 - midi_viewpoint_2)
+    return None
 
 def contour_hd(midi_viewpoint_1, midi_viewpoint_2):
     """
     Returns a quantized difference between two midi values
     Defined in (Mullensiefen and Frieler, 2004a)
     """
-    result = midi_viewpoint_1 - midi_viewpoint_2
-    values = [1, 3, 5, 8]
-    for count, ele in enumerate(values):
-        if result < ele:
-            return sign(result)*count
-    return int(0)
-
+    if midi_viewpoint_1 is not None and midi_viewpoint_2 is not None:
+        result = midi_viewpoint_1 - midi_viewpoint_2
+        values = [1, 3, 5, 8]
+        for count, ele in enumerate(values):
+            if result < ele:
+                return sign(result)*count
+        return int(0)
+    return None
 
 def is_intervalic_difference(seq_int_1, sign_1, seq_int_2, sign_2):
     """
@@ -180,5 +184,4 @@ def instrument_for_voices(instrument):
             real_in = music21.instrument.fromString(instrument)
         except music21.exceptions21.InstrumentException:
             print("Can't convert from this instrument: " + instrument)
-
     return real_in

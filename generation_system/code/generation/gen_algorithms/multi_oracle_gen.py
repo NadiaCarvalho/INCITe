@@ -51,7 +51,7 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
             else:
                 print('SFXS BEST LRSS')
                 key, sym = jump_best_lrss(
-                    sfxs, rsfxs, lrss, max_size, ktraces, ks_at_k, offsets)
+                    sfxs, rsfxs, lrss, max_size, ktraces, ks_at_k, offsets, principal_key)
                 sym_1 = sym + 1
         else:
             if all(ks < len(sfxs[key]) - 1 for key, ks in ks_at_k.items()):
@@ -68,9 +68,10 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
         keys_at_last_k = ks_at_k
         if sym_1 is not None:
             keys_at_last_k = next_keys
-            next_keys =_find_ks(offsets, key, sym_1)
+            next_keys = _find_ks(offsets, key, sym_1)
 
-        print('OK: ' + str(dict([(key, len(part)) for key, part in sfxs.items()])))
+        print('OK: ' + str(dict([(key, len(part))
+                                 for key, part in sfxs.items()])))
         print('NK: ' + str(next_keys))
         print('LK: ' + str(keys_at_last_k))
 
@@ -85,7 +86,8 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
                     ktraces[key].append(next_keys[key])
             elif key in keys_at_last_k:
                 next_k_princ = keys_at_last_k[principal_key]
-                next_k = _find_nearest_k(offsets, key, offsets[principal_key][next_k_princ])
+                next_k = _find_nearest_k(
+                    offsets, key, offsets[principal_key][next_k_princ])
                 for i in range(abs(next_k - keys_at_last_k[key])):
                     sequences[key].append(keys_at_last_k[key] + i + 1)
                     ktraces[key].append(keys_at_last_k[key] + i + 1)
@@ -115,30 +117,36 @@ def choose_from_sfxs_k(k, sfxs, ks_at_k, offsets, principal_key):
     return pr_key, sym
 
 
-def copy_transitions(k, trns, sfxs, ks_at_k, ktraces, offsets, principal_key):
+def copy_transitions(k, trns, sfxs, ks_at_k, ktraces, offsets, principal_key, i=0):
     """
     Copy forward according to possible transitions for all oracles
     """
     I = get_f_transitions_by_oracle(
         trns, _find_ks(offsets, principal_key, k), offsets)
 
+    if i > 5:
+        return choose_from_sfxs_k(k, sfxs, ks_at_k, offsets, principal_key)
+
     if len(I) == 0:
         key_pr, sym = choose_from_sfxs_k(
             k, sfxs, ks_at_k, offsets, principal_key)
         new_ks = _find_ks(offsets, key_pr, sym)
         _ = [ktraces[key].append(value) for key, value in new_ks.items()]
-        return copy_transitions(new_ks[principal_key], trns, sfxs, ks_at_k, ktraces, offsets, principal_key)
+        return copy_transitions(new_ks[principal_key], trns, sfxs, ks_at_k, ktraces, offsets, principal_key, i+1)
 
     return I[int(np.floor(random.random() * len(I)))]
 
 
-def jump_best_lrss(sfxs, rsfxs, lrss, max_size, ktraces, ks_at_k, offsets):
+def jump_best_lrss(sfxs, rsfxs, lrss, max_size, ktraces, ks_at_k, offsets, principal_key):
     """
     Get Best Suffix to Jump
     """
     _ = [ktraces[key].append(value) for key, value in ks_at_k.items()]
-    return get_next_suffix(
+    key, sym = get_next_suffix(
         sfxs, rsfxs, lrss, max_size, ks_at_k, offsets)
+    if key == '':
+        key = principal_key
+    return key, sym
 
 
 def get_sim_trans(I, offsets, key):

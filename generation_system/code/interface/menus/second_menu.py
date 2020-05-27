@@ -3,18 +3,13 @@ Main Window for Interface
 """
 
 import sys
+import textwrap
 
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
+from interface.components.qline import QHLine
 from interface.menus.menu import MyMenu
 from representation.events.viewpoint_description import DESCRIPTION
-
-
-class QHLine(QtWidgets.QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QtWidgets.QFrame.HLine)
-        self.setFrameShadow(QtWidgets.QFrame.Sunken)
 
 
 class ShowStatsWidget(QtWidgets.QWidget):
@@ -32,25 +27,8 @@ class ShowStatsWidget(QtWidgets.QWidget):
         self.vbox.setAlignment(QtCore.Qt.AlignTop)
         self.vbox.setContentsMargins(5, 5, 5, 5)
 
-        splited_name = self.name.split('.')
-
-        if len(splited_name) > 2:
-            part = " -> ".join(splited_name[0:2])
-            new_part = " -> ".join(splited_name[2:])
-            self.lbl = QtWidgets.QLabel("\n-> ".join([part, new_part]))
-        else:
-            self.lbl = QtWidgets.QLabel(" -> ".join(splited_name))
-
-        self.lbl.setStyleSheet("""color: blue; font: bold 18px;""")
-        self.vbox.addWidget(self.lbl)   # Add the label to the layout
-
-        self.lbl_2 = QtWidgets.QLabel(self.description)
-        self.lbl_2.setStyleSheet("""color: black; font: bold 15px;""")
-        self.vbox.addWidget(self.lbl_2)   # Add the label to the layout
-
-        line_splitter = QHLine()
-        self.vbox.addWidget(line_splitter)
-
+        self.set_name_and_description()
+        self.vbox.addWidget(QHLine())
         for key, stat in statistics.items():
             if key == 'weight':
                 self.weight = stat
@@ -60,42 +38,70 @@ class ShowStatsWidget(QtWidgets.QWidget):
                 self.vbox.addWidget(self.handle_stat(
                     key, stat, QtWidgets.QLabel('')))
 
-        line_splitter = QHLine()
-        self.vbox.addWidget(line_splitter)
+        self.vbox.addWidget(QHLine())
+        self.set_weight_box()
+        self.set_fixed_box()
+        self.setLayout(self.vbox)
+
+    def set_name_and_description(self):
+        """
+        Set name of Viewpoint and its description
+        """
+        splited_name = self.name.split('.')
+        name = " -> ".join(splited_name)
+        if len(splited_name) > 2:
+            part = " -> ".join(splited_name[0:2])
+            new_part = " -> ".join(splited_name[2:])
+            name = "\n-> ".join([part, new_part])
+
+        self.lbl = QtWidgets.QLabel(name)
+        self.lbl.setStyleSheet("""color: blue; font: bold 18px;""")
+        self.vbox.addWidget(self.lbl)   # Add the label to the layout
+
+        wrapped_description = '\n'.join(textwrap.wrap(self.description, 30))
+        self.lbl_2 = QtWidgets.QLabel(wrapped_description)
+        self.lbl_2.setStyleSheet("""color: black; font: bold 15px;""")
+        self.vbox.addWidget(self.lbl_2)   # Add the label to the layout
+
+    def set_weight_box(self):
+        """
+        Create Weight Box
+        """
+        hor_box = QtWidgets.QHBoxLayout()
+        hor_box.setAlignment(QtCore.Qt.AlignLeft)
+        hor_box.setContentsMargins(5, 5, 5, 5)
 
         label = QtWidgets.QLabel('Choose Weight: ')
         label.setStyleSheet(
-            """color: blue; font: bold 18px; margin-top: 5px""")
-        self.vbox.addWidget(label)
+            """color: blue; font: bold 16px; """)
 
         self.weight_box = QtWidgets.QSpinBox(self)
         self.weight_box.setMaximum(100)
-        self.weight_box.setFixedWidth(100)
+        self.weight_box.setFixedWidth(80)
         self.weight_box.setValue(self.weight)
         self.weight_box.setStyleSheet(
-            """color: blue; font: bold 18px;""")
+            """color: black; font: bold 16px; """)
         self.weight_box.valueChanged.connect(self.change_weight)
-        self.vbox.addWidget(self.weight_box)
 
+        label.setBuddy(self.weight_box)
+        hor_box.addWidget(label)
+        hor_box.addWidget(self.weight_box)
+
+        self.vbox.addLayout(hor_box)
+
+    def set_fixed_box(self):
+        """
+        Create Fixed Box
+        """
         hbox = QtWidgets.QHBoxLayout()
-        hbox.setAlignment(QtCore.Qt.AlignTop)
+        hbox.setAlignment(QtCore.Qt.AlignLeft)
         hbox.setContentsMargins(5, 5, 5, 5)
 
         f_label = QtWidgets.QLabel('Fixed Weight ?')
         f_label.setStyleSheet(
-            """color: blue; font: bold 18px;""")
+            """color: blue; font: bold 16px;""")
 
         self.fixed_box = QtWidgets.QCheckBox(self)
-        # self.fixed_box.setStyleSheet(
-        #     """QCheckBox::indicator
-        #         {
-        #         border : 1px solid black;
-        #         width : 20px;
-        #         height : 20px;
-        #         background: white;
-        #         color: blue;
-        #         font: bold 18px;
-        #         }""")
         self.fixed_box.stateChanged.connect(self.change_fixed_status)
 
         f_label.setBuddy(self.fixed_box)
@@ -103,8 +109,6 @@ class ShowStatsWidget(QtWidgets.QWidget):
         hbox.addWidget(self.fixed_box)
 
         self.vbox.addLayout(hbox)
-
-        self.setLayout(self.vbox)
 
     def change_weight(self, value):
         """
@@ -141,7 +145,6 @@ class ShowStatsWidget(QtWidgets.QWidget):
             label.setWordWrap(True)
             if 'percentage' in key:
                 label.setText(label.text() + ' %')
-
         return label
 
     def change_stats(self, stats):
@@ -256,13 +259,13 @@ class SecondMenu(MyMenu):
             # Initialize tab screen
             tabs = QtWidgets.QTabWidget()
             self.tab_parts = self.create_statistics_folder('parts',
-                statistics['parts'], tabs)
-            self.tab_vertical = self.create_statistics_folder('vertical',
-                statistics['vertical'], tabs)
-
-            # Add tabs
+                                                           statistics['parts'], tabs)
             tabs.addTab(self.tab_parts, "Part Events")
-            tabs.addTab(self.tab_vertical, "Vertical Events")
+
+            if 'vertical' in statistics:
+                self.tab_vertical = self.create_statistics_folder('vertical',
+                                                                statistics['vertical'], tabs)
+                tabs.addTab(self.tab_vertical, "Vertical Events")
 
             # Add tabs to widget
             self.container.layout().addWidget(tabs)
@@ -283,7 +286,8 @@ class SecondMenu(MyMenu):
         for key, description in DESCRIPTION[type].items():
             if key in statistics:
                 list_wid.addItem(key)
-                information_view.addWidget(ShowStatsWidget(key, statistics[key], description))
+                information_view.addWidget(ShowStatsWidget(
+                    key, statistics[key], description))
 
         information_view.setCurrentIndex(10)
         main_widget.layout().addWidget(list_wid, 0, 0, 1, 1)
@@ -294,17 +298,12 @@ class SecondMenu(MyMenu):
         """
         To Override
         """
-        weights_dict = {
-            'parts': {},
-            'vertical': {},
-        }
-
-        fixed_dict = {
-            'parts': {},
-            'vertical': {},
-        }
+        weights_dict = {}
+        fixed_dict = {}
 
         if self.tab_parts:
+            weights_dict['parts'] = {}
+            fixed_dict['parts'] = {}
             part_widget = self.tab_parts.children()[2]
             for i in range(part_widget.count()):
                 widget = part_widget.widget(i)
@@ -313,6 +312,8 @@ class SecondMenu(MyMenu):
                     fixed_dict['parts'][widget.name] = widget.is_fixed
 
         if self.tab_vertical:
+            weights_dict['vertical'] = {}
+            fixed_dict['vertical'] = {}
             vertical_widget = self.tab_vertical.children()[2]
             for i in range(vertical_widget.count()):
                 widget = vertical_widget.widget(i)
@@ -321,5 +322,6 @@ class SecondMenu(MyMenu):
                     fixed_dict['vertical'][widget.name] = widget.is_fixed
 
         main_window = self.parentWidget().parentWidget()
-        main_window.application.apply_viewpoint_weights(weights_dict, fixed_dict)
+        main_window.application.apply_viewpoint_weights(
+            weights_dict, fixed_dict)
         main_window.wids[main_window.front_wid + 1].set_maximum_spinbox()
