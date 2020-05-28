@@ -533,6 +533,32 @@ class Application(QtCore.QObject):
             'offsets': ev_offsets
         }
 
+    def generate_sequences_multiple(self, information, num_seq):
+        """
+        Generate Sequences
+        """
+        ordered_sequences = []
+
+        i = 0
+        while i < num_seq:
+            sequences, ktraces = multi_gen.sync_generate(
+                information['oracles'], information['offsets'], seq_len=50, p=0.5, k=0)
+
+            if all(len(sequence) > 0 for sequence in sequences.values()):
+                distances = []
+                for key, sequence in sequences.items():
+                    distances.append(distance_between_windowed_features(
+                        [information['normed_features'][key][state-1]
+                            for state in sequence],
+                        information['normed_features'][key]))
+
+                ordered_sequences.append(
+                    (sequences, sum(distances)/len(distances)))
+                i += 1
+
+        ordered_sequences.sort(key=lambda tup: tup[1])
+        return ordered_sequences
+
     def generate_from_multiple(self, num_seq):
         """
         Generate Sequences From a Multiple Oracle
@@ -550,13 +576,16 @@ class Application(QtCore.QObject):
         localtime = time.asctime(time.localtime(time.time()))
         localtime = '_'.join(localtime.split(' '))
         localtime = '-'.join(localtime.split(':'))
-        for i in range(num_seq):
-            sequences, ktraces = multi_gen.sync_generate(
-                information['oracles'], information['offsets'], seq_len=50, p=0.5, k=0)
+
+        ordered_sequences = self.generate_sequences_multiple(
+            information, num_seq)
+        for i, (sequence, dist) in enumerate(ordered_sequences):
+            name = 'gen_' + localtime + '_' + \
+                str(i) + '_distance_' + str(dist) + '.xml'
             self.multi_sequence_score_generator(
-                sequences, information['original_features'],
+                sequence, information['original_features'],
                 information['features_names'],
-                name='gen_' + localtime + '_' + str(i))
+                name=name)
 
     def multi_sequence_score_generator(self, sequences, o_information, feature_names, name='', start=-1):
         """
