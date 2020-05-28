@@ -136,6 +136,7 @@ class MusicParser:
         Process a part that has overlappings
         """
         max_voice_count = voice_utils.get_number_voices(part)
+
         for measure in list(part.recurse(classFilter='Measure')):
             measure.flattenUnnecessaryVoices(inPlace=True)
             if measure.hasVoices():
@@ -144,7 +145,7 @@ class MusicParser:
                 voice_utils.make_voices(measure, in_place=True,
                                         number_voices=max_voice_count)
 
-        part.flattenUnnecessaryVoices(inPlace=True)
+        #part.flattenUnnecessaryVoices(inPlace=True)
         new_parts = part.voicesToParts()
         for j, voice in enumerate(new_parts.parts):
             voice.append(real_in)

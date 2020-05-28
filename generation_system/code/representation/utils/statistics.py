@@ -66,3 +66,25 @@ def get_percentage_from_statistics(statistic_dict, len_events):
             'variance': round(np.var(unique_percentages), 2),
         }
     return new_stats_dict
+
+
+def calculate_part_weights(statistic_dict, key_stats='parts'):
+    """
+    To Reuse code
+    """
+    if key_stats in statistic_dict:
+        variances_parts = dict([(key, stats['variance'])
+                                for key, stats in statistic_dict[key_stats].items()])
+        variances_parts = utils.normalize_dictionary(
+            variances_parts, x_min=0, x_max=100)
+        for key, stats in statistic_dict[key_stats].items():
+            stats['weight'] = variances_parts[key]
+            stats['fixed'] = False
+
+
+def calculate_automatic_viewpoints(statistic_dict):
+    """
+    Calculate Automatic Weights from Statistics
+    """
+    calculate_part_weights(statistic_dict)
+    calculate_part_weights(statistic_dict, 'vertical')

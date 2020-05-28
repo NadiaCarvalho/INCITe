@@ -52,9 +52,14 @@ class Application(QtCore.QObject):
             'line': {},
             'vertical': {}
         }
-
-        # Music Generated
-        self.generation_sequences = {}
+        self.music_information = {
+            'parts': {},
+            'vertical': {}
+        }
+        self.oracles_information = {
+            'single_oracle': {},
+            'multiple_oracles': {}
+        }
 
     def parse_files(self, filenames, interface):
         """
@@ -113,64 +118,75 @@ class Application(QtCore.QObject):
                         music_parser.from_pickle(name, root.split(os.sep))
                         self.music[name] = (music_parser, folder, True)
 
+    def process_music(self):
+        """
+        Process Music To Learn Statistics
+        And Construct Oracles
+        """
+        self.indexes_first = {}
+
+        parts_features = []
+        vertical_features = []
+
+        for music, _tuple in self.music.items():
+            parser = _tuple[0]
+            self.indexes_first[music] = {}
+
+            # For each music, process all parts
+            for key, part in parser.get_part_events().items():
+                if 'parts' not in self.indexes_first[music]:
+                    self.indexes_first[music]['parts'] = []
+                if len(part) > 0:
+                    self.indexes_first[music]['parts'].append(len(
+                        parts_features))
+                    parts_features.extend(part)
+
+            # For each music, process vertical part, if exists
+            vertical_part = parser.get_vertical_events()
+            if vertical_part is not None or vertical_part is not []:
+                self.indexes_first[music]['vertical'] = len(
+                    vertical_features)
+                vertical_features.extend(vertical_part)
+
+        return parts_features, vertical_features
+
+    def return_statistics_part(self, key_part, features, statistic_dict):
+        """
+        Generate Statistic from Information
+        """
+        if len(features) > 0:
+            # Calculate Statistics
+            stats, original, feat_names = statistics.statistic_features(
+                features)
+
+            # Save Information
+            information = self.music_information[key_part]
+            information['original_features'] = original
+            information['original_features_names'] = feat_names
+            statistic_dict[key_part] = stats
+
+    def get_statistics(self, part_features, vertical_features):
+        """
+        Calculate Statistics From Processed Music
+        """
+        statistic_dict = {}
+        self.return_statistics_part('parts', part_features, statistic_dict)
+        self.return_statistics_part(
+            'vertical', vertical_features, statistic_dict)
+        return statistic_dict
+
     def calculate_statistics(self, interface, calc_weights=False):
         """
         Calculate Statistics For Viewpoints
         """
         self.indexes_first = {}
 
-        entire_part_music_to_learn_statistics = []
-        vertical_music_to_learn = []
-
-        for music, _tuple in self.music.items():
-            parser = _tuple[0]
-            self.indexes_first[music] = {}
-
-            for key, part in parser.get_part_events().items():
-                if 'parts' not in self.indexes_first[music]:
-                    self.indexes_first[music]['parts'] = []
-                if len(part) > 0:
-                    self.indexes_first[music]['parts'].append(len(
-                        entire_part_music_to_learn_statistics))
-                    entire_part_music_to_learn_statistics.extend(part)
-
-            vertical_part = parser.get_vertical_events()
-            if vertical_part is not None or vertical_part is not []:
-                self.indexes_first[music]['vertical'] = len(
-                    vertical_music_to_learn)
-                vertical_music_to_learn.extend(vertical_part)
-
-        statistic_dict = {}
-
-        statistic_part_dict_percentages, self.part_features, self.part_features_names = statistics.statistic_features(
-            entire_part_music_to_learn_statistics)
-
-        statistic_dict['parts'] = statistic_part_dict_percentages
-
-        if len(vertical_music_to_learn) > 0:
-            statistic_vert_dict_percentages, self.vertical_features, self.vert_features_names = statistics.statistic_features(
-                vertical_music_to_learn)
-            statistic_dict['vertical'] = statistic_vert_dict_percentages
+        part_features, vertical_features = self.process_music()
+        statistic_dict = self.get_statistics(part_features, vertical_features)
 
         # TODO: Calculate measurement for better viewpoints
         if calc_weights:
-            variances_parts = dict([(key, stats['variance'])
-                                    for key, stats in statistic_dict['parts'].items()])
-            variances_parts = rep_utils.normalize_dictionary(
-                variances_parts, x_min=0, x_max=100)
-
-            for key, stats in statistic_dict['parts'].items():
-                stats['weight'] = variances_parts[key]
-                stats['fixed'] = False
-
-            if 'vertical' in statistic_dict:
-                variances_vert = dict([(key, stats['variance'])
-                                       for key, stats in statistic_dict['vertical'].items()])
-                variances_vert = rep_utils.normalize_dictionary(
-                    variances_vert, x_min=0, x_max=100)
-                for key, stats in statistic_dict['vertical'].items():
-                    stats['weight'] = variances_vert[key]
-                    stats['fixed'] = False
+            statistics.calculate_automatic_viewpoints(statistic_dict)
 
         if interface is not None:
             self.signal_viewpoints.connect(
@@ -179,10 +195,11 @@ class Application(QtCore.QObject):
         else:
             return statistic_dict
 
-    def apply_viewpoint_weights(self, weight_dict, fixed_dict):
+    def process_weights(self, weight_dict, fixed_dict):
         """
-        Apply Choosen Weights
+        Process Incoming Weights
         """
+        # Non incoming weights
         if weight_dict['parts'] == {} and weight_dict['vertical'] == {}:
             statistics_dict = self.calculate_statistics(None, True)
             for key, stats in statistics_dict['parts'].items():
@@ -191,64 +208,6 @@ class Application(QtCore.QObject):
                 weight_dict['vertical'][key] = stats['weight']
 
         self.model_viewpoints = weight_dict
-
-        self.segmentation_viewpoints = {
-            'parts': {'fermata': 1, 'basic.rest': 1},
-            'vertical': None}
-        # TODO: Decide from the ones incoming
-
-        max_weight = max(list(weight_dict['parts'].values()))
-        res_weights = {
-            'derived.intphrase': max_weight,
-            'phrase.boundary': max_weight,
-            'phrase.length': max_weight
-        }
-        self.process_and_segment_parts(res_weights)
-
-        part_columns, non_norm_part_weights, self.fixed_part_weights, self.feat_part_names = self.get_columns_from_weights(
-            self.model_viewpoints['parts'], fixed_dict['parts'], self.part_features_names)
-        self.sel_part_o_feats = self.part_features[:, part_columns]
-        self.normed_part_feats = rep_utils.normalize(
-            self.sel_part_o_feats, -1, 1)
-        self.normalized_part_weights = rep_utils.normalize_weights(
-            non_norm_part_weights)
-
-        if 'vertical' in self.model_viewpoints:
-            vertical_cols, non_norm_vert_weights, self.fixed_vert_weights, self.feat_vert_names = self.get_columns_from_weights(
-                self.model_viewpoints['vertical'], fixed_dict['vertical'], self.vert_features_names)
-            self.sel_vert_o_feats = self.vertical_features[:,
-                                                           vertical_cols]
-            self.normed_vertical_feats = rep_utils.normalize(
-                self.sel_vert_o_feats, -1, 1)
-            self.normalized_vert_weights = rep_utils.normalize_weights(
-                non_norm_vert_weights)
-
-    def process_and_segment_parts(self, res_weights):
-        """
-        Segment Parts and join segmentation
-        information to part features,
-        not yet normalized
-        """
-        index_of_res_weights = [self.part_features_names.index(
-            key) for key in res_weights.keys() if key in self.part_features_names]
-        for music, _tuple in self.music.items():
-            parser = _tuple[0]
-            vertical_offsets = None
-            if parser.get_vertical_events() is not None:
-                vertical_offsets = [ev.get_offset()
-                                    for ev in parser.get_vertical_events()]
-            number_part = 0
-            for key, events in parser.get_part_events().items():
-                if len(events) > 0:
-                    self.part_segmentation(
-                        events, vertical_offsets, parser.get_vertical_events())
-                    features, _ = rep_utils.create_feat_array(
-                        events, res_weights, False)
-                    first_ind = self.indexes_first[music]['parts'][number_part]
-                    last_ind = first_ind + len(events)
-                    self.part_features[first_ind:last_ind,
-                                       index_of_res_weights] = features
-                    number_part += 1
 
     def part_segmentation(self, events, vertical_offsets, vertical_events):
         """
@@ -266,6 +225,91 @@ class Application(QtCore.QObject):
             segmentation(
                 events, weights_line=self.segmentation_viewpoints['parts'])
         apply_segmentation_info(events)
+
+    def process_and_segment_parts(self, res_weights):
+        """
+        Segment Parts and join segmentation
+        information to part features,
+        not yet normalized
+        """
+        part_features = self.music_information['parts']['original_features']
+        part_features_names = self.music_information['parts']['original_features_names']
+
+        index_of_res_weights = [part_features_names.index(
+            key) for key in res_weights.keys() if key in part_features_names]
+
+        for music, _tuple in self.music.items():
+            parser = _tuple[0]
+            vertical_offsets = None
+
+            # If vertical Elements exist, use them to calculate Segmentation
+            if parser.get_vertical_events() is not None:
+                vertical_offsets = [ev.get_offset()
+                                    for ev in parser.get_vertical_events()]
+
+            number_part = 0
+            for key, events in parser.get_part_events().items():
+                if len(events) > 0:
+                    # Segment Part
+                    self.part_segmentation(
+                        events, vertical_offsets, parser.get_vertical_events())
+
+                    # Get Features For Weights
+                    features, _ = rep_utils.create_feat_array(
+                        events, res_weights, False)
+                    first_ind = self.indexes_first[music]['parts'][number_part]
+                    last_ind = first_ind + len(events)
+                    part_features[first_ind:last_ind,
+                                  index_of_res_weights] = features
+                    number_part += 1
+
+    def segment(self, weight_dict):
+        """
+        Segment Music
+        """
+        self.segmentation_viewpoints = {
+            'parts': {'fermata': 1, 'basic.rest': 1},
+            'vertical': None}
+        # TODO: Decide from the ones incoming
+
+        max_weight = max(list(weight_dict['parts'].values()))
+        res_weights = {
+            'derived.intphrase': max_weight,
+            'phrase.boundary': max_weight,
+            'phrase.length': max_weight
+        }
+        self.process_and_segment_parts(res_weights)
+
+    def prepare_parts(self, fixed_dict, key_part):
+        """
+        Prepare Parts
+        """
+        if key_part in self.model_viewpoints:
+            information = self.music_information[key_part]
+
+            cols, weights, fixed_weights, feature_names = self.get_columns_from_weights(
+                self.model_viewpoints[key_part],
+                fixed_dict[key_part],
+                information['original_features_names'])
+
+            information['fixed_weights'] = fixed_weights
+            information['selected_features_names'] = feature_names
+
+            sel_part_features = information['original_features'][:, cols]
+            information['selected_original'] = sel_part_features
+            information['selected_normed'] = rep_utils.normalize(
+                sel_part_features, -1, 1)
+            information['normed_weights'] = rep_utils.normalize_weights(
+                weights)
+
+    def apply_viewpoint_weights(self, weight_dict, fixed_dict):
+        """
+        Apply Choosen Weights
+        """
+        self.process_weights(weight_dict, fixed_dict)
+        self.segment(weight_dict)
+        self.prepare_parts(fixed_dict, 'parts')
+        self.prepare_parts(fixed_dict, 'vertical')
 
     def generate_oracle(self, interface, line_oracle, line=0):
         """
@@ -290,93 +334,48 @@ class Application(QtCore.QObject):
         else:
             self.generate_from_multiple(num_seq)
 
-    def construct_single_oracle(self, line):
+    def get_single_part_features(self, information, line):
         """
-        Construct Oracle from Information
+        Get Part Features
         """
-        self.ev_offsets = []
-        self.normed_info_for_oracles = []
-        self.orig_info = []
+        normed_features = []
+        original_features = []
 
         for music, _tuple in self.music.items():
             parser = _tuple[0]
-            last_offset = 0
-            if self.ev_offsets != []:
-                last_offset = self.ev_offsets[-1]
 
             i = 0
             for key, events in parser.get_part_events().items():
                 if len(events) > 0 and i == line:
+
+                    # Get Start and End Indexes
                     start_index = self.indexes_first[music]['parts'][i]
                     finish_index = start_index + len(events)
-                    self.normed_info_for_oracles.extend(
-                        self.normed_part_feats[start_index:finish_index])
-                    self.orig_info.extend(
-                        self.sel_part_o_feats[start_index:finish_index])
-                    self.ev_offsets.extend(
-                        [ev.get_offset() + last_offset for ev in events])
+
+                    normed_features.extend(
+                        information['selected_normed'][start_index:finish_index])
+                    original_features.extend(
+                        information['selected_original'][start_index:finish_index])
+                    break
+                elif len(events) > 0:
                     i += 1
 
-        features_names = self.feat_part_names
-        weights = self.normalized_part_weights
-        thresh = gen_utils.find_threshold(
-            self.normed_info_for_oracles, weights=weights,
-            fixed_weights=self.fixed_part_weights,
-            dim=len(features_names), entropy=True)
-        self.oracle = gen_utils.build_oracle(
-            self.normed_info_for_oracles, flag='a', features=features_names,
-            weights=weights, fixed_weights=self.fixed_part_weights,
-            dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
+        return normed_features, original_features
 
-        image = gen_plot.start_draw(self.oracle)
-        name = r'data\myexamples\oracle' + '.PNG'
-        image.save(name)
-
-    def generate_from_single(self, num_seq):
+    def get_multiple_part_features(self, part_info, vert_info):
         """
-        Generate Music From a Single Oracle
+        Get Multiple Part Features
         """
-        localtime = time.asctime(time.localtime(time.time()))
-        localtime = '_'.join(localtime.split(' '))
-        localtime = '-'.join(localtime.split(':'))
-
-        self.linear_score_generator(range(len(
-            self.orig_info)), self.orig_info, self.feat_part_names, name='original', start=0)
-
-        ordered_sequences = []
-
-        i = 0
-        while i < num_seq:
-            sequence, kend, ktrace = gen.generate(
-                oracle=self.oracle, seq_len=100, p=0.5, k=0, LRS=3)
-            if len(sequence) > 0:
-                dist = distance_between_windowed_features(
-                    [self.normed_info_for_oracles[state-1] for state in sequence], self.normed_info_for_oracles)
-                ordered_sequences.append((sequence, dist))
-                i += 1
-
-        ordered_sequences.sort(key=lambda tup: tup[1])
-
-        for i, (sequence, dist) in enumerate(ordered_sequences):
-            name = 'gen_' + localtime + '_' + \
-                str(i) + '_distance_' + str(dist) + '.xml'
-            self.linear_score_generator(
-                sequence, self.orig_info, self.feat_part_names, name=name)
-
-    def construct_multi_oracles(self):
-        """
-        Construct Multiple Oracles from Information
-        """
-        self.orig_info = {}
-        self.normed_info_for_oracles = {}
-        self.ev_offsets = {}
+        ev_offsets = {}
+        normed_features = {}
+        original_features = {}
 
         for music, _tuple in self.music.items():
             parser = _tuple[0]
             last_offset = 0
-            if self.ev_offsets != {}:
+            if ev_offsets != {}:
                 last_offset = max([part_off[-1]
-                                   for part_off in self.ev_offsets.values()])
+                                   for part_off in ev_offsets.values()])
 
             i = 0
             for key, events in parser.get_part_events().items():
@@ -384,17 +383,18 @@ class Application(QtCore.QObject):
                     start_index = self.indexes_first[music]['parts'][i]
                     finish_index = start_index + len(events)
 
-                    if i not in self.normed_info_for_oracles:
-                        self.normed_info_for_oracles[i] = []
-                        self.ev_offsets[i] = []
-                        self.orig_info[i] = []
+                    if i not in normed_features:
+                        normed_features[i] = []
+                        ev_offsets[i] = []
+                        original_features[i] = []
 
-                    self.normed_info_for_oracles[i].extend(
-                        self.normed_part_feats[start_index:finish_index])
-                    self.orig_info[i].extend(
-                        self.sel_part_o_feats[start_index:finish_index])
-                    self.ev_offsets[i].extend(
+                    normed_features[i].extend(
+                        part_info['selected_normed'][start_index:finish_index])
+                    original_features[i].extend(
+                        part_info['selected_original'][start_index:finish_index])
+                    ev_offsets[i].extend(
                         [ev.get_offset() + last_offset for ev in events])
+
                     i += 1
 
             vertical_events = parser.get_vertical_events()
@@ -402,56 +402,161 @@ class Application(QtCore.QObject):
                 start_index = self.indexes_first[music]['vertical']
                 finish_index = start_index + len(vertical_events)
 
-                if 'vertical' not in self.normed_info_for_oracles:
-                    self.normed_info_for_oracles['vertical'] = []
-                    self.ev_offsets['vertical'] = []
+                if 'vertical' not in normed_features:
+                    normed_features['vertical'] = []
+                    ev_offsets['vertical'] = []
 
-                self.normed_info_for_oracles['vertical'].extend(
-                    self.normed_vertical_feats[start_index:finish_index])
-                self.ev_offsets['vertical'].extend(
+                normed_features['vertical'].extend(
+                    vert_info['selected_normed'][start_index:finish_index])
+                ev_offsets['vertical'].extend(
                     [ev.get_offset() + last_offset for ev in vertical_events])
 
-        self.oracles = {}
+        return normed_features, original_features, ev_offsets
 
-        for key, part in self.normed_info_for_oracles.items():
-            features_names = self.feat_part_names
-            weights = self.normalized_part_weights
-            fixed_weights = self.fixed_part_weights
+    def construct_single_oracle(self, line):
+        """
+        Construct Oracle from Information
+        """
+        part_information = self.music_information['parts']
+        features_names = part_information['selected_features_names']
+        weights = part_information['normed_weights']
+        fixed_weights = part_information['fixed_weights']
+
+        # Get Normed and Original Features
+        normed_features, original_features = self.get_single_part_features(
+            part_information, line)
+
+        thresh = gen_utils.find_threshold(
+            normed_features, weights=weights,
+            fixed_weights=fixed_weights,
+            dim=len(features_names), entropy=True)
+
+        oracle = gen_utils.build_oracle(
+            normed_features, flag='a', features=features_names,
+            weights=weights, fixed_weights=fixed_weights,
+            dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
+
+        image = gen_plot.start_draw(oracle)
+        name = r'data\myexamples\oracle' + '.PNG'
+        image.save(name)
+
+        self.oracles_information['single_oracle'] = {
+            'oracle': oracle,
+            'normed_features': normed_features,
+            'original_features': original_features,
+            'features_names': features_names
+        }
+
+    def generate_sequences_single(self, information, num_seq):
+        """
+        Generate Sequences
+        """
+        ordered_sequences = []
+
+        i = 0
+        while i < num_seq:
+            sequence, kend, ktrace = gen.generate(
+                oracle=information['oracle'], seq_len=100, p=0.5, k=0, LRS=3)
+            if len(sequence) > 0:
+                dist = distance_between_windowed_features(
+                    [information['normed_features'][state-1]
+                        for state in sequence],
+                    information['normed_features'])
+                ordered_sequences.append((sequence, dist))
+                i += 1
+
+        ordered_sequences.sort(key=lambda tup: tup[1])
+        return ordered_sequences
+
+    def generate_from_single(self, num_seq):
+        """
+        Generate Music From a Single Oracle
+        """
+        information = self.oracles_information['single_oracle']
+
+        original_sequence = range(len(information['original_features']))
+        self.linear_score_generator(original_sequence, information['original_features'],
+                                    information['features_names'], name='original', start=0)
+
+        localtime = time.asctime(time.localtime(time.time()))
+        localtime = '_'.join(localtime.split(' '))
+        localtime = '-'.join(localtime.split(':'))
+
+        ordered_sequences = self.generate_sequences_single(
+            information, num_seq)
+        # Generate Scores of Ordered Sequences
+        for i, (sequence, dist) in enumerate(ordered_sequences):
+            name = 'gen_' + localtime + '_' + \
+                str(i) + '_distance_' + str(dist) + '.xml'
+            self.linear_score_generator(
+                sequence, information['original_features'],
+                information['features_names'], name=name)
+
+    def construct_multi_oracles(self):
+        """
+        Construct Multiple Oracles from Information
+        """
+        part_information = self.music_information['parts']
+        vert_information = self.music_information['vertical']
+
+        normed_features, original_features, ev_offsets = self.get_multiple_part_features(
+            part_information, vert_information)
+
+        oracles = {}
+
+        for key, part in normed_features.items():
+            features_names = part_information['selected_features_names']
+            weights = part_information['normed_weights']
+            fixed_weights = part_information['fixed_weights']
             if key == 'vertical':
-                features_names = self.feat_vert_names
-                weights = self.normalized_vert_weights
-                fixed_weights = self.fixed_vert_weights
+                features_names = vert_information['selected_features_names']
+                weights = vert_information['normed_weights']
+                fixed_weights = vert_information['fixed_weights']
 
             thresh = gen_utils.find_threshold(
                 part, weights=weights, fixed_weights=fixed_weights,
                 dim=len(features_names), entropy=True)
-            self.oracles[key] = gen_utils.build_oracle(
+            oracles[key] = gen_utils.build_oracle(
                 part, flag='a', features=features_names,
                 weights=weights, fixed_weights=fixed_weights,
                 dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
 
-        image = gen_plot.start_draw(self.oracles, self.ev_offsets)
+        image = gen_plot.start_draw(oracles, ev_offsets)
         name = r'data\myexamples\oracle' + '.PNG'
         image.save(name)
+
+        self.oracles_information['multiple_oracles'] = {
+            'oracles': oracles,
+            'normed_features': normed_features,
+            'original_features': original_features,
+            'features_names': part_information['selected_features_names'],
+            'offsets': ev_offsets
+        }
 
     def generate_from_multiple(self, num_seq):
         """
         Generate Sequences From a Multiple Oracle
         """
+        information = self.oracles_information['multiple_oracles']
+
+        # Save original Score
         original_sequences = {}
-        for key, part in self.orig_info.items():
+        for key, part in information['original_features'].items():
             original_sequences[key] = range(len(part))
         self.multi_sequence_score_generator(
-            original_sequences, self.orig_info, self.feat_part_names, name='original', start=0)
+            original_sequences, information['original_features'],
+            information['features_names'], name='original', start=0)
 
         localtime = time.asctime(time.localtime(time.time()))
         localtime = '_'.join(localtime.split(' '))
         localtime = '-'.join(localtime.split(':'))
         for i in range(num_seq):
             sequences, ktraces = multi_gen.sync_generate(
-                self.oracles, self.ev_offsets, seq_len=50, p=0.5, k=0)
+                information['oracles'], information['offsets'], seq_len=50, p=0.5, k=0)
             self.multi_sequence_score_generator(
-                sequences, self.orig_info, self.feat_part_names, name='gen_' + localtime + '_' + str(i))
+                sequences, information['original_features'],
+                information['features_names'],
+                name='gen_' + localtime + '_' + str(i))
 
     def multi_sequence_score_generator(self, sequences, o_information, feature_names, name='', start=-1):
         """
