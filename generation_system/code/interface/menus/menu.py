@@ -24,8 +24,8 @@ class MyMenu(QtWidgets.QWidget):
         self.main_layout = QtWidgets.QGridLayout()
 
         self.wait = QtWaitingSpinner()
-        self.main_layout.addWidget(self.wait, 4, 1, 1, 1)
-        self.wait.start()
+        self.main_layout.addWidget(self.wait, 20, 1, 1, 1)
+        # self.wait.start()
 
         self.setLayout(self.main_layout)
 

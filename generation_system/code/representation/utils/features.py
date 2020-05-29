@@ -114,3 +114,38 @@ def events_to_features(events, weights=None,
                 weighted_fit[i] = weights[w_feat[0]]
 
     return norm_features, features, features_names, weighted_fit
+
+def get_columns_from_weights(weights, fixed_weights, features_names):
+    """
+    Get Columns and Weights (non-normalized)
+    per weighted_viewpoints and features_names
+    """
+    columns_to_retain = []
+    weights_per_column = []
+    fixed_per_column = []
+    feature_names_per_column = []
+    for i, key in enumerate(features_names):
+        new_key = key
+        if '=' in key:
+            new_key = key.split('=')[0]
+        elif any(s in key for s in ['articulation', 'expressions.expression', 'ornamentation',
+                                    'dynamic', 'chordPitches', 'pitches', 'pitchClass',
+                                    'primeForm', 'pcOrdered']):
+            new_key = key.split('_')[0]
+
+        if new_key in weights and weights[new_key] != 0:
+            columns_to_retain.append(i)
+
+            is_fixed = False
+            if new_key in fixed_weights:
+                is_fixed = fixed_weights[new_key]
+            fixed_per_column.append(is_fixed)
+
+            weight = weights[new_key]
+            if is_fixed:
+                weight = max(weights.values()) + 1
+            weights_per_column.append(weight)
+
+            feature_names_per_column.append(key)
+
+    return columns_to_retain, weights_per_column, fixed_per_column, feature_names_per_column
