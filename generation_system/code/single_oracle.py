@@ -1,5 +1,8 @@
 """
 """
+import os
+import time
+
 import generation.gen_algorithms.generation as gen
 import generation.plot_fo as gen_plot
 import generation.utils as gen_utils
@@ -72,7 +75,7 @@ def construct_single_oracle(application, line):
     }
 
 
-def generate_sequences_single(application, information, num_seq):
+def generate_sequences_single(information, num_seq):
     """
     Generate Sequences
     """
@@ -119,7 +122,7 @@ def generate_from_single(application, num_seq):
             information['features_names'], name=name)
 
 
-def linear_score_generator(application, sequence, o_information, feature_names, name='', start=-1):
+def linear_score_generator(sequence, o_information, feature_names, name='', start=-1):
     """
     Score Generator for Single Line
     """

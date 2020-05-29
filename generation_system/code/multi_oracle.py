@@ -1,12 +1,15 @@
 """
 """
+
+import os
+import time
+
 import generation.gen_algorithms.multi_oracle_gen as multi_gen
 import generation.plot_fo as gen_plot
 import generation.utils as gen_utils
 from generation.cdist_fixed import distance_between_windowed_features
 from representation.conversor.score_conversor import ScoreConversor
 from representation.events.linear_event import LinearEvent
-
 
 
 def get_multiple_part_features(application, part_info, vert_info):
@@ -103,7 +106,7 @@ def construct_multi_oracles(application):
     }
 
 
-def generate_sequences_multiple(application, information, num_seq):
+def generate_sequences_multiple(information, num_seq):
     """
     Generate Sequences
     """
@@ -152,7 +155,7 @@ def generate_from_multiple(application, num_seq):
         information, num_seq)
     for i, (sequence, dist) in enumerate(ordered_sequences):
         name = 'gen_' + localtime + '_' + \
-            str(i) + '_distance_' + str(dist) + '.xml'
+            str(i) + '_distance_' + str(dist)
         multi_sequence_score_generator(
             sequence, information['original_features'],
             information['features_names'],

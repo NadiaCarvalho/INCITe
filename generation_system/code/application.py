@@ -6,15 +6,16 @@ To comunicate with interface
 
 import math
 import os
-import time
 
 import numpy as np
 from PyQt5 import QtCore
 
+import single_oracle
+import multi_oracle
+
 import representation.utils.features as rep_utils
 import representation.utils.statistics as statistics
-import single_oracle as single
-import multi_oracle as multi
+
 from representation.parsers.music_parser import MusicParser
 from representation.parsers.segmentation import (apply_segmentation_info,
                                                  get_phrases_from_events,
@@ -313,9 +314,9 @@ class Application(QtCore.QObject):
         Construct Oracle Handler
         """
         if line_oracle:
-            single.construct_single_oracle(self, line)
+            single_oracle.construct_single_oracle(self, line)
         else:
-            multi.construct_multi_oracles(self)
+            multi_oracle.construct_multi_oracles(self)
 
         if interface is not None:
             self.signal_parsed.connect(
@@ -327,6 +328,6 @@ class Application(QtCore.QObject):
         Generate Sequences Handler
         """
         if line_oracle:
-            single.construct_single_oracle(self, num_seq)
+            single_oracle.generate_from_single(self, num_seq)
         else:
-            multi.generate_from_multiple(self, num_seq)
+            multi_oracle.generate_from_multiple(self, num_seq)
