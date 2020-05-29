@@ -10,7 +10,7 @@ from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
 from interface.menus.menu import MyMenu
 from interface.components.wrap_text import wrap_text
-
+from interface.components.qworker import Worker
 
 class OnOffWidget(QtWidgets.QWidget):
     def __init__(self, name):
@@ -303,4 +303,11 @@ class FirstMenu(MyMenu):
         )[2].widget().children() if isinstance(child, QtWidgets.QCheckBox)]
         folders = [checkbox.text()
                    for checkbox in checkboxes if checkbox.checkState() == 2]
-        self.parentWidget().parentWidget().application.retrieve_database(folders)
+
+        application = self.parentWidget().parentWidget().application
+
+        worker_1 = Worker(application.retrieve_database, folders)
+        worker_1.signals.finished.connect(self.stop_dialog_waiting)
+        self.threadpool.start(worker_1)
+
+        self.start_dialog_waiting()

@@ -10,12 +10,10 @@ import os
 import numpy as np
 from PyQt5 import QtCore
 
-import single_oracle
 import multi_oracle
-
 import representation.utils.features as rep_utils
 import representation.utils.statistics as statistics
-
+import single_oracle
 from representation.parsers.music_parser import MusicParser
 from representation.parsers.segmentation import (apply_segmentation_info,
                                                  get_phrases_from_events,
@@ -30,8 +28,6 @@ class Application(QtCore.QObject):
     """
     signal_parsed = QtCore.pyqtSignal(int)
     signal_viewpoints = QtCore.pyqtSignal(dict)
-
-    signal_oracle_start = QtCore.pyqtSignal(int)
 
     def __init__(self):
         QtCore.QObject.__init__(self)

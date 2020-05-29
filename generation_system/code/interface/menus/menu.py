@@ -4,9 +4,9 @@ Menu Abstract Class
 
 import sys
 
-from PyQt5 import Qt, QtGui, QtWidgets
+from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
-from interface.waiting_spinner import QtWaitingSpinner
+from pyqtspinner.spinner import WaitingSpinner
 
 
 class MyMenu(QtWidgets.QWidget):
@@ -19,13 +19,17 @@ class MyMenu(QtWidgets.QWidget):
     def __init__(self, width, height, parent, *args, **kwargs):
         super(MyMenu, self).__init__(*args, **kwargs)
 
+        self.parent = parent
+
         self.resize(width, height)
 
         self.main_layout = QtWidgets.QGridLayout()
 
-        self.wait = QtWaitingSpinner()
-        self.main_layout.addWidget(self.wait, 20, 1, 1, 1)
-        # self.wait.start()
+        self.threadpool = QtCore.QThreadPool()
+        self.wait = WaitingSpinner(self, True, True, QtCore.Qt.ApplicationModal, roundness=70.0, opacity=100.0,
+                                   fade=70.0, radius=10.0, lines=12,
+                                   line_length=10.0, line_width=5.0,
+                                   speed=1.0, color=(0, 0, 0))
 
         self.setLayout(self.main_layout)
 
@@ -34,6 +38,22 @@ class MyMenu(QtWidgets.QWidget):
         o.initFrom(self)
         p = Qt.QPainter(self)
         self.style().drawPrimitive(Qt.QStyle.PE_Widget, o, p, self)
+
+    def start_dialog_waiting(self):
+        """
+        """
+        self.wait = WaitingSpinner(self, True, True, QtCore.Qt.ApplicationModal, roundness=70.0, opacity=100.0,
+                                   fade=70.0, radius=10.0, lines=12,
+                                   line_length=10.0, line_width=5.0,
+                                   speed=1.0, color=(0, 0, 0))
+        self.wait.start()
+
+    def stop_dialog_waiting(self):
+        """
+        """
+        # self.wait.hide()
+        self.wait.stop()
+        self.parent.next_wid_logic()
 
     def next(self):
         """
@@ -45,4 +65,4 @@ class MyMenu(QtWidgets.QWidget):
         """
         To Override
         """
-        pass
+        self.parent.last_wid_logic()

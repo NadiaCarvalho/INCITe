@@ -99,6 +99,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def next_wid(self):
         self.wids[self.front_wid].next()
+
+    def next_wid_logic(self):
         # LOGIC TO SWITCH NEXT
         if self.front_wid != len(self.wids)-1:
             self.wids[self.front_wid].hide()
@@ -108,6 +110,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def last_wid(self):
         self.wids[self.front_wid].back()
+
+    def last_wid_logic(self):
         # LOGIC TO SWITCH BACK
         if self.front_wid > 0:
             self.wids[self.front_wid].hide()
