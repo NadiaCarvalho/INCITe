@@ -7,6 +7,7 @@ import sys
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
 from interface.components.qline import QHLine
+from interface.components.qworker import Worker
 from interface.menus.menu import MyMenu
 
 
@@ -18,7 +19,7 @@ class ThirdMenu(MyMenu):
 
     def __init__(self, width, height, parent, *args, **kwargs):
         super(ThirdMenu, self).__init__(width, height, parent, *args, **kwargs)
-        self.setStyleSheet("""background: light gray;""")
+        self.setStyleSheet("""background: #b4b4b4;""")
 
         self.number_sequences = 15
         self.line = True
@@ -141,15 +142,23 @@ class ThirdMenu(MyMenu):
         """
         Call Oracle Generator
         """
-        self.parentWidget().parentWidget().application.generate_oracle(
-            self, self.line, self.part - 1)
+        application = self.parentWidget().parentWidget().application
+        worker = Worker(
+            application.generate_oracle, self, self.line, self.part - 1)
+        worker.signals.finished.connect(self.stop_waiting)
+        self.threadpool.start(worker)
+        self.start_waiting()
 
     def generate_sequences_oracle(self):
         """
         Call Sequence Generator
         """
-        self.parentWidget().parentWidget().application.generate_sequences(
-            self.line, self.number_sequences)
+        application = self.parentWidget().parentWidget().application
+        worker = Worker(
+            application.generate_sequences, self.line, self.number_sequences)
+        worker.signals.finished.connect(self.stop_waiting_final)
+        self.threadpool.start(worker)
+        self.start_waiting()
 
     def change_line(self, value):
         """

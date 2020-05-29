@@ -39,7 +39,7 @@ class MyMenu(QtWidgets.QWidget):
         p = Qt.QPainter(self)
         self.style().drawPrimitive(Qt.QStyle.PE_Widget, o, p, self)
 
-    def start_dialog_waiting(self):
+    def start_waiting(self):
         """
         """
         self.wait = WaitingSpinner(self, True, True, QtCore.Qt.ApplicationModal, roundness=70.0, opacity=100.0,
@@ -48,12 +48,27 @@ class MyMenu(QtWidgets.QWidget):
                                    speed=1.0, color=(0, 0, 0))
         self.wait.start()
 
-    def stop_dialog_waiting(self):
+    def stop_waiting(self):
         """
         """
-        # self.wait.hide()
+        self.wait.stop()
+
+    def stop_waiting_next(self):
+        """
+        """
         self.wait.stop()
         self.parent.next_wid_logic()
+
+    def stop_waiting_final(self):
+        self.wait.stop()
+
+        msg = QtWidgets.QMessageBox()
+        msg.setStyleSheet("""background: #b4b4b4;""")
+        msg.setContentsMargins(5, 5, 5, 5)
+        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setText("Generation of Sequences Finished!!!")
+        msg.setWindowTitle('Creator Finished')
+        msg.exec_()
 
     def next(self):
         """

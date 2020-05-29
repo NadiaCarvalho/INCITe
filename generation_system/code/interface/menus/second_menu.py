@@ -8,6 +8,7 @@ import textwrap
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
 from interface.components.qline import QHLine
+from interface.components.qworker import Worker
 from interface.menus.menu import MyMenu
 from representation.events.viewpoint_description import DESCRIPTION
 
@@ -170,7 +171,7 @@ class SecondMenu(MyMenu):
     def __init__(self, width, height, parent, *args, **kwargs):
         super(SecondMenu, self).__init__(
             width, height, parent, *args, **kwargs)
-        self.setStyleSheet("""background: light gray;""")
+        self.setStyleSheet("""background: #b4b4b4;""")
 
         self.top_group = self.create_settings(parent, width)
         self.top_group.layout().setContentsMargins(5, 5, 10, 0)
@@ -226,14 +227,23 @@ class SecondMenu(MyMenu):
         """
         Calculate satistics for music
         """
-        self.parentWidget().parentWidget().application.calculate_statistics(self)
+        application = self.parentWidget().parentWidget().application
+
+        worker = Worker(application.calculate_statistics, self)
+        worker.signals.finished.connect(self.stop_waiting)
+        self.threadpool.start(worker)
+        self.start_waiting()
 
     def calculate_automatic_weights(self):
         """
         Calculate satistics for music
         """
-        self.parentWidget().parentWidget().application.calculate_statistics(
-            self, calc_weights=True)
+        application = self.parentWidget().parentWidget().application
+        worker = Worker(application.calculate_statistics,
+                        self, calc_weights=True)
+        worker.signals.finished.connect(self.stop_waiting)
+        self.threadpool.start(worker)
+        self.start_waiting()
 
     def create_statistics_overview(self, statistics):
         """
@@ -264,7 +274,7 @@ class SecondMenu(MyMenu):
 
             if 'vertical' in statistics:
                 self.tab_vertical = self.create_statistics_folder('vertical',
-                                                                statistics['vertical'], tabs)
+                                                                  statistics['vertical'], tabs)
                 tabs.addTab(self.tab_vertical, "Vertical Events")
 
             # Add tabs to widget
@@ -322,6 +332,11 @@ class SecondMenu(MyMenu):
                     fixed_dict['vertical'][widget.name] = widget.is_fixed
 
         main_window = self.parentWidget().parentWidget()
-        main_window.application.apply_viewpoint_weights(
-            weights_dict, fixed_dict)
+
+        worker = Worker(
+            main_window.application.apply_viewpoint_weights, weights_dict, fixed_dict)
+        worker.signals.finished.connect(self.stop_waiting_next)
+        self.threadpool.start(worker)
         main_window.wids[main_window.front_wid + 1].set_maximum_spinbox()
+        self.start_waiting()
+

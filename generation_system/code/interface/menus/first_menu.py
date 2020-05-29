@@ -2,15 +2,16 @@
 Main Window for Interface
 """
 
+import copy
 import os
 import sys
-import copy
 
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
-from interface.menus.menu import MyMenu
-from interface.components.wrap_text import wrap_text
 from interface.components.qworker import Worker
+from interface.components.wrap_text import wrap_text
+from interface.menus.menu import MyMenu
+
 
 class OnOffWidget(QtWidgets.QWidget):
     def __init__(self, name):
@@ -51,7 +52,7 @@ class FirstMenu(MyMenu):
 
     def __init__(self, width, height, parent, *args, **kwargs):
         super(FirstMenu, self).__init__(width, height, parent, *args, **kwargs)
-        self.setStyleSheet("""background: gray;""")
+        self.setStyleSheet("""background: #b4b4b4;""")
 
         self.top_group = self.create_settings(parent, width)
         self.left_group_box = self.create_database_group(parent)
@@ -307,7 +308,6 @@ class FirstMenu(MyMenu):
         application = self.parentWidget().parentWidget().application
 
         worker_1 = Worker(application.retrieve_database, folders)
-        worker_1.signals.finished.connect(self.stop_dialog_waiting)
+        worker_1.signals.finished.connect(self.stop_waiting_next)
         self.threadpool.start(worker_1)
-
-        self.start_dialog_waiting()
+        self.start_waiting()

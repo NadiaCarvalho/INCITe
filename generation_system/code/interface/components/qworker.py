@@ -53,9 +53,6 @@ class Worker(QtCore.QRunnable):
         self.kwargs = kwargs
         self.signals = WorkerSignals()
 
-        # Add the callback to our kwargs
-        #self.kwargs['progress_callback'] = self.signals.progress
-
     @QtCore.pyqtSlot()
     def run(self):
         '''
@@ -63,8 +60,6 @@ class Worker(QtCore.QRunnable):
         '''
         # Retrieve args/kwargs here; and fire processing using them
         try:
-            print(self.args)
-            print(self.kwargs)
             result = self.fn(*self.args, **self.kwargs)
         except:
             traceback.print_exc()
