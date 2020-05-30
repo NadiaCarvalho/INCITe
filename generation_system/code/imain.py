@@ -12,7 +12,11 @@ if __name__ == "__main__":
     app = Qt.QApplication(sys.argv)
     app.setStyle('Fusion')
 
-    window = MainWindow()
+    music = ''
+    if len(sys.argv) > 1:
+        music = sys.argv[1]
+
+    window = MainWindow(music=music)
     window.show()
 
     sys.exit(app.exec_())

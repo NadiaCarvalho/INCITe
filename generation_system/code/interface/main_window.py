@@ -18,12 +18,12 @@ class MainWindow(QtWidgets.QMainWindow):
     Main Window of Application
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, music, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
         self.setWindowTitle("My Awesome App")
         self.setWindowIcon(QtGui.QIcon('web.png'))
 
-        self.application = Application()
+        self.application = Application(music)
 
         self.resize(500, 800)
 

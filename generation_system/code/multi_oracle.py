@@ -166,18 +166,18 @@ def multi_sequence_score_generator(sequences, o_information, feature_names, name
     """
     Generate Score
     """
-    score = ScoreConversor()
+    sequenced_events = {}
     for key, sequence in sequences.items():
         if key != 'vertical':
-            sequenced_events = [LinearEvent(
+            sequenced_events[key] = [LinearEvent(
                 from_list=o_information[key][state + start], features=feature_names)
                 if (state + start) < len(o_information[key])
                 else print('key: state ' + str(state + start))
                 for state in sequence]
-            if len(sequenced_events) > 0:
-                score.parse_events(
-                    sequenced_events, new_part=True, new_voice=True)
-    # score.stream.show()
+
+    score = ScoreConversor()
+    score.parse_multiple(sequenced_events)
+    score.stream.show('text')
 
     path = os.sep.join([os.getcwd(), 'data', 'generations', name + '.xml'])
     fp = score.stream.write(fp=path)

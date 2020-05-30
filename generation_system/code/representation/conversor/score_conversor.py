@@ -18,11 +18,18 @@ class ScoreConversor:
 
     def __init__(self):
         self.stream = music21.stream.Stream()
-        self.last_voice_id = 0
 
-    def parse_events(self, events, new_part=True, new_voice=True):
+    def parse_multiple(self, event_dict):
         """
-        Parse Events in score
+        Create Score from Multiple Events
+        """
+        for key, events in event_dict.items():
+            print(key)
+            print(len(events))
+
+    def parse_events(self, events, new_part=True, new_voice=False):
+        """
+        Create Score a single line
         """
         stream = self.stream
         if new_part:
@@ -126,7 +133,7 @@ class ScoreConversor:
             self.last_voice_id += 1
         if new_part:
             self.stream.append(stream)
-        return self.stream
+
 
     def convert_note_event(self, event):
         """

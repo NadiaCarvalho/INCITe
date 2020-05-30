@@ -38,6 +38,11 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
         print(k)
 
         ks_at_k = _find_ks(offsets, principal_key, k)
+        last_ktraces = dict([(key, ktr[-1]) for key, ktr in ktraces.items()])
+
+        print('LK1: ' + str(ks_at_k))
+        print('KTR: ' + str(dict([(key, ktr[-1]) for key, ktr in ktraces.items()])))
+
         sfxs_k = dict([(key, sfxs[key][ks_at_k[key]])
                        for key in ks_at_k.keys()])
 
@@ -72,12 +77,15 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
 
         print('OK: ' + str(dict([(key, len(part))
                                  for key, part in sfxs.items()])))
+        print('LK2: ' + str(keys_at_last_k))
         print('NK: ' + str(next_keys))
-        print('LK: ' + str(keys_at_last_k))
+        print('offsets: ' + str(dict([(key, offsets[key][k-1]) for key, k in next_keys.items()])))
+
+        all_different = all(next_keys[key] > (keys_at_last_k[key] + 1) for key in next_keys.keys() if key in keys_at_last_k)
 
         for key in sfxs.keys():
             if key in next_keys:
-                if key in keys_at_last_k and next_keys[key] > (keys_at_last_k[key] + 1):
+                if not all_different and (key in keys_at_last_k and next_keys[key] > (keys_at_last_k[key] + 1)):
                     for i in range(next_keys[key] - keys_at_last_k[key]):
                         sequences[key].append(keys_at_last_k[key] + i + 1)
                         ktraces[key].append(keys_at_last_k[key] + i + 1)
@@ -213,7 +221,7 @@ def get_max_lrs_position(k_vecs, lrs_vecs, length):
 
     for key, k_vec in k_vecs.items():
         for i, k in enumerate(k_vec):
-            if lrs_vecs[key][i] > max_lrss[k]:
+            if lrs_vecs[key][i] >= max_lrss[k]:
                 max_lrss[k] = lrs_vecs[key][i]
                 key_lrss[k] = key
 
@@ -227,14 +235,19 @@ def _find_ks(offsets, principal_key, k):
     """
     if k == 0:
         return dict([(key, 0) for key in offsets.keys()])
-    return dict([(key, off.index(offsets[principal_key][k-1])+1)
+
+    print('FINDKS: ' + str(k))
+    result = dict([(key, off.index(offsets[principal_key][k-1])+1)
                  for key, off in offsets.items() if offsets[principal_key][k-1] in off])
+    print(result)
+    print()
+    return result
 
 
 def _find_nearest_k(offsets, key, off):
     k = np.argmin(np.abs(np.array(offsets[key])-off))
-    if offsets[key][k] > off:
-        k -= 1
+    if offsets[key][k] < off:
+        k += 1
     return k
 
 

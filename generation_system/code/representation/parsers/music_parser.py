@@ -97,7 +97,7 @@ class MusicParser:
                     self.process_voiced_part(part, i, instrument)
                 else:
                     self.music_events['part_events'][i] = self.parse_sequence_part(
-                        part, name=str(i), first=(False, True)[i == 0])
+                        part, name=str(instrument), first=(False, True)[i == 0])
 
         if vertical and (len(self.music.parts) > 1 or
                          len(self.music.getOverlaps()) > 0 or
@@ -149,8 +149,8 @@ class MusicParser:
         new_parts = part.voicesToParts()
         for j, voice in enumerate(new_parts.parts):
             voice.append(real_in)
-            index = str(i) + '.' + str(j)
-            name = str(i) + ', voice ' + str(j)
+            index = str(real_in) + '.' + str(j)
+            name = str(real_in) + ', voice ' + str(j)
             self.music_events['part_events'][index] = self.parse_sequence_part(
                 voice, name=name, first=(False, True)[i == 0])
 
@@ -169,8 +169,8 @@ class MusicParser:
 
         for j, voice in enumerate(new_parts.parts):
             voice.append(real_in)
-            index = str(i) + '.' + str(j)
-            name = str(i) + ', voice ' + str(j)
+            index = str(real_in) + '.' + str(j)
+            name = str(real_in) + ', voice ' + str(j)
             self.music_events['part_events'][index] = self.parse_sequence_part(
                 voice, name=name, first=(False, True)[i == 0])
 

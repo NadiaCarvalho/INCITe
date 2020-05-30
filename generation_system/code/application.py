@@ -34,6 +34,8 @@ class Application(QtCore.QObject):
 
         self.database_path = os.sep.join([os.getcwd(), 'data', 'database'])
 
+        self.principal_music = ''
+
         # Music To Use
         self.music = {}
 
