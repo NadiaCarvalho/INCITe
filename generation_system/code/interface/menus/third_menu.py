@@ -127,12 +127,13 @@ class ThirdMenu(MyMenu):
         """
         Set Maximum Value of line spinbox
         """
-        self.possible_parts = list(self.parentWidget().parentWidget().application.principal_music[0].get_part_events().keys())
-        if len(self.possible_parts) == 1:
-            self.children()[2].children()[5].setEnabled(False)
-        else:
-            self.children()[2].children()[5].addItems(self.possible_parts)
-            self.children()[2].children()[5].setEnabled(True)
+        if self.parentWidget().parentWidget().application.principal_music is not None:
+            self.possible_parts = list(self.parentWidget().parentWidget().application.principal_music[0].get_part_events().keys())
+            if len(self.possible_parts) == 1:
+                self.children()[2].children()[5].setEnabled(False)
+            else:
+                self.children()[2].children()[5].addItems(self.possible_parts)
+                self.children()[2].children()[5].setEnabled(True)
 
     def create_oracle(self):
         """

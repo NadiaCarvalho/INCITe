@@ -135,7 +135,7 @@ def get_columns_from_weights(weights, fixed_weights, features_names):
             new_key = key.split('_')[0]
 
         if (new_key in weights and weights[new_key] != 0
-                or new_key in fixed and fixed_weights[new_key]):
+                or new_key in fixed_weights and fixed_weights[new_key]):
             columns_to_retain.append(i)
 
             is_fixed = False

@@ -76,9 +76,10 @@ class ShowStatsWidget(QtWidgets.QWidget):
         label.setStyleSheet(
             """color: blue; font: bold 16px; """)
 
-        self.weight_box = QtWidgets.QSpinBox(self)
+        self.weight_box = QtWidgets.QSlider(self)
+        self.weight_box.setOrientation(QtCore.Qt.Horizontal)
         self.weight_box.setMaximum(100)
-        self.weight_box.setFixedWidth(80)
+        #self.weight_box.setFixedWidth(20)
         self.weight_box.setValue(self.weight)
         self.weight_box.setStyleSheet(
             """color: black; font: bold 16px; """)
@@ -265,7 +266,7 @@ class SecondMenu(MyMenu):
         """
         value = 0
         if self.sender().text() == 'All Weights Equal':
-            value = 1
+            value = 50
 
         if self.tab_parts is not None:
             part_widget = self.tab_parts.children()[2]
@@ -375,6 +376,5 @@ class SecondMenu(MyMenu):
             main_window.application.apply_viewpoint_weights, weights_dict, fixed_dict)
         worker.signals.finished.connect(self.stop_waiting_next)
         self.threadpool.start(worker)
-        main_window.wids[main_window.front_wid + 1].set_maximum_spinbox()
         self.start_waiting()
 

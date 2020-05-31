@@ -214,14 +214,23 @@ class Application(QtCore.QObject):
         Process Incoming Weights
         """
         # Non incoming weights
-        if weight_dict['parts'] == {} and weight_dict['vertical'] == {}:
+        if 'parts' not in weight_dict and 'vertical' not in 'weight_dict':
             statistics_dict = self.calculate_statistics(None, True)
+
+            weight_dict['parts'] = {}
+            fixed_dict['parts'] = {}
+            weight_dict['vertical'] = {}
+            fixed_dict['vertical'] = {}
+
             for key, stats in statistics_dict['parts'].items():
                 weight_dict['parts'][key] = stats['weight']
+                fixed_dict['parts'][key] = stats['fixed']
             for key, stats in statistics_dict['vertical'].items():
                 weight_dict['vertical'][key] = stats['weight']
+                fixed_dict['vertical'][key] = stats['fixed']
 
         self.model_viewpoints = weight_dict
+        return fixed_dict
 
     def part_segmentation(self, events, vertical_offsets, vertical_events):
         """
@@ -320,7 +329,7 @@ class Application(QtCore.QObject):
         """
         Apply Choosen Weights
         """
-        self.process_weights(weight_dict, fixed_dict)
+        fixed_dict = self.process_weights(weight_dict, fixed_dict)
         self.segment(weight_dict)
         self.prepare_parts(fixed_dict, 'parts')
         self.prepare_parts(fixed_dict, 'vertical')

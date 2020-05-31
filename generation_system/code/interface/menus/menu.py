@@ -57,7 +57,12 @@ class MyMenu(QtWidgets.QWidget):
         """
         """
         self.wait.stop()
+
+        if self.parent.front_wid == 1:
+            self.parent.wids[self.parent.front_wid + 1].set_maximum_spinbox()
+
         self.parent.next_wid_logic()
+
 
     def stop_waiting_final(self):
         self.wait.stop()

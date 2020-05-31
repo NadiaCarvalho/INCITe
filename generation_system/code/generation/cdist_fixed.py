@@ -28,8 +28,9 @@ def distance_between_windowed_features(XA, XB):
     """
     Windowed Distance between two matrixes using Euclidean Distance
     """
+
     if len(XB) == len(XA):
-        return np.linalg.norm(np.array(XA), np.array(XB), ord='fro')
+        return np.linalg.norm(np.array(XA) - np.array(XB), ord='fro')
 
     max_matrix = XB
     min_matrix = XA

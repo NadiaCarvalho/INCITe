@@ -2,6 +2,7 @@
 """
 import os
 import time
+import random
 
 import generation.gen_algorithms.generation as gen
 import generation.plot_fo as gen_plot
@@ -82,8 +83,11 @@ def generate_sequences_single(information, num_seq):
 
     i = 0
     while i < num_seq:
+        p = random.uniform(0, 1)
+        lrs = int(random.uniform(1, max(information['oracle'].basic_attributes['lrs'])))
+
         sequence, kend, ktrace = gen.generate(
-            oracle=information['oracle'], seq_len=100, p=0.5, k=0, LRS=3)
+            oracle=information['oracle'], seq_len=50, p=p, k=-1, LRS=lrs)
         if len(sequence) > 0:
             dist = distance_between_windowed_features(
                 [information['normed_features'][state-1]

@@ -69,6 +69,9 @@ class LineParser:
         self.double_barline_parsing()
         self.repeat_barline_parsing()
 
+        if len(self.events) > 0 and self.events[0].get_viewpoint('posinbar') != 0:
+            self.events[0].add_viewpoint('anacrusis', True)
+
         return self.events
 
     def note_and_rests_parsing(self):

@@ -10,6 +10,8 @@ ARRAY_VALUES = ['expressions.articulation', 'expressions.expression',
                 'expressions.ornamentation', 'expressions.dynamic', 'pitch.chordPitches', 'basic.pitches',
                 'classes.pitchClass', 'basic.primeForm', 'classes.pcOrdered']
 
+FIXED_FEATURES = ['posinbar', 'key']
+
 
 def statistic_features(events):
     """
@@ -74,12 +76,19 @@ def calculate_part_weights(statistic_dict, key_stats='parts'):
     if key_stats in statistic_dict:
         variances_parts = dict([(key, stats['variance'])
                                 for key, stats in statistic_dict[key_stats].items()])
-        variances_parts = utils.normalize_dictionary(
-            variances_parts, x_min=0, x_max=100)
+        variances_parts_normed = utils.normalize_dictionary(
+            variances_parts, x_min=0, x_max=50)
 
         for key, stats in statistic_dict[key_stats].items():
-            stats['weight'] = variances_parts[key]
+
+            stats['weight'] = variances_parts_normed[key]
+
+            if 'basic' in key and variances_parts[key] > 0:
+                stats['weight'] = variances_parts_normed[key] * 5
+
             stats['fixed'] = False
+            if 'posinbar' in key:
+                stats['fixed'] = True
 
 
 def calculate_automatic_viewpoints(statistic_dict):

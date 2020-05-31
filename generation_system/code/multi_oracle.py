@@ -3,6 +3,7 @@
 import collections
 import os
 import time
+import random
 
 import generation.gen_algorithms.multi_oracle_gen as multi_gen
 import generation.plot_fo as gen_plot
@@ -118,7 +119,7 @@ def generate_sequences_multiple(information, num_seq, start=-1):
     i = 0
     while i < num_seq:
         sequences, ktraces = multi_gen.sync_generate(
-            information['oracles'], information['offsets'], seq_len=50, p=1, k=-1)
+            information['oracles'], information['offsets'], seq_len=50, p=random.uniform(0, 1), k=-1)
 
         flag = all(len(sequence) > 0 for sequence in sequences.values())
         if flag:
