@@ -115,6 +115,7 @@ def events_to_features(events, weights=None,
 
     return norm_features, features, features_names, weighted_fit
 
+
 def get_columns_from_weights(weights, fixed_weights, features_names):
     """
     Get Columns and Weights (non-normalized)
@@ -133,7 +134,8 @@ def get_columns_from_weights(weights, fixed_weights, features_names):
                                     'primeForm', 'pcOrdered']):
             new_key = key.split('_')[0]
 
-        if new_key in weights and weights[new_key] != 0:
+        if (new_key in weights and weights[new_key] != 0
+                or new_key in fixed and fixed_weights[new_key]):
             columns_to_retain.append(i)
 
             is_fixed = False
