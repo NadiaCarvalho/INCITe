@@ -112,7 +112,7 @@ class LineParser:
                 if is_chord:
                     note_to_parse = music21.note.Note(note_or_rest.bass())
                     self.events[i].add_viewpoint(
-                        'chordPitches', [str(p) for p in note_or_rest.pitches])
+                        'pitch.chordPitches', [str(p) for p in note_or_rest.pitches])
 
                 self.note_basic_info_parsing(i, note_to_parse)
                 self.contours_parsing(i)

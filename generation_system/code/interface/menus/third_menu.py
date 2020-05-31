@@ -67,11 +67,9 @@ class ThirdMenu(MyMenu):
         label_1 = QtWidgets.QLabel("Part from Which to Generate:")
         label_1.setStyleSheet("""color: black; font: bold 16px;""")
 
-        spin_box_1 = QtWidgets.QSpinBox()
-        spin_box_1.setValue(self.part)
-        spin_box_1.valueChanged.connect(self.change_line)
-
-        layout.addRow(label_1, spin_box_1)
+        combo_box_1 = QtWidgets.QComboBox()
+        combo_box_1.currentIndexChanged.connect(self.change_line)
+        layout.addRow(label_1, combo_box_1)
 
         button_box = QtWidgets.QPushButton("Generate Oracle")
         button_box.setStyleSheet("""color: black; font: bold 16px;""")
@@ -129,13 +127,11 @@ class ThirdMenu(MyMenu):
         """
         Set Maximum Value of line spinbox
         """
-        possible_parts = [len(list(_tuple[0].get_part_events()))
-                          for music, _tuple in
-                          self.parentWidget().parentWidget().application.music.items()]
-        if max(possible_parts) == 1:
+        self.possible_parts = list(self.parentWidget().parentWidget().application.principal_music[0].get_part_events().keys())
+        if len(self.possible_parts) == 1:
             self.children()[2].children()[5].setEnabled(False)
         else:
-            self.children()[2].children()[5].setMaximum(max(possible_parts))
+            self.children()[2].children()[5].addItems(self.possible_parts)
             self.children()[2].children()[5].setEnabled(True)
 
     def create_oracle(self):
@@ -144,7 +140,7 @@ class ThirdMenu(MyMenu):
         """
         application = self.parentWidget().parentWidget().application
         worker = Worker(
-            application.generate_oracle, self, self.line, self.part - 1)
+            application.generate_oracle, self, self.line, self.part)
         worker.signals.finished.connect(self.stop_waiting)
         self.threadpool.start(worker)
         self.start_waiting()
@@ -164,8 +160,8 @@ class ThirdMenu(MyMenu):
         """
         Handle for spinbox sequence number
         """
-        if value > 0:
-            self.part = value
+        if len(self.possible_parts) > 0:
+            self.part = self.possible_parts[value]
 
     def change_number_seq(self, value):
         """

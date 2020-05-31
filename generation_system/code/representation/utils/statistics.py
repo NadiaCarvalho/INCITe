@@ -6,9 +6,9 @@ import numpy as np
 import representation.utils.features as utils
 
 
-ARRAY_VALUES = ['articulation', 'expressions.expression',
-                'ornamentation', 'dynamic', 'chordPitches', 'pitches',
-                'pitchClass', 'primeForm', 'pcOrdered']
+ARRAY_VALUES = ['expressions.articulation', 'expressions.expression',
+                'expressions.ornamentation', 'expressions.dynamic', 'pitch.chordPitches', 'basic.pitches',
+                'classes.pitchClass', 'basic.primeForm', 'classes.pcOrdered']
 
 
 def statistic_features(events):
@@ -16,7 +16,6 @@ def statistic_features(events):
     Get Statistics from Features
     """
     features, features_names = utils.create_feat_array(events)
-
     columns_values = list(zip(*features))
     statistic_dict = {}
     for i, feat in enumerate(features_names):
@@ -35,6 +34,8 @@ def statistic_features(events):
                     statistic_dict[info[0]].append((info[1], ret[0][1]))
         elif any(s in feat for s in ARRAY_VALUES):
             cat = [s for s in ARRAY_VALUES if s in feat]
+            print(feat)
+            print(cat)
             if not cat[0] in statistic_dict:
                 statistic_dict[cat[0]] = []
             value_1 = list(filter(lambda x: 1.0 in x, values))
@@ -77,6 +78,7 @@ def calculate_part_weights(statistic_dict, key_stats='parts'):
                                 for key, stats in statistic_dict[key_stats].items()])
         variances_parts = utils.normalize_dictionary(
             variances_parts, x_min=0, x_max=100)
+
         for key, stats in statistic_dict[key_stats].items():
             stats['weight'] = variances_parts[key]
             stats['fixed'] = False

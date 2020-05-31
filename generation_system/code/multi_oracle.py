@@ -1,6 +1,6 @@
 """
 """
-
+import collections
 import os
 import time
 
@@ -8,7 +8,7 @@ import generation.gen_algorithms.multi_oracle_gen as multi_gen
 import generation.plot_fo as gen_plot
 import generation.utils as gen_utils
 from generation.cdist_fixed import distance_between_windowed_features
-from representation.conversor.score_conversor import ScoreConversor
+from representation.conversor.score_conversor import parse_multiple
 from representation.events.linear_event import LinearEvent
 
 
@@ -16,9 +16,11 @@ def get_multiple_part_features(application, part_info, vert_info):
     """
     Get Multiple Part Features
     """
-    ev_offsets = {}
-    normed_features = {}
-    original_features = {}
+    ev_offsets = collections.OrderedDict()
+    normed_features = collections.OrderedDict()
+    original_features = collections.OrderedDict()
+
+    keys_for_parts = application.principal_music[0].get_part_events().keys()
 
     for music, _tuple in application.music.items():
         parser = _tuple[0]
@@ -30,21 +32,21 @@ def get_multiple_part_features(application, part_info, vert_info):
         i = 0
         for key, events in parser.get_part_events().items():
             if len(events) > 0:
-                start_index = application.indexes_first[music]['parts'][i]
-                finish_index = start_index + len(events)
+                if key in keys_for_parts:
+                    start_index = application.indexes_first[music]['parts'][i]
+                    finish_index = start_index + len(events)
 
-                if i not in normed_features:
-                    normed_features[i] = []
-                    ev_offsets[i] = []
-                    original_features[i] = []
+                    if key not in normed_features:
+                        normed_features[key] = []
+                        ev_offsets[key] = []
+                        original_features[key] = []
 
-                normed_features[i].extend(
-                    part_info['selected_normed'][start_index:finish_index])
-                original_features[i].extend(
-                    part_info['selected_original'][start_index:finish_index])
-                ev_offsets[i].extend(
-                    [ev.get_offset() + last_offset for ev in events])
-
+                    normed_features[key].extend(
+                        part_info['selected_normed'][start_index:finish_index])
+                    original_features[key].extend(
+                        part_info['selected_original'][start_index:finish_index])
+                    ev_offsets[key].extend(
+                        [ev.get_offset() + last_offset for ev in events])
                 i += 1
 
         vertical_events = parser.get_vertical_events()
@@ -74,7 +76,7 @@ def construct_multi_oracles(application):
     normed_features, original_features, ev_offsets = get_multiple_part_features(
         application, part_information, vert_information)
 
-    oracles = {}
+    oracles = collections.OrderedDict()
 
     for key, part in normed_features.items():
         features_names = part_information['selected_features_names']
@@ -93,6 +95,7 @@ def construct_multi_oracles(application):
             weights=weights, fixed_weights=fixed_weights,
             dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
 
+    oracles.move_to_end('vertical', last=True)
     image = gen_plot.start_draw(oracles, ev_offsets)
     name = r'data\myexamples\oracle' + '.PNG'
     image.save(name)
@@ -140,9 +143,10 @@ def generate_from_multiple(application, num_seq):
     information = application.oracles_information['multiple_oracles']
 
     # Save original Score
-    original_sequences = {}
+    original_sequences = collections.OrderedDict()
     for key, part in information['original_features'].items():
         original_sequences[key] = range(len(part))
+
     multi_sequence_score_generator(
         original_sequences, information['original_features'],
         information['features_names'], name='original', start=0)
@@ -175,9 +179,7 @@ def multi_sequence_score_generator(sequences, o_information, feature_names, name
                 else print('key: state ' + str(state + start))
                 for state in sequence]
 
-    score = ScoreConversor()
-    score.parse_multiple(sequenced_events)
-    score.stream.show('text')
-
+    score = parse_multiple(sequenced_events)
+    # score.show()
     path = os.sep.join([os.getcwd(), 'data', 'generations', name + '.xml'])
-    fp = score.stream.write(fp=path)
+    fp = score.write(fp=path)

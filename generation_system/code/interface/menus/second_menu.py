@@ -245,6 +245,12 @@ class SecondMenu(MyMenu):
         self.threadpool.start(worker)
         self.start_waiting()
 
+    def error_no_music(self, value):
+        """
+        Receive signal if no music to create statistics
+        """
+        print('ERROR')
+
     def create_statistics_overview(self, statistics):
         """
         Receive signal for presenting statistics
@@ -280,7 +286,7 @@ class SecondMenu(MyMenu):
             # Add tabs to widget
             self.container.layout().addWidget(tabs)
 
-    def create_statistics_folder(self, type, statistics, tabs):
+    def create_statistics_folder(self, _type, statistics, tabs):
         """
         """
         main_widget = QtWidgets.QWidget()
@@ -293,7 +299,8 @@ class SecondMenu(MyMenu):
         list_wid.currentRowChanged.connect(
             lambda i: information_view.setCurrentIndex(i))
 
-        for key, description in DESCRIPTION[type].items():
+        print(statistics.keys())
+        for key, description in DESCRIPTION[_type].items():
             if key in statistics:
                 list_wid.addItem(key)
                 information_view.addWidget(ShowStatsWidget(

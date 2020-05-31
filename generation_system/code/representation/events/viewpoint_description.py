@@ -28,6 +28,7 @@ DESCRIPTION = {
         "pitch.accidental": "Accidental applied to dnote",
         "pitch.microtonal": "Microtonality of event in cents",
         "pitch.pitch_class": "Pitch class of note",
+        "pitch.chordPitches": "Pitches of event if event is chord.",
 
         "expressions.articulation": "Articulations of Event",
         "expressions.breath_mark": "Event has a breath mark?",

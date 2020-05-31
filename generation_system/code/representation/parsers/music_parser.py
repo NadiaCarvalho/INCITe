@@ -96,8 +96,9 @@ class MusicParser:
                 elif not part.isSequence() or part.hasVoices():
                     self.process_voiced_part(part, i, instrument)
                 else:
-                    self.music_events['part_events'][i] = self.parse_sequence_part(
-                        part, name=str(instrument), first=(False, True)[i == 0])
+                    _, name = self.name_of_part(instrument)
+                    self.music_events['part_events'][name] = self.parse_sequence_part(
+                        part, name=name, first=(False, True)[i == 0])
 
         if vertical and (len(self.music.parts) > 1 or
                          len(self.music.getOverlaps()) > 0 or
@@ -145,12 +146,11 @@ class MusicParser:
                 voice_utils.make_voices(measure, in_place=True,
                                         number_voices=max_voice_count)
 
-        #part.flattenUnnecessaryVoices(inPlace=True)
+        # part.flattenUnnecessaryVoices(inPlace=True)
         new_parts = part.voicesToParts()
         for j, voice in enumerate(new_parts.parts):
             voice.append(real_in)
-            index = str(real_in) + '.' + str(j)
-            name = str(real_in) + ', voice ' + str(j)
+            index, name = self.name_of_part(real_in, j)
             self.music_events['part_events'][index] = self.parse_sequence_part(
                 voice, name=name, first=(False, True)[i == 0])
 
@@ -169,10 +169,37 @@ class MusicParser:
 
         for j, voice in enumerate(new_parts.parts):
             voice.append(real_in)
-            index = str(real_in) + '.' + str(j)
-            name = str(real_in) + ', voice ' + str(j)
+            index, name = self.name_of_part(real_in, j)
             self.music_events['part_events'][index] = self.parse_sequence_part(
                 voice, name=name, first=(False, True)[i == 0])
+
+    def name_of_part(self, real_in, j=None):
+        """
+        Return Index and Name of a part
+        """
+        if j is not None:
+            index = str(real_in) + '.' + str(j)
+            name = str(real_in) + ', voice ' + str(j)
+
+            counter = [1 for key in self.music_events['part_events'].keys()
+                       if str(real_in) in key and str(j) in key]
+
+            if len(counter) > 0:
+                index = str(real_in) + '_' + \
+                    str(len(counter) + 1) + '.' + str(j)
+                name = str(real_in) + '_' + str(len(counter) + 1) + \
+                    ', voice ' + str(j)
+        else:
+            index = str(real_in)
+            name = str(real_in)
+            counter_0 = [key for key in self.music_events['part_events'].keys()
+                       if str(real_in) in key]
+            counter = set([key.split('.')[0] for key in counter_0])
+            if len(counter) > 0:
+                index = str(real_in) + '_' + str(len(counter) + 1)
+                name = str(real_in) + '_' + str(len(counter) + 1)
+
+        return index, name
 
     def clean_hidden_music(self):
         """
@@ -275,7 +302,8 @@ class MusicParser:
         }
 
         for key, part in self.music_events['part_events'].items():
-            to_dump['part_events'][key] = [event.to_feature_dict() for event in part]
+            to_dump['part_events'][key] = [event.to_feature_dict()
+                                           for event in part]
 
         with open(file_path + '.json', 'w') as handle:
             json.dump(to_dump, handle, indent=indent)

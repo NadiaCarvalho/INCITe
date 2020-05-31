@@ -29,12 +29,13 @@ class Application(QtCore.QObject):
     signal_parsed = QtCore.pyqtSignal(int)
     signal_viewpoints = QtCore.pyqtSignal(dict)
 
-    def __init__(self):
+    def __init__(self, music):
         QtCore.QObject.__init__(self)
 
         self.database_path = os.sep.join([os.getcwd(), 'data', 'database'])
 
-        self.principal_music = ''
+        self.principal_music_path = music
+        self.principal_music = None
 
         # Music To Use
         self.music = {}
@@ -119,6 +120,17 @@ class Application(QtCore.QObject):
         Process Music To Learn Statistics
         And Construct Oracles
         """
+        # Add Principal Music To Music
+        if '.mxl' or '.xml' in self.principal_music_path:
+            self.principal_music = (MusicParser(self.principal_music_path), self.principal_music_path, False)
+            self.principal_music[0].parse()
+            self.music[self.principal_music[1]] = self.principal_music
+        else:
+            if self.music == {}:
+                return -1, -1
+            else:
+                self.principal_music = self.music[list(self.music.keys())[-1]]
+
         self.indexes_first = {}
 
         parts_features = []
@@ -178,7 +190,13 @@ class Application(QtCore.QObject):
         self.indexes_first = {}
 
         part_features, vertical_features = self.process_music()
+        if part_features == -1 and vertical_features == -1 and interface is not None:
+            self.signal_parsed.connect(
+                interface.create_statistics_overview)
+            self.signal_parsed.emit(statistic_dict)
+
         statistic_dict = self.get_statistics(part_features, vertical_features)
+        print(statistic_dict['parts'].keys())
 
         # TODO: Calculate measurement for better viewpoints
         if calc_weights:

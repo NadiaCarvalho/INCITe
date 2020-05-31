@@ -7,7 +7,7 @@ import generation.gen_algorithms.generation as gen
 import generation.plot_fo as gen_plot
 import generation.utils as gen_utils
 from generation.cdist_fixed import distance_between_windowed_features
-from representation.conversor.score_conversor import ScoreConversor
+from representation.conversor.score_conversor import parse_single_line
 from representation.events.linear_event import LinearEvent
 
 
@@ -23,8 +23,7 @@ def get_single_part_features(application, information, line):
 
         i = 0
         for key, events in parser.get_part_events().items():
-            if len(events) > 0 and i == line:
-
+            if len(events) > 0 and key == line:
                 # Get Start and End Indexes
                 start_index = application.indexes_first[music]['parts'][i]
                 finish_index = start_index + len(events)
@@ -129,9 +128,7 @@ def linear_score_generator(sequence, o_information, feature_names, name='', star
     sequenced_events = [LinearEvent(
         from_list=o_information[state+start], features=feature_names) for state in sequence]
     if len(sequenced_events) > 0:
-        score = ScoreConversor()
-        score.parse_events(
-            sequenced_events, new_part=True, new_voice=True)
-        # score.stream.show()
+        score = parse_single_line(sequenced_events)
+        # score.show()
         path = os.sep.join([os.getcwd(), 'data', 'generations', name])
-        fp = score.stream.write(fp=path)
+        fp = score.write(fp=path)
