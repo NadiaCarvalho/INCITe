@@ -73,10 +73,7 @@ def parse_single_line(events, stream=None, voice_id=0):
 
         note = None
         if event.is_rest():
-            note = music21.note.Rest(
-                quarterLength=event.get_viewpoint('duration.length'),
-                type=event.get_viewpoint('duration.type'),
-                dots=event.get_viewpoint('duration.dots'))
+            note = music21.note.Rest(duration=duration_conversion(event))
         else:
             note = convert_note_event(event)
 
@@ -84,7 +81,7 @@ def parse_single_line(events, stream=None, voice_id=0):
         last_offset = voice.highestTime
 
     part.insert(0, voice, ignoreSort=False)
-    part.show('text')
+    #part.show('text')
     return part
 
 
@@ -141,119 +138,29 @@ def metro_selection(event, stream, last_metro_value, offset):
     return last_metro_value
 
 
-"""
-    def parse_events(self, events, new_part=True, new_voice=False):
-
-        # Create Score a single line
-
-        stream = self.stream
-        if new_part:
-            self.last_voice_id = 0
-            stream = music21.stream.Part()
-
-        voice = music21.stream.Voice(id=self.last_voice_id)
-
-        measures = []
-
-        slurs = []
-
-        bar_duration = music21.duration.Duration(quarterLength=4)
-        last_key_signature = 0
-        last_time_signature = ''
-        last_metro_value = ''
-        last_instrument = music21.instrument.Instrument('')
-        last_dynamics = []
-
-        for event in events:
-
-            instrument = event.get_viewpoint('instrument')
-            if instrument is None:
-                instrument = music21.instrument.Instrument()
-            if instrument != last_instrument and not isinstance(instrument, str):
-                stream.append(instrument)
-                last_instrument = instrument
-
-            keysig = event.get_viewpoint('keysig')
-            if keysig != last_key_signature:
-                stream.append(music21.key.KeySignature(
-                    sharps=int(keysig)))
-                last_key_signature = keysig
-
-            time_sig = event.get_viewpoint('timesig')
-            if time_sig != last_time_signature:
-                time_signature = music21.meter.TimeSignature(time_sig)
-                stream.append(time_signature)
-                last_time_signature = time_sig
-                bar_duration = time_signature.barDuration
-
-            metro_value = event.get_viewpoint('metro.value')
-            if metro_value != last_metro_value:
-                stream.append(
-                    music21.tempo.MetronomeMark(
-                        text=event.get_viewpoint('metro.text'),
-                        number=metro_value,
-                        referent=music21.note.Note(type=event.get_viewpoint('ref.type'))))
-                last_metro_value = metro_value
-
-            if new_voice and event.get_viewpoint('fib') and len(measures) > 0:
-                measures[-1].append(voice)
-                voice = music21.stream.Voice(id=self.last_voice_id)
-            # if len(measures) > 0:
-            #     measures[-1].makeNotation(inPlace=True, meterStream=bar_duration)
-            if (len(measures) == 0 or event.get_viewpoint('fib')
-                    or measures[-1].barDurationProportion(barDuration=bar_duration) == 1.0):
-                measures.append(music21.stream.Measure(number=len(measures)))
-
-            note = None
-            if event.is_rest():
-                note = music21.note.Rest(
-                    quarterLength=event.get_viewpoint('duration.length'),
-                    type=event.get_viewpoint('duration.type'),
-                    dots=event.get_viewpoint('duration.dots'))
-            else:
-                note = self.convert_note_event(event)
-
-            if new_voice:
-                voice.append(note)
-            else:
-                measures[-1].append(note)
-
-            for dyn in event.get_viewpoint('dynamic'):
-                if dyn not in last_dynamics:
-                    measures[-1].insert(stream.highestOffset,
-                                        music21.dynamics.Dynamic(dyn))
-            last_dynamics = event.get_viewpoint('dynamic')
-
-            if event.get_viewpoint('slur.begin'):
-                slurs.append(music21.spanner.Slur())
-                pass
-
-        if events[0].get_viewpoint('posinbar') > 0:
-            measures[0].padAsAnacrusis(useGaps=False, useInitialRests=True)
-
-        if new_voice and len(measures) > 0:
-            measures[-1].append(voice)
-
-        if self.last_voice_id == 0:
-            stream.append(measures)
-        else:
-            for i, measure in enumerate(list(stream.recurse(classFilter='Measure'))):
-                for v in measures[i].voices:
-                    measure.append(v)
-
-        # music21.stream.makeNotation.makeMeasures(stream, inPlace=True, searchContext=True)
-        stream.makeNotation(inPlace=True)
-
-        if new_voice:
-            self.last_voice_id += 1
-        if new_part:
-            self.stream.insert(0, stream)
-"""
-
-
 def convert_note_event(event):
     """
     Convert Note Event
+    """
+    if event.is_chord() and event.get_viewpoint('chordPitches') != []:
+        note = music21.chord.Chord([music21.pitch.Pitch(p) for p in event.get_viewpoint(
+            'chordPitches')], duration=duration_conversion(event))
+    else:
+        note = music21.note.Note(
+            pitch_conversion(event), duration=duration_conversion(event))
+
+    note = articulation_conversion(event, note)
+    note = expressions_conversion(event, note)
+
+    if event.is_grace_note():
+        note.getGrace(appogiatura=True, inPlace=True)
+
+    return note
+
+
+def pitch_conversion(event):
+    """
+    Return Pitch of Event
     """
     pitch = music21.pitch.Pitch(event.get_viewpoint(
         'dnote') + str(int(event.get_viewpoint('octave'))))
@@ -266,28 +173,30 @@ def convert_note_event(event):
     if pitch.ps != event.get_viewpoint('cpitch'):
         pitch.ps = event.get_viewpoint('cpitch')
 
-    if np.asscalar(event.get_viewpoint('duration.length') % 1) % 5 != 0 or np.mod(event.get_viewpoint('duration.length'), 1) != 0:
-        if event.is_chord():
-            note = music21.chord.Chord([music21.pitch.Pitch(p) for p in event.get_viewpoint(
-                'chordPitches')], quarterLength=event.get_viewpoint('duration.length'))
-        else:
-            note = music21.note.Note(
-                pitch, quarterLength=event.get_viewpoint('duration.length'))
-    else:
-        if event.is_chord():
-            note = music21.chord.Chord([music21.pitch.Pitch(p) for p in event.get_viewpoint(
-                'chordPitches')],
-                quarterLength=event.get_viewpoint(
-                'duration.length'),
-                type=event.get_viewpoint(
-                'duration.type'),
-                dots=event.get_viewpoint('duration.dots'))
-        else:
-            note = music21.note.Note(
-                pitch, quarterLength=event.get_viewpoint('duration.length'),
-                type=event.get_viewpoint('duration.type'),
-                dots=event.get_viewpoint('duration.dots'))
+    return pitch
 
+
+def duration_conversion(event):
+    """
+    Return Pitch of Event
+    """
+    duration = music21.duration.Duration(quarterLength=event.get_viewpoint('duration.length'),
+                                              type=event.get_viewpoint(
+                                                  'duration.type'),
+                                              dots=event.get_viewpoint('duration.dots'))
+
+    if (np.asscalar(event.get_viewpoint('duration.length') % 1) % 5 != 0
+            or np.mod(event.get_viewpoint('duration.length'), 1) != 0):
+        duration = music21.duration.Duration(
+            quarterLength=event.get_viewpoint('duration.length'))
+
+    return duration
+
+
+def articulation_conversion(event, note):
+    """
+    Return note with articulations
+    """
     for articulation in event.get_viewpoint('articulation'):
         note.articulations.append(
             getattr(music21.articulations, articulation.capitalize())())
@@ -295,6 +204,13 @@ def convert_note_event(event):
     if event.get_viewpoint('breath mark'):
         note.articulations.append(music21.articulations.BreathMark())
 
+    return note
+
+
+def expressions_conversion(event, note):
+    """
+    Return note with expressions
+    """
     for exp in event.get_viewpoint('expression'):
         note.expressions.append(
             getattr(music21.expressions, exp.capitalize())())
@@ -325,8 +241,5 @@ def convert_note_event(event):
 
     if event.get_viewpoint('rehearsal'):
         note.expressions.append(music21.expressions.RehearsalMark())
-
-    if event.is_grace_note():
-        note.getGrace(appogiatura=True, inPlace=True)
 
     return note

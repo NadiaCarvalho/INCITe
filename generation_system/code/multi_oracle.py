@@ -109,7 +109,7 @@ def construct_multi_oracles(application):
     }
 
 
-def generate_sequences_multiple(information, num_seq):
+def generate_sequences_multiple(information, num_seq, start=-1):
     """
     Generate Sequences
     """
@@ -118,19 +118,33 @@ def generate_sequences_multiple(information, num_seq):
     i = 0
     while i < num_seq:
         sequences, ktraces = multi_gen.sync_generate(
-            information['oracles'], information['offsets'], seq_len=50, p=0.5, k=0)
+            information['oracles'], information['offsets'], seq_len=50, p=1, k=-1)
 
-        if all(len(sequence) > 0 for sequence in sequences.values()):
+        flag = all(len(sequence) > 0 for sequence in sequences.values())
+        if flag:
             distances = []
             for key, sequence in sequences.items():
-                distances.append(distance_between_windowed_features(
-                    [information['normed_features'][key][state-1]
-                        for state in sequence],
-                    information['normed_features'][key]))
+                normed_feats = information['normed_features'][key]
+                if key != 'vertical':
+                    orig_feats = information['original_features'][key]
 
-            ordered_sequences.append(
-                (sequences, sum(distances)/len(distances)))
-            i += 1
+                seq = list(map(lambda x: x + start, sequence))
+                if any(s >= len(normed_feats) for s in seq):
+                    flag = False
+                    break
+
+                sequence_in_feat = [normed_feats[k] for k in seq]
+                if key != 'vertical':
+                    sequences[key] = [orig_feats[k] for k in seq]
+
+                distances.append(distance_between_windowed_features(
+                    sequence_in_feat,
+                    normed_feats))
+
+            if flag:
+                ordered_sequences.append(
+                    (sequences, sum(distances)/len(distances)))
+                i += 1
 
     ordered_sequences.sort(key=lambda tup: tup[1])
     return ordered_sequences
@@ -143,13 +157,8 @@ def generate_from_multiple(application, num_seq):
     information = application.oracles_information['multiple_oracles']
 
     # Save original Score
-    original_sequences = collections.OrderedDict()
-    for key, part in information['original_features'].items():
-        original_sequences[key] = range(len(part))
-
     multi_sequence_score_generator(
-        original_sequences, information['original_features'],
-        information['features_names'], name='original', start=0)
+        information['original_features'], information['features_names'], name='original')
 
     localtime = time.asctime(time.localtime(time.time()))
     localtime = '_'.join(localtime.split(' '))
@@ -161,12 +170,12 @@ def generate_from_multiple(application, num_seq):
         name = 'gen_' + localtime + '_' + \
             str(i) + '_distance_' + str(dist)
         multi_sequence_score_generator(
-            sequence, information['original_features'],
+            sequence,
             information['features_names'],
             name=name)
 
 
-def multi_sequence_score_generator(sequences, o_information, feature_names, name='', start=-1):
+def multi_sequence_score_generator(sequences, feature_names, name=''):
     """
     Generate Score
     """
@@ -174,9 +183,7 @@ def multi_sequence_score_generator(sequences, o_information, feature_names, name
     for key, sequence in sequences.items():
         if key != 'vertical':
             sequenced_events[key] = [LinearEvent(
-                from_list=o_information[key][state + start], features=feature_names)
-                if (state + start) < len(o_information[key])
-                else print('key: state ' + str(state + start))
+                from_list=state, features=feature_names)
                 for state in sequence]
 
     score = parse_multiple(sequenced_events)

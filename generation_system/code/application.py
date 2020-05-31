@@ -121,15 +121,16 @@ class Application(QtCore.QObject):
         And Construct Oracles
         """
         # Add Principal Music To Music
-        if '.mxl' or '.xml' in self.principal_music_path:
-            self.principal_music = (MusicParser(self.principal_music_path), self.principal_music_path, False)
-            self.principal_music[0].parse()
-            self.music[self.principal_music[1]] = self.principal_music
-        else:
-            if self.music == {}:
-                return -1, -1
+        if self.principal_music is None:
+            if '.mxl' or '.xml' in self.principal_music_path:
+                self.principal_music = (MusicParser(self.principal_music_path), self.principal_music_path, False)
+                self.principal_music[0].parse()
+                self.music[self.principal_music[1]] = self.principal_music
             else:
-                self.principal_music = self.music[list(self.music.keys())[-1]]
+                if self.music == {}:
+                    return -1, -1
+                else:
+                    self.principal_music = self.music[list(self.music.keys())[-1]]
 
         self.indexes_first = {}
 
@@ -196,7 +197,6 @@ class Application(QtCore.QObject):
             self.signal_parsed.emit(statistic_dict)
 
         statistic_dict = self.get_statistics(part_features, vertical_features)
-        print(statistic_dict['parts'].keys())
 
         # TODO: Calculate measurement for better viewpoints
         if calc_weights:

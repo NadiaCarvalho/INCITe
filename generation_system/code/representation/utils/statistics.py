@@ -34,8 +34,6 @@ def statistic_features(events):
                     statistic_dict[info[0]].append((info[1], ret[0][1]))
         elif any(s in feat for s in ARRAY_VALUES):
             cat = [s for s in ARRAY_VALUES if s in feat]
-            print(feat)
-            print(cat)
             if not cat[0] in statistic_dict:
                 statistic_dict[cat[0]] = []
             value_1 = list(filter(lambda x: 1.0 in x, values))

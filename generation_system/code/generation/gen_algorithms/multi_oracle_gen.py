@@ -34,15 +34,22 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
         sequences[key] = []
         ktraces[key] = [k]
 
+    if k == -1:
+        reversed_offsets = list(reversed(offsets[principal_key]))
+        for _j, off in enumerate(reversed_offsets):
+            new_k = len(reversed_offsets) - _j - 1
+            ks_at_off = _find_ks(offsets, principal_key, new_k)
+            if len(ks_at_off.keys()) == len(offsets.keys()):
+                k = ks_at_off[principal_key] - 1
+                break
+
     for _i in range(seq_len):
         print(k)
 
+        if any(ks > len(sfxs[key]) - 1 for key, ks in _find_ks(offsets, principal_key, k).items()):
+            k = 0
+
         ks_at_k = _find_ks(offsets, principal_key, k)
-        last_ktraces = dict([(key, ktr[-1]) for key, ktr in ktraces.items()])
-
-        print('LK1: ' + str(ks_at_k))
-        print('KTR: ' + str(dict([(key, ktr[-1]) for key, ktr in ktraces.items()])))
-
         sfxs_k = dict([(key, sfxs[key][ks_at_k[key]])
                        for key in ks_at_k.keys()])
 
@@ -69,42 +76,51 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
                     k, sfxs, ks_at_k, offsets, principal_key)
                 sym_1 = sym + 1
 
-        next_keys = _find_ks(offsets, key, sym)
-        keys_at_last_k = ks_at_k
+        last_ktraces = dict([(key, ktr[-1]) for key, ktr in ktraces.items()])
+
         if sym_1 is not None:
-            keys_at_last_k = next_keys
             next_keys = _find_ks(offsets, key, sym_1)
+        else:
+            next_keys = _find_ks(offsets, key, sym)
 
-        print('OK: ' + str(dict([(key, len(part))
-                                 for key, part in sfxs.items()])))
-        print('LK2: ' + str(keys_at_last_k))
-        print('NK: ' + str(next_keys))
-        print('offsets: ' + str(dict([(key, offsets[key][k-1]) for key, k in next_keys.items()])))
+        start_offset = [offsets[key][ks] if ks < len(
+            offsets[key]) else -1 for key, ks in next_keys.items()][0]
 
-        all_different = all(next_keys[key] > (keys_at_last_k[key] + 1) for key in next_keys.keys() if key in keys_at_last_k)
+        offsets_at_kp1 = dict([(key, offsets[key][ks]) if ks < len(
+            offsets[key]) else (key, -1) for key, ks in next_keys.items()])
+
+        max_offset = max(offsets_at_kp1.values())
+        if any(off == -1 for off in offsets_at_kp1.values()):
+            max_offset = -1
+
+        ks_at_final_of_event = dict(
+            [(key, _find_nearest_k(offsets, key, max_offset)) for key in sfxs.keys()])
 
         for key in sfxs.keys():
             if key in next_keys:
-                if not all_different and (key in keys_at_last_k and next_keys[key] > (keys_at_last_k[key] + 1)):
-                    for i in range(next_keys[key] - keys_at_last_k[key]):
-                        sequences[key].append(keys_at_last_k[key] + i + 1)
-                        ktraces[key].append(keys_at_last_k[key] + i + 1)
-                else:
-                    sequences[key].append(next_keys[key])
-                    ktraces[key].append(next_keys[key])
-            elif key in keys_at_last_k:
-                next_k_princ = keys_at_last_k[principal_key]
-                next_k = _find_nearest_k(
-                    offsets, key, offsets[principal_key][next_k_princ])
-                for i in range(abs(next_k - keys_at_last_k[key])):
-                    sequences[key].append(keys_at_last_k[key] + i + 1)
-                    ktraces[key].append(keys_at_last_k[key] + i + 1)
-        k = next_keys[principal_key]
+                sequences[key].append(next_keys[key])
+                ktraces[key].append(next_keys[key])
+                sequences, ktraces = fill_gaps(
+                    key, ks_at_final_of_event, next_keys, sequences, ktraces, start_offset, offsets)
+            else:
+                sequences, ktraces = fill_gaps(
+                    key, ks_at_final_of_event, last_ktraces, sequences, ktraces, start_offset, offsets)
 
-        if any(ks > len(sfxs[key]) - 1 for key, ks in _find_ks(offsets, principal_key, k).items()):
-            k = 0
+        k = ktraces[principal_key][-1]
 
-        print()
+    return sequences, ktraces
+
+
+def fill_gaps(key, ks_dict_1, ks_dict_2, sequences, ktraces, start_offset, offsets):
+    """
+    Fill Gaps where existent
+    """
+    values = ks_dict_1[key] - ks_dict_2[key] - 1
+    for i in range(values):
+        ks = ks_dict_2[key] + i + 1
+        if offsets[key][ks] >= start_offset:
+            sequences[key].append(ks)
+            ktraces[key].append(ks)
     return sequences, ktraces
 
 
@@ -115,7 +131,7 @@ def choose_from_sfxs_k(k, sfxs, ks_at_k, offsets, principal_key):
     sfxs_k = dict([(key, sfxs[key][ks_at_k[key]])
                    for key in ks_at_k.keys()])
     possible_moves = [(key, sfx) for key, sfx in sfxs_k.items() if len(
-        _find_ks(offsets, key, sfx).values()) == len(offsets.keys())]
+        _find_ks(offsets, key, sfx).values()) <= len(offsets.keys())]
 
     pr_key = principal_key
     sym = sfxs_k[principal_key]
@@ -161,7 +177,7 @@ def get_sim_trans(I, offsets, key):
     """
     Get Simultaneous Transitions by K
     """
-    return [trans for trans in I if len(_find_ks(offsets, key, trans).values()) == len(offsets.keys())]
+    return [trans for trans in I if len(_find_ks(offsets, key, trans).values()) <= len(offsets.keys())]
 
 
 def get_f_transitions_by_oracle(trns, ks_at_k, offsets):
@@ -236,18 +252,21 @@ def _find_ks(offsets, principal_key, k):
     if k == 0:
         return dict([(key, 0) for key in offsets.keys()])
 
-    print('FINDKS: ' + str(k))
     result = dict([(key, off.index(offsets[principal_key][k-1])+1)
-                 for key, off in offsets.items() if offsets[principal_key][k-1] in off])
-    print(result)
-    print()
+                   for key, off in offsets.items() if k-1 < len(offsets[principal_key]) and offsets[principal_key][k-1] in off])
     return result
 
 
-def _find_nearest_k(offsets, key, off):
+def _find_nearest_k(offsets, key, off, minus=True):
+    if off == -1:
+        return len(offsets[key])
+
     k = np.argmin(np.abs(np.array(offsets[key])-off))
-    if offsets[key][k] < off:
+    if offsets[key][k] <= off and minus:
         k += 1
+    elif offsets[key][k] > off and not minus:
+        k -= 1
+
     return k
 
 

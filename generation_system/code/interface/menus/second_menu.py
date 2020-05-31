@@ -216,9 +216,17 @@ class SecondMenu(MyMenu):
         button.clicked.connect(self.calculate_statistics)
         layout.addWidget(button, 0, 0, 1, 1)
 
-        button = QtWidgets.QPushButton('View Automatic Viewpoints')
+        button = QtWidgets.QPushButton('View Automatic Weights')
         button.clicked.connect(self.calculate_automatic_weights)
         layout.addWidget(button, 0, 1, 1, 1)
+
+        button = QtWidgets.QPushButton('All Weights Equal')
+        button.clicked.connect(self.clean_weights)
+        layout.addWidget(button, 1, 0, 1, 1)
+
+        button = QtWidgets.QPushButton('Clean Weights')
+        button.clicked.connect(self.clean_weights)
+        layout.addWidget(button, 1, 1, 1, 1)
 
         database_group.setLayout(layout)
         return database_group
@@ -250,6 +258,30 @@ class SecondMenu(MyMenu):
         Receive signal if no music to create statistics
         """
         print('ERROR')
+
+    def clean_weights(self):
+        """
+        Clean Weights and Fixed
+        """
+        value = 0
+        if self.sender().text() == 'All Weights Equal':
+            value = 1
+
+        if self.tab_parts is not None:
+            part_widget = self.tab_parts.children()[2]
+            for i in range(part_widget.count()):
+                widget = part_widget.widget(i)
+                if isinstance(widget, ShowStatsWidget):
+                    widget.weight_box.setValue(value)
+                    widget.fixed_box.setChecked(False)
+
+        if self.tab_vertical is not None:
+            vertical_widget = self.tab_vertical.children()[2]
+            for i in range(vertical_widget.count()):
+                widget = vertical_widget.widget(i)
+                if isinstance(widget, ShowStatsWidget):
+                    widget.weight_box.setValue(value)
+                    widget.fixed_box.setChecked(False)
 
     def create_statistics_overview(self, statistics):
         """
@@ -299,7 +331,6 @@ class SecondMenu(MyMenu):
         list_wid.currentRowChanged.connect(
             lambda i: information_view.setCurrentIndex(i))
 
-        print(statistics.keys())
         for key, description in DESCRIPTION[_type].items():
             if key in statistics:
                 list_wid.addItem(key)
