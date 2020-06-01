@@ -106,6 +106,9 @@ def generate_from_single(application, num_seq):
     """
     information = application.oracles_information['single_oracle']
 
+    print(len(information['original_features']))
+    print(len(information['features_names']))
+
     original_sequence = range(len(information['original_features']))
     linear_score_generator(original_sequence, information['original_features'],
                            information['features_names'], name='original', start=0)

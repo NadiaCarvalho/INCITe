@@ -129,13 +129,14 @@ def get_columns_from_weights(weights, fixed_weights, features_names):
         new_key = key
         if '=' in key:
             new_key = key.split('=')[0]
-        elif any(s in key for s in ['articulation', 'expressions.expression', 'ornamentation',
-                                    'dynamic', 'chordPitches', 'pitches', 'pitchClass',
+        elif any(s in key for s in ['expressions.articulation', 'expressions.expression', 'expressions.ornamentation',
+                                    'expressions.dynamic', 'pitch.chordPitches', 'basic.pitches', 'pitchClass',
                                     'primeForm', 'pcOrdered']):
             new_key = key.split('_')[0]
 
         if (new_key in weights and weights[new_key] != 0
                 or new_key in fixed_weights and fixed_weights[new_key]):
+
             columns_to_retain.append(i)
 
             is_fixed = False

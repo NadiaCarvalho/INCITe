@@ -81,7 +81,7 @@ def parse_single_line(events, stream=None, voice_id=0):
         last_offset = voice.highestTime
 
     part.insert(0, voice, ignoreSort=False)
-    #part.show('text')
+    # part.show('text')
     return part
 
 
@@ -162,16 +162,32 @@ def pitch_conversion(event):
     """
     Return Pitch of Event
     """
-    pitch = music21.pitch.Pitch(event.get_viewpoint(
-        'dnote') + str(int(event.get_viewpoint('octave'))))
+    pitch = music21.pitch.Pitch('C4')
 
-    if event.get_viewpoint('accidental') is not music21.pitch.Accidental('natural').modifier:
-        acc = music21.pitch.Accidental('natural')
-        acc.modifier = event.get_viewpoint('accidental')
-        pitch.accidental = acc
+    if (event.get_viewpoint('dnote') is None
+        and event.get_viewpoint('octave') is None
+        and event.get_viewpoint('accidental') is None
+        and event.get_viewpoint('cpitch') is None):
 
-    if pitch.ps != event.get_viewpoint('cpitch'):
-        pitch.ps = event.get_viewpoint('cpitch')
+        pitch.ps += event.get_viepoint('seq_int')
+
+    else:
+        if (event.get_viewpoint('dnote') is not None
+            and event.get_viewpoint('octave') is not None
+            and event.get_viewpoint('accidental') is not None):
+
+            pitch = music21.pitch.Pitch(event.get_viewpoint(
+                'dnote') + str(int(event.get_viewpoint('octave'))))
+
+            if event.get_viewpoint('accidental') is not music21.pitch.Accidental('natural').modifier:
+                acc = music21.pitch.Accidental('natural')
+                acc.modifier = event.get_viewpoint('accidental')
+                pitch.accidental = acc
+
+        if (event.get_viewpoint('cpitch') is not None and
+                pitch.ps != event.get_viewpoint('cpitch')):
+            pitch.ps = event.get_viewpoint('cpitch')
+
 
     return pitch
 
@@ -181,9 +197,9 @@ def duration_conversion(event):
     Return Pitch of Event
     """
     duration = music21.duration.Duration(quarterLength=event.get_viewpoint('duration.length'),
-                                              type=event.get_viewpoint(
-                                                  'duration.type'),
-                                              dots=event.get_viewpoint('duration.dots'))
+                                         type=event.get_viewpoint(
+        'duration.type'),
+        dots=event.get_viewpoint('duration.dots'))
 
     if (np.asscalar(event.get_viewpoint('duration.length') % 1) % 5 != 0
             or np.mod(event.get_viewpoint('duration.length'), 1) != 0):

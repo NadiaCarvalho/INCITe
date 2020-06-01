@@ -77,13 +77,13 @@ def calculate_part_weights(statistic_dict, key_stats='parts'):
         variances_parts = dict([(key, stats['variance'])
                                 for key, stats in statistic_dict[key_stats].items()])
         variances_parts_normed = utils.normalize_dictionary(
-            variances_parts, x_min=0, x_max=50)
+            variances_parts, x_min=0, x_max=100)
 
         for key, stats in statistic_dict[key_stats].items():
 
             stats['weight'] = variances_parts_normed[key]
 
-            if 'basic' in key and variances_parts[key] > 0:
+            if variances_parts[key] > 10:
                 stats['weight'] = variances_parts_normed[key] * 5
 
             stats['fixed'] = False

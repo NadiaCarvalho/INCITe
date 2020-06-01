@@ -79,7 +79,6 @@ class ShowStatsWidget(QtWidgets.QWidget):
         self.weight_box = QtWidgets.QSlider(self)
         self.weight_box.setOrientation(QtCore.Qt.Horizontal)
         self.weight_box.setMaximum(100)
-        #self.weight_box.setFixedWidth(20)
         self.weight_box.setValue(self.weight)
         self.weight_box.setStyleSheet(
             """color: black; font: bold 16px; """)

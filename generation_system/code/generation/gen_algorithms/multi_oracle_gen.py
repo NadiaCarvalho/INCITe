@@ -83,8 +83,14 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
         else:
             next_keys = _find_ks(offsets, key, sym)
 
-        start_offset = [offsets[key][ks] if ks < len(
-            offsets[key]) else -1 for key, ks in next_keys.items()][0]
+        print(next_keys)
+
+        start_offsets = [offsets[key][ks] if ks < len(
+            offsets[key]) else -1 for key, ks in next_keys.items()]
+
+        start_offset = 0
+        if len(start_offsets) > 0:
+            start_offset = start_offsets[0]
 
         offsets_at_kp1 = dict([(key, offsets[key][ks]) if ks < len(
             offsets[key]) else (key, -1) for key, ks in next_keys.items()])
@@ -131,7 +137,7 @@ def choose_from_sfxs_k(k, sfxs, ks_at_k, offsets, principal_key):
     sfxs_k = dict([(key, sfxs[key][ks_at_k[key]])
                    for key in ks_at_k.keys()])
     possible_moves = [(key, sfx) for key, sfx in sfxs_k.items() if len(
-        _find_ks(offsets, key, sfx).values()) <= len(offsets.keys())]
+        _find_ks(offsets, key, sfx).values()) < len(offsets.keys())]
 
     pr_key = principal_key
     sym = sfxs_k[principal_key]
@@ -177,7 +183,7 @@ def get_sim_trans(I, offsets, key):
     """
     Get Simultaneous Transitions by K
     """
-    return [trans for trans in I if len(_find_ks(offsets, key, trans).values()) <= len(offsets.keys())]
+    return [trans for trans in I if len(_find_ks(offsets, key, trans).values()) < len(offsets.keys())]
 
 
 def get_f_transitions_by_oracle(trns, ks_at_k, offsets):
