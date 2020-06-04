@@ -26,14 +26,6 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
     sequences = {}
     ktraces = {}
 
-    for key, oracle in oracles.items():
-        trns[key] = oracle.basic_attributes['trn'][:]
-        sfxs[key] = oracle.basic_attributes['sfx'][:]
-        lrss[key] = oracle.basic_attributes['lrs'][:]
-        rsfxs[key] = oracle.basic_attributes['rsfx'][:]
-        sequences[key] = []
-        ktraces[key] = [k]
-
     if k == -1:
         reversed_offsets = list(reversed(offsets[principal_key]))
         for _j, off in enumerate(reversed_offsets):
@@ -43,19 +35,33 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
                 k = ks_at_off[principal_key] - 1
                 break
 
+    offsets_at_k = _find_ks(offsets, principal_key, k)
+    for key, oracle in oracles.items():
+        trns[key] = oracle.basic_attributes['trn'][:]
+        sfxs[key] = oracle.basic_attributes['sfx'][:]
+        lrss[key] = oracle.basic_attributes['lrs'][:]
+        rsfxs[key] = oracle.basic_attributes['rsfx'][:]
+        sequences[key] = []
+
+        if key in offsets_at_k:
+            ktraces[key] = [offsets_at_k[key]]
+        else:
+            ktraces[key] = [-1]
+
+    times = 0
     for _i in range(seq_len):
         print(k)
-
-        if any(ks > len(sfxs[key]) - 1 for key, ks in _find_ks(offsets, principal_key, k).items()):
-            k = 0
 
         ks_at_k = _find_ks(offsets, principal_key, k)
         sfxs_k = dict([(key, sfxs[key][ks_at_k[key]])
                        for key in ks_at_k.keys()])
 
-        sym_1 = None
         # generate each state
-        if any(list(sfxs_k.values())):
+        if _i == 0 and all(ks < len(sfxs[key]) - 1 for key, ks in ks_at_k.items()):
+            print('INITIAL STRAIGHT FORWARD')
+            key = principal_key
+            sym = k + 1
+        elif any(list(sfxs_k.values())):
             if (random.random() < p):
                 print('TRANSITIONS')
                 key, sym = copy_transitions(
@@ -64,7 +70,7 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
                 print('SFXS BEST LRSS')
                 key, sym = jump_best_lrss(
                     sfxs, rsfxs, lrss, max_size, ktraces, ks_at_k, offsets, principal_key)
-                sym_1 = sym + 1
+                sym += 1
         else:
             if all(ks < len(sfxs[key]) - 1 for key, ks in ks_at_k.items()):
                 print('STRAIGHT FORWARD')
@@ -74,59 +80,89 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
                 print('SFXS RANDOM')
                 key, sym = choose_from_sfxs_k(
                     k, sfxs, ks_at_k, offsets, principal_key)
-                sym_1 = sym + 1
+                sym += 1
 
+        next_keys = _find_ks(offsets, key, sym)
         last_ktraces = dict([(key, ktr[-1]) for key, ktr in ktraces.items()])
-
-        if sym_1 is not None:
-            next_keys = _find_ks(offsets, key, sym_1)
+        if last_ktraces[key] == sym and times > 3:
+            key, sym = choose_from_sfxs_k(
+                k, sfxs, ks_at_k, offsets, principal_key)
+            sym += 1
+        if last_ktraces[key] == sym:
+            times += 1
         else:
-            next_keys = _find_ks(offsets, key, sym)
+            times = 0
 
-        print(next_keys)
-
-        start_offsets = [offsets[key][ks] if ks < len(
-            offsets[key]) else -1 for key, ks in next_keys.items()]
-
+        offsets_at_kp = dict([(key, offsets[key][ks-1]) if ks < len(
+            offsets[key]) and ks > 1 else (key, -1) for key, ks in next_keys.items()])
         start_offset = 0
-        if len(start_offsets) > 0:
-            start_offset = start_offsets[0]
+        if len(offsets_at_kp.values()) > 0 and principal_key in offsets_at_kp:
+            start_offset = offsets_at_kp[principal_key]
+        keys_at_beginning_of_event = dict([(key, _find_nearest_k(
+            offsets, key, start_offset)) for key in last_ktraces.keys()])
 
         offsets_at_kp1 = dict([(key, offsets[key][ks]) if ks < len(
             offsets[key]) else (key, -1) for key, ks in next_keys.items()])
 
-        max_offset = max(offsets_at_kp1.values())
+        max_offset = -1
+        if len(offsets_at_kp1.values()) > 0:
+            max_offset = max(offsets_at_kp1.values())
         if any(off == -1 for off in offsets_at_kp1.values()):
             max_offset = -1
-
         ks_at_final_of_event = dict(
-            [(key, _find_nearest_k(offsets, key, max_offset)) for key in sfxs.keys()])
+            [(key, _find_nearest_k(offsets, key, max_offset, minus=False) + 1) for key in sfxs.keys()])
 
         for key in sfxs.keys():
             if key in next_keys:
                 sequences[key].append(next_keys[key])
                 ktraces[key].append(next_keys[key])
                 sequences, ktraces = fill_gaps(
-                    key, ks_at_final_of_event, next_keys, sequences, ktraces, start_offset, offsets)
+                    key, ks_at_final_of_event, next_keys[key], sequences, ktraces, start_offset, offsets, max_offset)
             else:
                 sequences, ktraces = fill_gaps(
-                    key, ks_at_final_of_event, last_ktraces, sequences, ktraces, start_offset, offsets)
+                    key, ks_at_final_of_event, keys_at_beginning_of_event[key],
+                    sequences, ktraces, start_offset, offsets, max_offset, no_key=True)
 
         k = ktraces[principal_key][-1]
+        if any(ktr[-1] >= len(sfxs[key]) - 1 for key, ktr in ktraces.items()):
+            k = 0
+
+    print('____________________________________________________________________')
 
     return sequences, ktraces
 
 
-def fill_gaps(key, ks_dict_1, ks_dict_2, sequences, ktraces, start_offset, offsets):
+def fill_gaps(key, ks_dict_1, k_2, sequences, ktraces, start_offset, offsets, max_offset, no_key=False):
     """
     Fill Gaps where existent
     """
-    values = ks_dict_1[key] - ks_dict_2[key] - 1
+    max_of_all_offsets = max(max(offsets.values())) + 1
+    values = ks_dict_1[key] - k_2
+    if max_offset == -1:
+        max_offset = max(max(offsets.values())) + 1
+
     for i in range(values):
-        ks = ks_dict_2[key] + i + 1
-        if offsets[key][ks] >= start_offset:
+        ks = k_2 + i + 1
+        if ks == len(offsets[key]) and max_offset == max_of_all_offsets:
             sequences[key].append(ks)
             ktraces[key].append(ks)
+        elif ks < len(offsets[key]):
+            if i == 0 and offsets[key][ks - 1] > start_offset and no_key:
+                duration = str(abs(start_offset - offsets[key][ks  - 1]))
+                sequences[key].append('N_' + duration)
+            elif offsets[key][ks - 1] >= start_offset and offsets[key][ks] <= max_offset:
+                sequences[key].append(ks)
+                ktraces[key].append(ks)
+
+            if (i == values - 1) and offsets[key][ks - 1] < max_offset:
+                duration = str(abs(max_offset - offsets[key][ks]))
+                sequences[key].append('N_' + duration)
+
+    if no_key and values <= 0:
+        duration_minor = str(abs(start_offset - offsets[key][k_2 - 1]))
+        duration_max = str(abs(max_offset - offsets[key][k_2]))
+        sequences[key].append('N_' + min(duration_minor, duration_max))
+
     return sequences, ktraces
 
 
@@ -137,7 +173,7 @@ def choose_from_sfxs_k(k, sfxs, ks_at_k, offsets, principal_key):
     sfxs_k = dict([(key, sfxs[key][ks_at_k[key]])
                    for key in ks_at_k.keys()])
     possible_moves = [(key, sfx) for key, sfx in sfxs_k.items() if len(
-        _find_ks(offsets, key, sfx).values()) < len(offsets.keys())]
+        _find_ks(offsets, key, sfx).values()) == len(offsets.keys())]
 
     pr_key = principal_key
     sym = sfxs_k[principal_key]
@@ -155,7 +191,9 @@ def copy_transitions(k, trns, sfxs, ks_at_k, ktraces, offsets, principal_key, i=
         trns, _find_ks(offsets, principal_key, k), offsets)
 
     if i > 5:
-        return choose_from_sfxs_k(k, sfxs, ks_at_k, offsets, principal_key)
+        key, sym = choose_from_sfxs_k(k, sfxs, ks_at_k, offsets, principal_key)
+        sym += 1
+        return key, sym
 
     if len(I) == 0:
         key_pr, sym = choose_from_sfxs_k(
@@ -183,7 +221,7 @@ def get_sim_trans(I, offsets, key):
     """
     Get Simultaneous Transitions by K
     """
-    return [trans for trans in I if len(_find_ks(offsets, key, trans).values()) < len(offsets.keys())]
+    return [trans for trans in I if len(_find_ks(offsets, key, trans).values()) == len(offsets.keys())]
 
 
 def get_f_transitions_by_oracle(trns, ks_at_k, offsets):
@@ -223,7 +261,7 @@ def filter_lrss(k_vecs, lrs_vecs, offsets):
         lrs_vecs_filtered[key] = []
 
         for i, k in enumerate(k_poss):
-            if len(_find_ks(offsets, key, k).values()) == len(offsets.keys()):
+            if len(_find_ks(offsets, key, k + 1).values()) == len(offsets.keys()):
                 k_vecs_filtered[key].append(k_vecs[key][i])
                 lrs_vecs_filtered[key].append(k)
 
@@ -264,6 +302,7 @@ def _find_ks(offsets, principal_key, k):
 
 
 def _find_nearest_k(offsets, key, off, minus=True):
+    """Find nearest k to an offset"""
     if off == -1:
         return len(offsets[key])
 

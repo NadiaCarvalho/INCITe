@@ -10,6 +10,7 @@ import generation.utils as gen_utils
 from generation.cdist_fixed import distance_between_windowed_features
 from representation.conversor.score_conversor import parse_single_line
 from representation.events.linear_event import LinearEvent
+from representation.parsers.utils import get_last_x_events_that_are_notes_before_index
 
 
 def get_single_part_features(application, information, line):
@@ -68,6 +69,7 @@ def construct_single_oracle(application, line):
     image.save(name)
 
     application.oracles_information['single_oracle'] = {
+        'key': line,
         'oracle': oracle,
         'normed_features': normed_features,
         'original_features': original_features,
@@ -84,7 +86,8 @@ def generate_sequences_single(information, num_seq):
     i = 0
     while i < num_seq:
         p = random.uniform(0, 1)
-        lrs = int(random.uniform(1, max(information['oracle'].basic_attributes['lrs'])))
+        lrs = int(random.uniform(
+            1, max(information['oracle'].basic_attributes['lrs'])))
 
         sequence, kend, ktrace = gen.generate(
             oracle=information['oracle'], seq_len=50, p=p, k=-1, LRS=lrs)
@@ -106,12 +109,11 @@ def generate_from_single(application, num_seq):
     """
     information = application.oracles_information['single_oracle']
 
-    print(len(information['original_features']))
-    print(len(information['features_names']))
-
     original_sequence = range(len(information['original_features']))
-    linear_score_generator(original_sequence, information['original_features'],
-                           information['features_names'], name='original', start=0)
+    linear_score_generator(application, original_sequence,
+                           information['original_features'],
+                           information['features_names'],
+                           name='original', start=0, line=information['key'])
 
     localtime = time.asctime(time.localtime(time.time()))
     localtime = '_'.join(localtime.split(' '))
@@ -123,19 +125,31 @@ def generate_from_single(application, num_seq):
     for i, (sequence, dist) in enumerate(ordered_sequences):
         name = 'gen_' + localtime + '_' + \
             str(i) + '_distance_' + str(dist) + '.xml'
-        linear_score_generator(
-            sequence, information['original_features'],
-            information['features_names'], name=name)
+        linear_score_generator(application, sequence,
+                               information['original_features'],
+                               information['features_names'],
+                               name=name, line=information['key'])
 
 
-def linear_score_generator(sequence, o_information, feature_names, name='', start=-1):
+def linear_score_generator(application, sequence, o_information,
+                           feature_names, name='', start=-1, line=''):
     """
     Score Generator for Single Line
     """
     sequenced_events = [LinearEvent(
         from_list=o_information[state+start], features=feature_names) for state in sequence]
+
+    start_pitch = application.principal_music[0].get_part_events()[
+        line][0].get_viewpoint('pitch')
+    if start == -1:
+        last_pitch_index = get_last_x_events_that_are_notes_before_index(
+            application.principal_music[0].get_part_events()[line],
+            number=1, actual_index=start)
+        start_pitch = application.principal_music[0].get_part_events()[
+            line][last_pitch_index].get_viewpoint('pitch')
+
     if len(sequenced_events) > 0:
-        score = parse_single_line(sequenced_events)
+        score = parse_single_line(sequenced_events, start_pitch=start_pitch)
         # score.show()
         path = os.sep.join([os.getcwd(), 'data', 'generations', name])
         fp = score.write(fp=path)

@@ -5,12 +5,15 @@ import os
 import time
 import random
 
+import numpy as np
+
 import generation.gen_algorithms.multi_oracle_gen as multi_gen
 import generation.plot_fo as gen_plot
 import generation.utils as gen_utils
 from generation.cdist_fixed import distance_between_windowed_features
 from representation.conversor.score_conversor import parse_multiple
 from representation.events.linear_event import LinearEvent
+from representation.parsers.utils import get_last_x_events_that_are_notes_before_index
 
 
 def get_multiple_part_features(application, part_info, vert_info):
@@ -110,7 +113,7 @@ def construct_multi_oracles(application):
     }
 
 
-def generate_sequences_multiple(information, num_seq, start=-1):
+def generate_sequences_multiple(information, num_seq, seq_len=15, start=-1):
     """
     Generate Sequences
     """
@@ -119,7 +122,7 @@ def generate_sequences_multiple(information, num_seq, start=-1):
     i = 0
     while i < num_seq:
         sequences, ktraces = multi_gen.sync_generate(
-            information['oracles'], information['offsets'], seq_len=50, p=random.uniform(0, 1), k=-1)
+            information['oracles'], information['offsets'], seq_len=seq_len, p=random.uniform(0, 1), k=-1)
 
         flag = all(len(sequence) > 0 for sequence in sequences.values())
         if flag:
@@ -129,14 +132,19 @@ def generate_sequences_multiple(information, num_seq, start=-1):
                 if key != 'vertical':
                     orig_feats = information['original_features'][key]
 
-                seq = list(map(lambda x: x + start, sequence))
-                if any(s >= len(normed_feats) for s in seq):
+                seq = list(
+                    map(lambda x: x + start if not isinstance(x, str) else x, sequence))
+                filter_strings = [s for s in seq if not isinstance(s, str)]
+                if (any(s >= len(normed_feats) for s in filter_strings) or
+                        len(seq) - len(filter_strings) > (seq_len / 10)):
                     flag = False
                     break
 
-                sequence_in_feat = [normed_feats[k] for k in seq]
+                sequence_in_feat = [normed_feats[k]
+                                    for k in filter_strings]
                 if key != 'vertical':
-                    sequences[key] = [orig_feats[k] for k in seq]
+                    sequences[key] = [orig_feats[k] if not isinstance(
+                        k, str) else k for k in seq]
 
                 distances.append(distance_between_windowed_features(
                     sequence_in_feat,
@@ -159,7 +167,8 @@ def generate_from_multiple(application, num_seq):
 
     # Save original Score
     multi_sequence_score_generator(
-        information['original_features'], information['features_names'], name='original')
+        information['original_features'], information['features_names'],
+        application=application, name='original', actual_index=0)
 
     localtime = time.asctime(time.localtime(time.time()))
     localtime = '_'.join(localtime.split(' '))
@@ -173,21 +182,36 @@ def generate_from_multiple(application, num_seq):
         multi_sequence_score_generator(
             sequence,
             information['features_names'],
+            application=application,
             name=name)
 
 
-def multi_sequence_score_generator(sequences, feature_names, name=''):
+def multi_sequence_score_generator(sequences, feature_names, application, name='', actual_index=-1):
     """
     Generate Score
     """
+    start_pitches = {}
     sequenced_events = {}
     for key, sequence in sequences.items():
         if key != 'vertical':
             sequenced_events[key] = [LinearEvent(
                 from_list=state, features=feature_names)
+                if not isinstance(state, str)
+                else state
                 for state in sequence]
 
-    score = parse_multiple(sequenced_events)
+            start_pitches[key] = application.principal_music[0].get_part_events()[
+                key][0].get_viewpoint('pitch')
+
+            if actual_index == -1:
+                last_pitch_index = get_last_x_events_that_are_notes_before_index(
+                    application.principal_music[0].get_part_events()[key],
+                    number=1, actual_index=actual_index)
+                last_pitch = application.principal_music[0].get_part_events()[
+                    key][last_pitch_index].get_viewpoint('pitch')
+                start_pitches[key] = last_pitch
+
+    score = parse_multiple(sequenced_events, start_pitches)
     # score.show()
     path = os.sep.join([os.getcwd(), 'data', 'generations', name + '.xml'])
     fp = score.write(fp=path)

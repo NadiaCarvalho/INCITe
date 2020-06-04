@@ -169,24 +169,25 @@ class VerticalParser:
         if len(uniq_keys_off) > 0:
             key = uniq_keys_off[0]
 
-        return key
+        return k_offset, key
 
     def key_signatures_parsing(self, index, chord):
         """
         Parses the existent key signatures information
         """
-        nearest_key_sign = self.get_key_sign_at_offset(
+        k_offset, nearest_key_sign = self.get_key_sign_at_offset(
             self.events[index].get_offset())
         self.events[index].add_viewpoint(
-            'keysign', nearest_key_sign.sharps)
+            'key.keysig', nearest_key_sign.sharps)
+
         self.events[index].add_viewpoint(
-            'signature.key', str(self.ks_keys[nearest_key_sign.offset]))
+            'signatures.key', str(self.ks_keys[k_offset]))
         self.events[index].add_viewpoint(
-            'signature.certainty', self.ks_keys[nearest_key_sign.offset].tonalCertainty())
+            'signatures.certainty', self.ks_keys[k_offset].tonalCertainty())
         harm_f_ks = utils.harmonic_functions_key(
-            chord, self.ks_keys[nearest_key_sign.offset])
+            chord, self.ks_keys[k_offset])
         self.events[index].add_viewpoint(
-            'signature.function', harm_f_ks.figure)
+            'signatures.function', harm_f_ks.figure)
 
     def perceived_key_at_measure_parsing(self, index, chord):
         """

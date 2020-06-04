@@ -10,7 +10,7 @@ ARRAY_VALUES = ['expressions.articulation', 'expressions.expression',
                 'expressions.ornamentation', 'expressions.dynamic', 'pitch.chordPitches', 'basic.pitches',
                 'classes.pitchClass', 'basic.primeForm', 'classes.pcOrdered']
 
-FIXED_FEATURES = ['posinbar', 'key']
+FIXED_FEATURES = ['posinbar', 'keysig']
 
 
 def statistic_features(events):

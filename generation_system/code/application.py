@@ -6,6 +6,7 @@ To comunicate with interface
 
 import math
 import os
+import json
 
 import numpy as np
 from PyQt5 import QtCore
@@ -122,15 +123,17 @@ class Application(QtCore.QObject):
         """
         # Add Principal Music To Music
         if self.principal_music is None:
-            if '.mxl' or '.xml' in self.principal_music_path:
-                self.principal_music = (MusicParser(self.principal_music_path), self.principal_music_path, False)
+            if '.mxl' in self.principal_music_path or '.xml' in self.principal_music_path:
+                self.principal_music = (MusicParser(
+                    self.principal_music_path), self.principal_music_path, False)
                 self.principal_music[0].parse()
                 self.music[self.principal_music[1]] = self.principal_music
             else:
                 if self.music == {}:
                     return -1, -1
                 else:
-                    self.principal_music = self.music[list(self.music.keys())[-1]]
+                    self.principal_music = self.music[list(
+                        self.music.keys())[-1]]
 
         self.indexes_first = {}
 
@@ -324,6 +327,15 @@ class Application(QtCore.QObject):
                 sel_part_features, -1, 1)
             information['normed_weights'] = rep_utils.normalize_weights(
                 weights)
+
+            file_path = r'data\myexamples\viewpoints' + '_' + str(key_part)
+            with open(file_path + '.json', 'w') as handle:
+                json.dump(information['selected_features_names'], handle, indent=2)
+                json.dump(information['fixed_weights'], handle, indent=2)
+                json.dump(information['normed_weights'], handle, indent=2)
+                handle.close()
+
+
 
     def apply_viewpoint_weights(self, weight_dict, fixed_dict):
         """

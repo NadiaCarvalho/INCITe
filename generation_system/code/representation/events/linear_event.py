@@ -14,7 +14,7 @@ ARRAY_VALUES = ['articulation', 'expression',
                 'ornamentation', 'dynamic', 'chordPitches']
 
 BOOL_VALUES = ['rest', 'grace', 'chord',
-               'exists_before', 'is_end', 'double', 'fib']
+               'exists_before', 'is_end', 'double', 'fib', 'anacrusis']
 
 
 class LinearEvent(Event):

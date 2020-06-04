@@ -136,6 +136,7 @@ class LineParser:
             self.events[index].add_viewpoint(
                 'accidental', note_or_rest.pitch.accidental.modifier)
 
+        note_or_rest.pitch.convertQuarterTonesToMicrotones(inPlace=True)
         self.events[index].add_viewpoint(
             'microtonal', note_or_rest.pitch.microtone.cents)
         self.events[index].add_viewpoint(
@@ -410,13 +411,13 @@ class LineParser:
 
                 for event in utils.get_evs_bet_offs_inc(self.events, key.offset, next_key_offset):
                     event.add_viewpoint('keysig', key.sharps)
-                    event.add_viewpoint('key', str(key_anal), 'signature')
+                    event.add_viewpoint('signatures.key', str(key_anal))
                     if not event.is_rest():
                         sc_deg = key_anal.getScaleDegreeFromPitch(
                             event.get_viewpoint('dnote') +
                             event.get_viewpoint('accidental'))
                         event.add_viewpoint(
-                            'scale_degree', sc_deg, 'signature')
+                            'signatures.scale_degree', sc_deg)
             except music21.analysis.discrete.DiscreteAnalysisException:
                 print('failed to get likely keys for Stream component')
 
