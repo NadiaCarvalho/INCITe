@@ -197,7 +197,7 @@ class Application(QtCore.QObject):
         if part_features == -1 and vertical_features == -1 and interface is not None:
             self.signal_parsed.connect(
                 interface.create_statistics_overview)
-            self.signal_parsed.emit(statistic_dict)
+            self.signal_parsed.emit('ERROR')
 
         statistic_dict = self.get_statistics(part_features, vertical_features)
 
@@ -330,12 +330,11 @@ class Application(QtCore.QObject):
 
             file_path = r'data\myexamples\viewpoints' + '_' + str(key_part)
             with open(file_path + '.json', 'w') as handle:
-                json.dump(information['selected_features_names'], handle, indent=2)
+                json.dump(
+                    information['selected_features_names'], handle, indent=2)
                 json.dump(information['fixed_weights'], handle, indent=2)
                 json.dump(information['normed_weights'], handle, indent=2)
                 handle.close()
-
-
 
     def apply_viewpoint_weights(self, weight_dict, fixed_dict):
         """
