@@ -3,6 +3,7 @@
 import os
 import time
 import random
+import numpy as np
 
 import generation.gen_algorithms.generation as gen
 import generation.plot_fo as gen_plot
@@ -91,15 +92,21 @@ def generate_sequences_single(information, num_seq):
 
         sequence, kend, ktrace = gen.generate(
             oracle=information['oracle'], seq_len=50, p=p, k=-1, LRS=lrs)
+
         if len(sequence) > 0:
             dist = distance_between_windowed_features(
                 [information['normed_features'][state-1]
                     for state in sequence],
                 information['normed_features'])
-            ordered_sequences.append((sequence, dist))
+
+            # calculate ktrace distance as
+            # (#non-consecutive / #total-recuperaded-states)
+            dist_2 = sum(np.diff(ktrace) != 1)/len(ktrace)
+
+            ordered_sequences.append((sequence, dist, dist_2))
             i += 1
 
-    ordered_sequences.sort(key=lambda tup: tup[1])
+    ordered_sequences.sort(key=lambda tup: tup[2])
     return ordered_sequences
 
 
@@ -122,9 +129,10 @@ def generate_from_single(application, num_seq):
     ordered_sequences = generate_sequences_single(
         information, num_seq)
     # Generate Scores of Ordered Sequences
-    for i, (sequence, dist) in enumerate(ordered_sequences):
+    for i, (sequence, dist_1, dist_2) in enumerate(ordered_sequences):
         name = 'gen_' + localtime + '_' + \
-            str(i) + '_distance_' + str(dist) + '.xml'
+            str(i) + '_distF_' + str(round(dist_1)) + \
+            '_distC_' + str(round(dist_2, 2)) + '.xml'
         linear_score_generator(application, sequence,
                                information['original_features'],
                                information['features_names'],
@@ -150,6 +158,5 @@ def linear_score_generator(application, sequence, o_information,
 
     if len(sequenced_events) > 0:
         score = parse_single_line(sequenced_events, start_pitch=start_pitch)
-        # score.show()
         path = os.sep.join([os.getcwd(), 'data', 'generations', name])
         fp = score.write(fp=path)

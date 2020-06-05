@@ -158,7 +158,7 @@ def fill_gaps(key, ks_dict_1, k_2, sequences, ktraces, start_offset, offsets, ma
                 duration = str(abs(max_offset - offsets[key][ks]))
                 sequences[key].append('N_' + duration)
 
-    if no_key and values <= 0:
+    if no_key and values <= 0 and k_2 < len(offsets[key]):
         duration_minor = str(abs(start_offset - offsets[key][k_2 - 1]))
         duration_max = str(abs(max_offset - offsets[key][k_2]))
         sequences[key].append('N_' + min(duration_minor, duration_max))

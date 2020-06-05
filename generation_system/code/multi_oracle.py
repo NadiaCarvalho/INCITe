@@ -127,6 +127,7 @@ def generate_sequences_multiple(information, num_seq, seq_len=15, start=-1):
         flag = all(len(sequence) > 0 for sequence in sequences.values())
         if flag:
             distances = []
+            distances_2 = []
             for key, sequence in sequences.items():
                 normed_feats = information['normed_features'][key]
                 if key != 'vertical':
@@ -150,12 +151,19 @@ def generate_sequences_multiple(information, num_seq, seq_len=15, start=-1):
                     sequence_in_feat,
                     normed_feats))
 
+                # calculate ktrace distance as
+                # (#non-consecutive / #total-recuperaded-states)
+                distances_2.append(
+                    sum(np.diff(ktraces[key]) != 1)/len(ktraces[key]))
+
             if flag:
                 ordered_sequences.append(
-                    (sequences, sum(distances)/len(distances)))
+                    (sequences,
+                     sum(distances)/len(distances),
+                     sum(distances_2)/len(distances_2)))
                 i += 1
 
-    ordered_sequences.sort(key=lambda tup: tup[1])
+    ordered_sequences.sort(key=lambda tup: tup[2])
     return ordered_sequences
 
 
@@ -176,9 +184,10 @@ def generate_from_multiple(application, num_seq):
 
     ordered_sequences = generate_sequences_multiple(
         information, num_seq)
-    for i, (sequence, dist) in enumerate(ordered_sequences):
+    for i, (sequence, dist_1, dist_2) in enumerate(ordered_sequences):
         name = 'gen_' + localtime + '_' + \
-            str(i) + '_distance_' + str(dist)
+            str(i) + '_distF_' + str(round(dist_1)) + \
+            '_distC_' + str(round(dist_2, 2))
         multi_sequence_score_generator(
             sequence,
             information['features_names'],
@@ -212,6 +221,5 @@ def multi_sequence_score_generator(sequences, feature_names, application, name='
                 start_pitches[key] = last_pitch
 
     score = parse_multiple(sequenced_events, start_pitches)
-    # score.show()
     path = os.sep.join([os.getcwd(), 'data', 'generations', name + '.xml'])
     fp = score.write(fp=path)

@@ -131,9 +131,17 @@ class ShowStatsWidget(QtWidgets.QWidget):
         if isinstance(stat, list):
             plus_text = ''
             if key == 'unique_values' and len(stat) < 5:
-                for _tuple in stat:
-                    plus_text += str(_tuple[0]) + ' : ' + \
-                        str(_tuple[1]) + ' times\n'
+                new_tuples = stat
+                values = [x[0] for x in stat]
+                if len(values) <= 2 and all(val in [0, 1] for val in values):
+                    new_tuples = [(bool(_tuple[0]), _tuple[1]) for _tuple in stat]
+                for _tuple in new_tuples:
+                    if _tuple[0] == 10000:
+                        plus_text += 'No value' + ' : ' + \
+                            str(_tuple[1]) + ' times\n'
+                    else:
+                        plus_text += str(_tuple[0]) + ' : ' + \
+                            str(_tuple[1]) + ' times\n'
             elif key == 'unique_percentages' and len(stat) < 5:
                 for perc in stat:
                     plus_text += str(perc) + ' %\n'
