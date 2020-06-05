@@ -196,8 +196,9 @@ class Application(QtCore.QObject):
         part_features, vertical_features = self.process_music()
         if part_features == -1 and vertical_features == -1 and interface is not None:
             self.signal_parsed.connect(
-                interface.create_statistics_overview)
+                interface.error_no_music)
             self.signal_parsed.emit('ERROR')
+            return
 
         statistic_dict = self.get_statistics(part_features, vertical_features)
 

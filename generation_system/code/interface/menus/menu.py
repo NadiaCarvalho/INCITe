@@ -46,26 +46,41 @@ class MyMenu(QtWidgets.QWidget):
                                    fade=70.0, radius=10.0, lines=12,
                                    line_length=10.0, line_width=5.0,
                                    speed=1.0, color=(0, 0, 0))
+        self.parent.btn_next.setEnabled(False)
+        self.parent.btn_back.setEnabled(False)
         self.wait.start()
 
     def stop_waiting(self):
         """
         """
+        self.parent.btn_next.setEnabled(True)
+        self.parent.btn_back.setEnabled(True)
         self.wait.stop()
 
     def stop_waiting_next(self):
         """
         """
-        self.wait.stop()
+        self.stop_waiting()
 
         if self.parent.front_wid == 1:
             self.parent.wids[self.parent.front_wid + 1].set_maximum_spinbox()
 
         self.parent.next_wid_logic()
 
+    def error_no_music(self, value):
+        """
+        Receive signal if no music to create statistics
+        """
+        msg = QtWidgets.QMessageBox()
+        msg.setStyleSheet("""background: #b4b4b4;""")
+        msg.setContentsMargins(5, 5, 5, 5)
+        msg.setIcon(QtWidgets.QMessageBox.Warning)
+        msg.setText("No Music! Go Back and select some!")
+        msg.setWindowTitle('No Music Warning')
+        msg.exec_()
 
     def stop_waiting_final(self):
-        self.wait.stop()
+        self.stop_waiting()
 
         msg = QtWidgets.QMessageBox()
         msg.setStyleSheet("""background: #b4b4b4;""")

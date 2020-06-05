@@ -128,7 +128,7 @@ class FirstMenu(MyMenu):
 
         check_box = QtWidgets.QCheckBox("Select All")
         check_box.setTristate(True)
-        check_box.setCheckState(QtCore.Qt.Checked)
+        check_box.setChecked(False)
         check_box.stateChanged.connect(self.select_all)
         check_box.clicked.connect(self.click_pass_semi)
 
@@ -162,7 +162,7 @@ class FirstMenu(MyMenu):
             name = os.path.normpath(folder).split(os.path.sep)[-1]
             if name not in folders:
                 selectables.append(QtWidgets.QCheckBox(name))
-                selectables[-1].setChecked(True)
+                selectables[-1].setChecked(False)
                 selectables[-1].toggled.connect(self.select_one)
                 container.widget().layout().addWidget(selectables[-1])
         return selectables

@@ -261,12 +261,6 @@ class SecondMenu(MyMenu):
         self.threadpool.start(worker)
         self.start_waiting()
 
-    def error_no_music(self, value):
-        """
-        Receive signal if no music to create statistics
-        """
-        print('ERROR')
-
     def clean_weights(self):
         """
         Clean Weights and Fixed
@@ -345,7 +339,7 @@ class SecondMenu(MyMenu):
                 information_view.addWidget(ShowStatsWidget(
                     key, statistics[key], description))
 
-        information_view.setCurrentIndex(10)
+        information_view.setCurrentIndex(0)
         main_widget.layout().addWidget(list_wid, 0, 0, 1, 1)
         main_widget.layout().addWidget(information_view, 0, 1, 1, 1)
         return main_widget
