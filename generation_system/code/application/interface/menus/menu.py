@@ -13,9 +13,7 @@ from application.interface.components.wrap_text import wrap_text
 
 class MyMenu(QtWidgets.QWidget):
     """
-    Second Menu:
-    - Present Statistics
-    - Choosing Weights
+    Abstract Class for Menu
     """
 
     def __init__(self, width, height, parent, *args, **kwargs):
