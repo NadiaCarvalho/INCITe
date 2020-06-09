@@ -25,7 +25,7 @@ a = Analysis(['code\\cli.py'],
              cipher=block_cipher,
              noarchive=False)
 
-a.datas += [('logo.png','D:\\FEUP_1920\\DISS\\Dissertation\\generation_system\\data\\images\\logo.png','DATA')]
+a.datas += [('logo.ico','D:\\FEUP_1920\\DISS\\Dissertation\\generation_system\\data\\images\\logo.ico','DATA')]
 
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
@@ -36,20 +36,12 @@ exe = EXE(pyz,
           a.datas,
           options,
           # exclude_binaries=True,
-          name='APP',
+          name='MyMusicalSuggestor',
           debug=False,
           strip=False,
           upx=True,
           icon='D:\\FEUP_1920\\DISS\\Dissertation\\generation_system\\data\\images\\logo.ico',
           bootloader_ignore_signals=False,
           runtime_tmpdir=None,
-          console=True)
+          console=False)
 
-# coll = COLLECT(exe,
-#              a.binaries,
-#              a.zipfiles,
-#              a.datas,
-#              strip=False,
-#              upx=True,
-#              upx_exclude=[],
-#              name='APP')

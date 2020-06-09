@@ -1,12 +1,12 @@
 setup(
-    name="realpython-reader",
+    name="My Musical Suggestor",
     version="1.0.0",
-    description="Read the latest Real Python tutorials",
-    long_description=README,
+    description="Create Suggestions for continuating a piece of music.",
+    long_description='../README',
     long_description_content_type="text/markdown",
-    url="https://github.com/realpython/reader",
-    author="Real Python",
-    author_email="office@realpython.com",
+    url="https://github.com/NadiaCarvalho/Dissertation",
+    author="Nádia Carvalho",
+    author_email="ei12047@fe.up.pt; nadiacarvalho118@gmail.com",
     license="MIT",
     classifiers=[
         "License :: OSI Approved :: MIT License",

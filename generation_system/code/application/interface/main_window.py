@@ -1,7 +1,7 @@
 """
 Main Window for Interface
 """
-
+import os
 import sys
 
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
@@ -12,6 +12,15 @@ from application.interface.menus.third_menu import ThirdMenu
 
 from application.logic import Application
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 class MainWindow(QtWidgets.QMainWindow):
     """
@@ -20,8 +29,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, music, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        self.setWindowTitle("My Awesome App")
-        self.setWindowIcon(QtGui.QIcon('web.png'))
+        self.setWindowTitle("My Musical Suggestor")
+
+        self.setWindowIcon(QtGui.QIcon(resource_path("logo.ico")))
 
         self.application = Application(music)
 

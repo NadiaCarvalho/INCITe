@@ -139,6 +139,9 @@ class MusicParser:
         """
         max_voice_count = voice_utils.get_number_voices(part)
 
+        if isinstance(part, music21.stream.Part):
+            part = music21.stream.Stream(part)
+
         for measure in list(part.recurse(classFilter='Measure')):
             measure.flattenUnnecessaryVoices(inPlace=True)
             if measure.hasVoices():
@@ -147,13 +150,18 @@ class MusicParser:
                 voice_utils.make_voices(measure, in_place=True,
                                         number_voices=max_voice_count)
 
-        # part.flattenUnnecessaryVoices(inPlace=True)
         new_parts = part.voicesToParts()
-        for j, voice in enumerate(new_parts.parts):
-            voice.append(real_in)
-            index, name = self.name_of_part(real_in, j)
+        if hasattr(new_parts, 'parts'):
+            for j, voice in enumerate(new_parts.parts):
+                voice.insert(0, real_in)
+                index, name = self.name_of_part(real_in, j)
+                self.music_events['part_events'][index] = self.parse_sequence_part(
+                    voice, name=name, first=(False, True)[i == 0])
+        else:
+            new_parts.insert(0, real_in)
+            index, name = self.name_of_part(real_in)
             self.music_events['part_events'][index] = self.parse_sequence_part(
-                voice, name=name, first=(False, True)[i == 0])
+                new_parts, name=name, first=(False, True)[i == 0])
 
     def process_voiced_part(self, part, i, real_in):
         """
@@ -168,11 +176,17 @@ class MusicParser:
             except Exception:
                 new_parts = part.voicesToParts(separateById=False)
 
-        for j, voice in enumerate(new_parts.parts):
-            voice.append(real_in)
-            index, name = self.name_of_part(real_in, j)
+        if hasattr(new_parts, 'parts'):
+            for j, voice in enumerate(new_parts.parts):
+                voice.insert(0, real_in)
+                index, name = self.name_of_part(real_in, j)
+                self.music_events['part_events'][index] = self.parse_sequence_part(
+                    voice, name=name, first=(False, True)[i == 0])
+        else:
+            new_parts.insert(0, real_in)
+            index, name = self.name_of_part(real_in)
             self.music_events['part_events'][index] = self.parse_sequence_part(
-                voice, name=name, first=(False, True)[i == 0])
+                new_parts, name=name, first=(False, True)[i == 0])
 
     def name_of_part(self, real_in, j=None):
         """

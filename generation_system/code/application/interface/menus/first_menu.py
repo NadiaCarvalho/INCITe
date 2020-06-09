@@ -266,7 +266,7 @@ class FirstMenu(MyMenu):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         files, _ = QtWidgets.QFileDialog.getOpenFileNames(
-            self, "QFileDialog.getOpenFileNames()", "", "MusicXML Files (*.mxl);; XML Files (*.xml)", options=options)
+            self, "QFileDialog.getOpenFileNames()", "", "MusicXML Files (*.mxl *.xml)", options=options)
         if files:
             self.right_group_box.children()[2].setVisible(True)
             for filename in files:

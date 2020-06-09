@@ -130,7 +130,7 @@ def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4', single=
     crescendo_conversor(voice, events)
 
     part.insert(0, voice, ignoreSort=False)
-    #part.show('text')
+    # part.show('text')
 
     if single:
         part.makeNotation(inPlace=True)
@@ -273,7 +273,9 @@ def convert_note_event(event, start_pitch):
     note.volume = event.get_viewpoint('volume')
 
     note.notehead = event.get_viewpoint('notehead.type')
-    note.noteheadFill = event.get_viewpoint('notehead.fill')
+
+    if str(note.duration.type) not in ['half', 'whole']:
+        note.noteheadFill = event.get_viewpoint('notehead.fill')
     parenthesis = event.get_viewpoint('notehead.parenthesis')
     if parenthesis:
         note.noteheadParenthesis = parenthesis

@@ -75,7 +75,7 @@ class Application(QtCore.QObject):
 
         n_processed = 0
         for filename in reversed_filenames:
-            if '.mxl' in filename:
+            if '.mxl' in filename or '.xml' in filename:
                 self.music[filename] = (MusicParser(filename), filename, False)
                 self.music[filename][0].parse()
 
@@ -88,7 +88,6 @@ class Application(QtCore.QObject):
                 name = '.'.join(name.split('.')[:-1])
                 folders = self.database_path.split(os.path.sep) + folder_name
                 self.music[filename][0].to_pickle(name, folders)
-                self.music[filename][0].to_json(name, folders)
 
                 n_processed += 1
 

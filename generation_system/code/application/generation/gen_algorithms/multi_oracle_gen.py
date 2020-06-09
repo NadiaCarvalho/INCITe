@@ -117,14 +117,15 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
 
         for key in sfxs.keys():
             if key in next_keys:
-                sequences[key].append(next_keys[key])
+                if _i != 0:
+                    sequences[key].append(next_keys[key])
                 ktraces[key].append(next_keys[key])
                 sequences, ktraces = fill_gaps(
-                    key, ks_at_final_of_event, next_keys[key], sequences, ktraces, start_offset, offsets, max_offset)
+                    key, ks_at_final_of_event, next_keys[key], sequences, ktraces, start_offset, offsets, max_offset, _i=_i)
             else:
                 sequences, ktraces = fill_gaps(
                     key, ks_at_final_of_event, keys_at_beginning_of_event[key],
-                    sequences, ktraces, start_offset, offsets, max_offset, no_key=True)
+                    sequences, ktraces, start_offset, offsets, max_offset, no_key=True, _i=_i)
 
         k = ktraces[principal_key][-1]
         if any(ktr[-1] >= len(sfxs[key]) - 1 for key, ktr in ktraces.items()):
@@ -135,7 +136,7 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
     return sequences, ktraces
 
 
-def fill_gaps(key, ks_dict_1, k_2, sequences, ktraces, start_offset, offsets, max_offset, no_key=False):
+def fill_gaps(key, ks_dict_1, k_2, sequences, ktraces, start_offset, offsets, max_offset, no_key=False, _i=0):
     """
     Fill Gaps where existent
     """
@@ -147,21 +148,23 @@ def fill_gaps(key, ks_dict_1, k_2, sequences, ktraces, start_offset, offsets, ma
     for i in range(values):
         ks = k_2 + i + 1
         if ks == len(offsets[key]) and max_offset == max_of_all_offsets:
-            sequences[key].append(ks)
+            if _i != 0:
+                sequences[key].append(ks)
             ktraces[key].append(ks)
         elif ks < len(offsets[key]):
-            if i == 0 and offsets[key][ks - 1] > start_offset and no_key:
+            if  _i != 0 and i == 0 and offsets[key][ks - 1] > start_offset and no_key:
                 duration = str(abs(start_offset - offsets[key][ks  - 1]))
                 sequences[key].append('N_' + duration)
             elif offsets[key][ks - 1] >= start_offset and offsets[key][ks] <= max_offset:
-                sequences[key].append(ks)
+                if _i != 0:
+                    sequences[key].append(ks)
                 ktraces[key].append(ks)
 
-            if (i == values - 1) and offsets[key][ks - 1] < max_offset:
+            if _i != 0 and (i == values - 1) and offsets[key][ks - 1] < max_offset:
                 duration = str(abs(max_offset - offsets[key][ks]))
                 sequences[key].append('N_' + duration)
 
-    if no_key and values <= 0 and k_2 < len(offsets[key]):
+    if  _i != 0 and no_key and values <= 0 and k_2 < len(offsets[key]):
         duration_minor = str(abs(start_offset - offsets[key][k_2 - 1]))
         duration_max = str(abs(max_offset - offsets[key][k_2]))
         sequences[key].append('N_' + min(duration_minor, duration_max))
