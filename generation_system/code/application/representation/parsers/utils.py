@@ -171,7 +171,7 @@ def instrument_for_voices(instrument):
     """
     Recover Instrument for voice dealing
     """
-    real_in = music21.instrument.Instrument()
+    real_in = music21.instrument.Instrument(instrumentName='Piano')
     try:
         if instrument is not None:
             if instrument in ['Brass', 'Woodwind', 'Keyboard', 'String']:

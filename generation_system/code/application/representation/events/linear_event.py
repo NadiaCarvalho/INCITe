@@ -14,7 +14,7 @@ ARRAY_VALUES = ['articulation', 'expression',
                 'ornamentation', 'dynamic', 'chordPitches']
 
 BOOL_VALUES = ['rest', 'grace', 'chord',
-               'exists_before', 'is_end', 'double', 'fib', 'anacrusis']
+               'exists_before', 'is_end', 'double', 'fib', 'anacrusis', 'begin', 'end', 'between']
 
 
 class LinearEvent(Event):
@@ -64,6 +64,16 @@ class LinearEvent(Event):
                     'style': 'normal',
                 },
                 'slur': {
+                    'begin': False,
+                    'end': False,
+                    'between': False,
+                },
+                'diminuendo': {
+                    'begin': False,
+                    'end': False,
+                    'between': False,
+                },
+                'crescendo': {
                     'begin': False,
                     'end': False,
                     'between': False,
@@ -165,8 +175,8 @@ class LinearEvent(Event):
         for i, feat in enumerate(features):
             category = None
             if '.' in feat:
-                category = feat.split('.')[0]
-                feat = feat.split('.')[1]
+                category = ".".join(feat.split('.')[0:-1])
+                feat = feat.split('.')[-1]
 
             if feat == 'offset':
                 self.offset_time = from_list[i]

@@ -382,14 +382,7 @@ class SecondMenu(MyMenu):
             weights_dict['vertical'] = wdv
             fixed_dict['vertical'] = fdv
 
-        if zwp != 0 and zwv != 0:
-            main_window = self.parentWidget().parentWidget()
-            worker = Worker(
-                main_window.application.apply_viewpoint_weights, weights_dict, fixed_dict)
-            worker.signals.finished.connect(self.stop_waiting_next)
-            self.threadpool.start(worker)
-            self.start_waiting()
-        else:
+        if zwp == 0 and zwv == 0:
             msg = QtWidgets.QMessageBox()
             msg.setStyleSheet("""background: #b4b4b4;""")
             msg.setContentsMargins(5, 5, 5, 5)
@@ -397,3 +390,10 @@ class SecondMenu(MyMenu):
             msg.setText("All viewpoints can't be 0! Choose at least 1.")
             msg.setWindowTitle('No Music Warning')
             msg.exec_()
+        else:
+            main_window = self.parentWidget().parentWidget()
+            worker = Worker(
+                main_window.application.apply_viewpoint_weights, weights_dict, fixed_dict)
+            worker.signals.finished.connect(self.stop_waiting_next)
+            self.threadpool.start(worker)
+            self.start_waiting()

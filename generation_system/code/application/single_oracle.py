@@ -21,8 +21,8 @@ def get_single_part_features(application, information, line):
     """
     normed_features = []
     original_features = []
-    line_splitted = '.'.split(line)
 
+    line_splitted = '.'.split(line)
     for music, _tuple in application.music.items():
         parser = _tuple[0]
 

@@ -89,6 +89,7 @@ class MusicParser:
                     part.getInstrument().instrumentName)
                 is_linear_instrument = any(val in instrument.classes for
                                            val in LINEAR_INSTRUMENTS)
+
                 if (is_linear_instrument and
                         (len(part.recurse(classFilter='Chord')) > 0 or part.hasVoices())):
                     self.process_voiced_part_linear_instruments(

@@ -104,6 +104,13 @@ class LineParser:
             # Duration Parsing
             self.duration_info_parsing(i, note_or_rest)
 
+            # Articulation Parsing
+            for art in note_or_rest.articulations:
+                if art.name == 'breath mark':
+                    self.events[i].add_viewpoint('breath_mark', True)
+                else:
+                    self.events[i].add_viewpoint('articulation', art.name)
+
             # Expression and Spanners Parsing
             self.expression_parsing(i, note_or_rest.expressions)
             self.spanner_parsing(
@@ -153,12 +160,6 @@ class LineParser:
             self.events[index].add_viewpoint(
                 'parenthesis', note_or_rest.noteheadParenthesis)
 
-        for art in note_or_rest.articulations:
-            if art.name == 'breath mark':
-                self.events[index].add_viewpoint('breath_mark', True)
-            else:
-                self.events[index].add_viewpoint('articulation', art.name)
-
         self.events[index].add_viewpoint(
             'volume', note_or_rest.volume.getRealized())
 
@@ -167,6 +168,7 @@ class LineParser:
                 'type', note_or_rest.tie.type, 'tie')
             self.events[index].add_viewpoint(
                 'style', note_or_rest.tie.style, 'tie')
+
 
     def duration_info_parsing(self, index, note_or_rest):
         """
@@ -279,6 +281,20 @@ class LineParser:
                     'slur.end', span.isLast(note_or_rest))
                 self.events[index].add_viewpoint(
                     'slur.between', True)
+            elif 'Diminuendo' in span.classes:
+                self.events[index].add_viewpoint(
+                    'diminuendo.begin', span.isFirst(note_or_rest))
+                self.events[index].add_viewpoint(
+                    'diminuendo.end', span.isLast(note_or_rest))
+                self.events[index].add_viewpoint(
+                    'diminuendo.between', True)
+            elif 'Crescendo' in span.classes:
+                self.events[index].add_viewpoint(
+                    'crescendo.begin', span.isFirst(note_or_rest))
+                self.events[index].add_viewpoint(
+                    'crescendo.end', span.isLast(note_or_rest))
+                self.events[index].add_viewpoint(
+                    'crescendo.between', True)
 
     def get_first_fib_before_fib(self, offset):
         """

@@ -26,10 +26,10 @@ def parse_multiple(event_dict, start_pitches=None):
         if '.' in key and instrument_key in parts:  # Voice and not part
             parts[instrument_key] = parse_single_line(
                 events, stream=parts[instrument_key],
-                voice_id=int(key.split('.')[1]), start_pitch=start_pitch)
+                voice_id=int(key.split('.')[1]), start_pitch=start_pitch, single=False)
         else:
             parts[instrument_key] = parse_single_line(
-                events, start_pitch=start_pitch)
+                events, start_pitch=start_pitch, single=False)
 
     to_shift = {}
     potential_anacrusis = dict([(key, events[0].get_viewpoint(
@@ -54,7 +54,7 @@ def parse_multiple(event_dict, start_pitches=None):
     return stream
 
 
-def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4'):
+def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4', single=True):
     """
     Convert Single Line of events to stream
     """
@@ -65,6 +65,7 @@ def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4'):
     last_metro_value = ''
     last_instrument = music21.instrument.Instrument()
     last_dynamics = []
+    slurs = []
 
     if stream is not None:
         part = stream
@@ -96,11 +97,17 @@ def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4'):
         last_instrument = instrument_selection(
             event, part, last_instrument, last_offset)
         last_key_signature = keysig_selection(
-            event, part, last_key_signature, last_offset)
+            event, voice, last_key_signature, last_offset)
         last_time_signature, bar_duration = timesig_selection(
             event, part, last_time_signature, bar_duration, last_offset)
         last_metro_value = metro_selection(
             event, part, last_metro_value, last_offset)
+
+        for dyn in event.get_viewpoint('dynamic'):
+            if dyn not in last_dynamics:
+                voice.insert(last_offset,
+                             music21.dynamics.Dynamic(dyn))
+        last_dynamics = event.get_viewpoint('dynamic')
 
         last_pitch = start_pitch
         if len(voice.notes) > 0:
@@ -113,12 +120,91 @@ def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4'):
         else:
             note = convert_note_event(event, last_pitch)
 
+        note = articulation_conversion(event, note)
+        note = expressions_conversion(event, note)
         voice.append(note)
         last_offset = voice.highestTime
 
+    slur_conversor(voice, events)
+    diminuendo_conversor(voice, events)
+    crescendo_conversor(voice, events)
+
     part.insert(0, voice, ignoreSort=False)
-    # part.show('text')
+    #part.show('text')
+
+    if single:
+        part.makeNotation(inPlace=True)
+
     return part
+
+
+def slur_conversor(voice, events):
+    """
+    Slur Parsing
+    """
+    slurs = []
+    note_or_rests = voice.flat.notesAndRests.stream()
+    start_slurs = [(i, event) for i, event in enumerate(
+        events) if not isinstance(event, str) and event.get_viewpoint('slur.begin')]
+    for (i, start) in start_slurs:
+        slurs.append(music21.spanner.Slur())
+        start_note = note_or_rests[i]
+        slurs[-1].addSpannedElements(start_note)
+
+        for j, note in enumerate(note_or_rests.elements[i+1:]):
+            if note not in slurs[-1].getSpannedElements():
+                slurs[-1].addSpannedElements(note)
+            if events[i+1+j].get_viewpoint('slur.end'):
+                break
+
+    for slur in slurs:
+        voice.append(slur)
+
+
+def diminuendo_conversor(voice, events):
+    """
+    Diminuendo Parsing
+    """
+    diminuendos = []
+    note_or_rests = voice.flat.notesAndRests.stream()
+    start_dim = [(i, event) for i, event in enumerate(events)
+                 if not isinstance(event, str) and event.get_viewpoint('diminuendo.begin')]
+    for (i, start) in start_dim:
+        diminuendos.append(music21.dynamics.Diminuendo())
+        start_note = note_or_rests[i]
+        diminuendos[-1].addSpannedElements(start_note)
+
+        for j, note in enumerate(note_or_rests.elements[i+1:]):
+            if note not in diminuendos[-1].getSpannedElements():
+                diminuendos[-1].addSpannedElements(note)
+            if events[i+1+j].get_viewpoint('diminuendo.end'):
+                break
+
+    for diminuendo in diminuendos:
+        voice.append(diminuendo)
+
+
+def crescendo_conversor(voice, events):
+    """
+    Crescendo Parsing
+    """
+    crescendos = []
+    note_or_rests = voice.flat.notesAndRests.stream()
+    start_dim = [(i, event) for i, event in enumerate(events)
+                 if not isinstance(event, str) and event.get_viewpoint('crescendo.begin')]
+    for (i, start) in start_dim:
+        crescendos.append(music21.dynamics.Crescendo())
+        start_note = note_or_rests[i]
+        crescendos[-1].addSpannedElements(start_note)
+
+        for j, note in enumerate(note_or_rests.elements[i+1:]):
+            if note not in crescendos[-1].getSpannedElements():
+                crescendos[-1].addSpannedElements(note)
+            if events[i+1+j].get_viewpoint('crescendo.end'):
+                break
+
+    for crescendo in crescendos:
+        voice.append(crescendo)
 
 
 def instrument_selection(event, stream, last_instrument, offset):
@@ -142,8 +228,7 @@ def keysig_selection(event, stream, last_key_signature, offset):
     """
     keysig = event.get_viewpoint('keysig')
     if keysig != last_key_signature:
-        stream.insert(offset, music21.key.KeySignature(
-            sharps=int(keysig)))
+        stream.insert(offset, music21.key.KeySignature(sharps=int(keysig)))
         last_key_signature = keysig
 
     return last_key_signature
@@ -185,8 +270,13 @@ def convert_note_event(event, start_pitch):
         note = music21.note.Note(
             pitch_conversion(event, start_pitch), duration=duration_conversion(event))
 
-    note = articulation_conversion(event, note)
-    note = expressions_conversion(event, note)
+    note.volume = event.get_viewpoint('volume')
+
+    note.notehead = event.get_viewpoint('notehead.type')
+    note.noteheadFill = event.get_viewpoint('notehead.fill')
+    parenthesis = event.get_viewpoint('notehead.parenthesis')
+    if parenthesis:
+        note.noteheadParenthesis = parenthesis
 
     if event.is_grace_note():
         note.getGrace(appogiatura=True, inPlace=True)
@@ -232,8 +322,15 @@ def duration_conversion(event):
         dots=event.get_viewpoint('duration.dots'))
 
     duration_1 = event.get_viewpoint('duration.length') % 1
-    if (np.asscalar(duration_1) % 5 != 0.0
-            or np.mod(event.get_viewpoint('duration.length'), 1) != 0):
+    try:
+        if (np.asscalar(duration_1) % 5 != 0.0
+                or np.mod(event.get_viewpoint('duration.length'), 1) != 0):
+            duration = music21.duration.Duration(
+                quarterLength=event.get_viewpoint('duration.length'))
+    except Exception:
+        'No item'
+
+    if event.get_viewpoint('duration.type') == '2048th':
         duration = music21.duration.Duration(
             quarterLength=event.get_viewpoint('duration.length'))
 
@@ -258,9 +355,18 @@ def expressions_conversion(event, note):
     """
     Return note with expressions
     """
-    for exp in event.get_viewpoint('expression'):
-        note.expressions.append(
-            getattr(music21.expressions, exp.capitalize())())
+    for exp in event.get_viewpoint('expressions.expression'):
+        try:
+            note.expressions.append(
+                getattr(music21.expressions, exp.capitalize())())
+        except AttributeError:
+            try:
+                as_articulation = getattr(
+                    music21.articulations, exp.capitalize())()
+                if as_articulation not in note.articulations:
+                    note.articulations.append(as_articulation)
+            except AttributeError:
+                print('Expression is not Expression or Articulation')
 
     for orn in event.get_viewpoint('ornamentation'):
         splitted = orn.split(':')
@@ -271,9 +377,6 @@ def expressions_conversion(event, note):
         elif splitted[0] == 'trill':
             ornament.placement = splitted[1]
             ornament.size.name = splitted[2]
-        elif splitted[0] == 'tremolo':
-            ornament.measured = splitted[1]
-            ornament.numberOfMarks = splitted[2]
         elif splitted[0] == 'tremolo':
             ornament.measured = splitted[1]
             ornament.numberOfMarks = splitted[2]

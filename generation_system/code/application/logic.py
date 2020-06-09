@@ -209,7 +209,6 @@ class Application(QtCore.QObject):
 
         statistic_dict = self.get_statistics(part_features, vertical_features)
 
-        # TODO: Calculate measurement for better viewpoints
         if calc_weights:
             statistics.calculate_automatic_viewpoints(statistic_dict)
 

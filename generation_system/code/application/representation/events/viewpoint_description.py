@@ -45,6 +45,12 @@ DESCRIPTION = {
         "expressions.slur.begin": "Is at the beginning of a slur.",
         "expressions.slur.end": "Is at the end of a slur.",
         "expressions.slur.between": "Is in a slur.",
+        "expressions.diminuendo.begin": "Is at the beginning of a diminuendo.",
+        "expressions.diminuendo.end": "Is at the end of a diminuendo.",
+        "expressions.diminuendo.between": "Is in a diminuendo.",
+        "expressions.crescendo.begin": "Is at the beginning of a crescendo.",
+        "expressions.crescendo.end": "Is at the end of a crescendo.",
+        "expressions.crescendo.between": "Is in a crescendo.",
         "expressions.clef": "Clef of Event.",
 
         "key.keysig": "Key Signature (by number of sharps/flats) at the time of Event.",
