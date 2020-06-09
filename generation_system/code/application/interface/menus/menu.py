@@ -3,10 +3,12 @@ Menu Abstract Class
 """
 
 import sys
+import os
 
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
 from pyqtspinner.spinner import WaitingSpinner
+from application.interface.components.wrap_text import wrap_text
 
 
 class MyMenu(QtWidgets.QWidget):
@@ -86,9 +88,25 @@ class MyMenu(QtWidgets.QWidget):
         msg.setStyleSheet("""background: #b4b4b4;""")
         msg.setContentsMargins(5, 5, 5, 5)
         msg.setIcon(QtWidgets.QMessageBox.Information)
-        msg.setText("Generation of Sequences Finished!!!")
+
+        splitted_db = self.parent.application.database_path.split(os.sep)
+        if len(splitted_db) == 1:
+            splitted_db = splitted_db[0].split('/')
+
+        db_path = os.sep.join(splitted_db[:-1] + ['generations'])
+        if os.path.exists(db_path):
+            all_subdirs = [os.sep.join([db_path, d]) for d in os.listdir(db_path + os.sep) if os.path.isdir(os.sep.join([db_path, d]))]
+            if len(all_subdirs) > 0:
+                latest_subdir = max(all_subdirs, key=os.path.getmtime)
+                db_path = latest_subdir
+
+        msg.setText(wrap_text(
+            "Generation of Sequences Finished!!!\n Sequences in folder: " + db_path, 40))
         msg.setWindowTitle('Creator Finished')
+        msg.buttonClicked.connect(lambda: QtGui.QDesktopServices.openUrl(
+            QtCore.QUrl.fromLocalFile(db_path)))
         msg.exec_()
+
 
     def next(self):
         """

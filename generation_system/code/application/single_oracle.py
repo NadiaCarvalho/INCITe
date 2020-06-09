@@ -1,13 +1,14 @@
 """
+Single part Oracle and Sequence Generator
 """
 import os
 import time
 import random
 import numpy as np
 
-import  application.generation.gen_algorithms.generation as gen
-import  application.generation.plot_fo as gen_plot
-import  application.generation.utils as gen_utils
+import application.generation.gen_algorithms.generation as gen
+import application.generation.plot_fo as gen_plot
+import application.generation.utils as gen_utils
 from application.generation.cdist_fixed import distance_between_windowed_features
 from application.representation.conversor.score_conversor import parse_single_line
 from application.representation.events.linear_event import LinearEvent
@@ -20,13 +21,14 @@ def get_single_part_features(application, information, line):
     """
     normed_features = []
     original_features = []
+    line_splitted = '.'.split(line)
 
     for music, _tuple in application.music.items():
         parser = _tuple[0]
 
         i = 0
         for key, events in parser.get_part_events().items():
-            if len(events) > 0 and key == line:
+            if len(events) > 0 and any(k in line_splitted for k in '.'.split(key)):
                 # Get Start and End Indexes
                 start_index = application.indexes_first[music]['parts'][i]
                 finish_index = start_index + len(events)
@@ -65,9 +67,9 @@ def construct_single_oracle(application, line):
         weights=weights, fixed_weights=fixed_weights,
         dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
 
-    image = gen_plot.start_draw(oracle)
-    name = r'data\myexamples\oracle' + '.PNG'
-    image.save(name)
+    # image = gen_plot.start_draw(oracle)
+    # name = r'data\myexamples\oracle' + '.PNG'
+    # image.save(name)
 
     application.oracles_information['single_oracle'] = {
         'key': line,
@@ -116,31 +118,32 @@ def generate_from_single(application, num_seq):
     """
     information = application.oracles_information['single_oracle']
 
+    localtime = time.asctime(time.localtime(time.time()))
+    localtime = '_'.join(localtime.split(' '))
+    localtime = '-'.join(localtime.split(':'))
+
     original_sequence = range(len(information['original_features']))
     linear_score_generator(application, original_sequence,
                            information['original_features'],
                            information['features_names'],
-                           name='original', start=0, line=information['key'])
-
-    localtime = time.asctime(time.localtime(time.time()))
-    localtime = '_'.join(localtime.split(' '))
-    localtime = '-'.join(localtime.split(':'))
+                           name='original.xml', time='generations_' + localtime,
+                           start=0, line=information['key'])
 
     ordered_sequences = generate_sequences_single(
         information, num_seq)
     # Generate Scores of Ordered Sequences
     for i, (sequence, dist_1, dist_2) in enumerate(ordered_sequences):
-        name = 'gen_' + localtime + '_' + \
-            str(i) + '_distF_' + str(round(dist_1)) + \
+        name = 'gen_' + str(i) + '_distF_' + str(round(dist_1)) + \
             '_distC_' + str(round(dist_2, 2)) + '.xml'
         linear_score_generator(application, sequence,
                                information['original_features'],
                                information['features_names'],
-                               name=name, line=information['key'])
+                               name=name, time='generations_' + localtime, line=information['key'])
 
 
 def linear_score_generator(application, sequence, o_information,
-                           feature_names, name='', start=-1, line=''):
+                           feature_names, name='',
+                           time='', start=-1, line=''):
     """
     Score Generator for Single Line
     """
@@ -158,5 +161,22 @@ def linear_score_generator(application, sequence, o_information,
 
     if len(sequenced_events) > 0:
         score = parse_single_line(sequenced_events, start_pitch=start_pitch)
-        path = os.sep.join([os.getcwd(), 'data', 'generations', name])
-        fp = score.write(fp=path)
+
+        splitted_db = application.database_path.split(os.sep)
+        if len(splitted_db) == 1:
+            splitted_db = application.database_path.split('/')
+
+        db_path = os.sep.join(splitted_db[:-1])
+        gen_folder = os.sep.join([db_path, 'generations', time])
+        if not os.path.exists(gen_folder):
+            try:
+                os.mkdir(gen_folder)
+            except OSError:
+                print("Creation of the directory %s failed" % gen_folder)
+            else:
+                print("Successfully created the directory %s " % gen_folder)
+                path=os.sep.join([gen_folder, name + '.xml'])
+                fp=score.write(fp=path)
+        else:
+            path=os.sep.join([gen_folder, name + '.xml'])
+            fp=score.write(fp=path)

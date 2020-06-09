@@ -10,9 +10,9 @@ import pickle
 
 import music21
 
-import  application.representation.parsers.utils as utils
-import  application.representation.utils.printing as printing
-import  application.representation.utils.voice as voice_utils
+import application.representation.parsers.utils as utils
+import application.representation.utils.printing as printing
+import application.representation.utils.voice as voice_utils
 from application.representation.events.linear_event import LinearEvent
 from application.representation.events.vertical_event import VerticalEvent
 from application.representation.parsers.line_parser import LineParser
@@ -193,7 +193,7 @@ class MusicParser:
             index = str(real_in)
             name = str(real_in)
             counter_0 = [key for key in self.music_events['part_events'].keys()
-                       if str(real_in) in key]
+                         if str(real_in) in key]
             counter = set([key.split('.')[0] for key in counter_0])
             if len(counter) > 0:
                 index = str(real_in) + '_' + str(len(counter) + 1)
@@ -369,3 +369,4 @@ class MusicParser:
         with bz2.BZ2File(file_path + '.pbz2', 'rb') as handle:
             self.music_events = pickle.load(handle)
             handle.close()
+        print('Loaded from pickle')

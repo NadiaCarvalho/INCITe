@@ -134,7 +134,8 @@ class ShowStatsWidget(QtWidgets.QWidget):
                 new_tuples = stat
                 values = [x[0] for x in stat]
                 if len(values) <= 2 and all(val in [0, 1] for val in values):
-                    new_tuples = [(bool(_tuple[0]), _tuple[1]) for _tuple in stat]
+                    new_tuples = [(bool(_tuple[0]), _tuple[1])
+                                  for _tuple in stat]
                 for _tuple in new_tuples:
                     if _tuple[0] == 10000:
                         plus_text += 'No value' + ' : ' + \
@@ -344,6 +345,26 @@ class SecondMenu(MyMenu):
         main_widget.layout().addWidget(information_view, 0, 1, 1, 1)
         return main_widget
 
+    def tabs_process(self, tab):
+        """
+        Processing a Tab and extracting weights
+        """
+        weights_dict = {}
+        fixed_dict = {}
+        non_zero_weights = 0
+
+        if tab:
+            part_widget = tab.children()[2]
+            for i in range(part_widget.count()):
+                widget = part_widget.widget(i)
+                if isinstance(widget, ShowStatsWidget):
+                    weights_dict[widget.name] = widget.weight
+                    fixed_dict[widget.name] = widget.is_fixed
+                    if widget.weight != 0:
+                        non_zero_weights += 1
+
+        return weights_dict, fixed_dict, non_zero_weights
+
     def next(self):
         """
         To Override
@@ -351,31 +372,28 @@ class SecondMenu(MyMenu):
         weights_dict = {}
         fixed_dict = {}
 
-        if self.tab_parts:
-            weights_dict['parts'] = {}
-            fixed_dict['parts'] = {}
-            part_widget = self.tab_parts.children()[2]
-            for i in range(part_widget.count()):
-                widget = part_widget.widget(i)
-                if isinstance(widget, ShowStatsWidget):
-                    weights_dict['parts'][widget.name] = widget.weight
-                    fixed_dict['parts'][widget.name] = widget.is_fixed
+        wdp, fdp, zwp = self.tabs_process(self.tab_parts)
+        if wdp != {}:
+            weights_dict['parts'] = wdp
+            fixed_dict['parts'] = fdp
 
-        if self.tab_vertical:
-            weights_dict['vertical'] = {}
-            fixed_dict['vertical'] = {}
-            vertical_widget = self.tab_vertical.children()[2]
-            for i in range(vertical_widget.count()):
-                widget = vertical_widget.widget(i)
-                if isinstance(widget, ShowStatsWidget):
-                    weights_dict['vertical'][widget.name] = widget.weight
-                    fixed_dict['vertical'][widget.name] = widget.is_fixed
+        wdv, fdv, zwv = self.tabs_process(self.tab_vertical)
+        if wdv != {}:
+            weights_dict['vertical'] = wdv
+            fixed_dict['vertical'] = fdv
 
-        main_window = self.parentWidget().parentWidget()
-
-        worker = Worker(
-            main_window.application.apply_viewpoint_weights, weights_dict, fixed_dict)
-        worker.signals.finished.connect(self.stop_waiting_next)
-        self.threadpool.start(worker)
-        self.start_waiting()
-
+        if zwp != 0 and zwv != 0:
+            main_window = self.parentWidget().parentWidget()
+            worker = Worker(
+                main_window.application.apply_viewpoint_weights, weights_dict, fixed_dict)
+            worker.signals.finished.connect(self.stop_waiting_next)
+            self.threadpool.start(worker)
+            self.start_waiting()
+        else:
+            msg = QtWidgets.QMessageBox()
+            msg.setStyleSheet("""background: #b4b4b4;""")
+            msg.setContentsMargins(5, 5, 5, 5)
+            msg.setIcon(QtWidgets.QMessageBox.Warning)
+            msg.setText("All viewpoints can't be 0! Choose at least 1.")
+            msg.setWindowTitle('No Music Warning')
+            msg.exec_()

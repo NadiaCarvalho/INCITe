@@ -87,7 +87,10 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
         if last_ktraces[key] == sym and times > 3:
             key, sym = choose_from_sfxs_k(
                 k, sfxs, ks_at_k, offsets, principal_key)
-            sym += 1
+            if sym is not None:
+                sym += 1
+            else:
+                sym = 0
         if last_ktraces[key] == sym:
             times += 1
         else:
@@ -297,7 +300,7 @@ def _find_ks(offsets, principal_key, k):
         return dict([(key, 0) for key in offsets.keys()])
 
     result = dict([(key, off.index(offsets[principal_key][k-1])+1)
-                   for key, off in offsets.items() if k-1 < len(offsets[principal_key]) and offsets[principal_key][k-1] in off])
+                   for key, off in offsets.items() if k is not None and k-1 < len(offsets[principal_key]) and offsets[principal_key][k-1] in off])
     return result
 
 

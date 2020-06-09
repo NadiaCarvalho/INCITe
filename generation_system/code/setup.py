@@ -11,13 +11,12 @@ setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
     ],
     packages=["interface", "generation", "representation"],
     include_package_data=True,
     install_requires=[
-        "music21", "numpy", "scipy", "sklearn", "vmo", "Pillow", "pyqt5", "pyqtspinner"
+        "music21-5.7.2", "numpy", "scipy", "sklearn", "vmo", "Pillow", "pyqt5", "pyqtspinner"
     ],
-    entry_points={"console_scripts": ["realpython=imain:main"]},
+    entry_points={"console_scripts": ["realpython=application.__main__:main"]},
 )

@@ -11,14 +11,18 @@ import json
 import numpy as np
 from PyQt5 import QtCore
 
-import application.multi_oracle
+import application.single_oracle as single_oracle
+import application.multi_oracle as multi_oracle
+
 import application.representation.utils.features as rep_utils
 import application.representation.utils.statistics as statistics
-import application.single_oracle
+
 from application.representation.parsers.music_parser import MusicParser
 from application.representation.parsers.segmentation import (apply_segmentation_info,
-                                                 get_phrases_from_events,
-                                                 segmentation)
+                                                             get_phrases_from_events,
+                                                             segmentation,
+                                                             VERTICAL_WEIGHTS,
+                                                             LINE_WEIGHTS)
 
 
 class Application(QtCore.QObject):
@@ -33,7 +37,9 @@ class Application(QtCore.QObject):
     def __init__(self, music):
         QtCore.QObject.__init__(self)
 
-        self.database_path = os.sep.join([os.getcwd(), 'data', 'database'])
+        self.database_path = os.sep.join([os.getcwd(), 'database'])
+        if not os.path.exists(self.database_path):
+            self.database_path = os.getcwd()
 
         self.principal_music_path = music
         self.principal_music = None
@@ -123,6 +129,7 @@ class Application(QtCore.QObject):
         """
         # Add Principal Music To Music
         if self.principal_music is None:
+            print(self.principal_music_path)
             if '.mxl' in self.principal_music_path or '.xml' in self.principal_music_path:
                 self.principal_music = (MusicParser(
                     self.principal_music_path), self.principal_music_path, False)
@@ -294,10 +301,12 @@ class Application(QtCore.QObject):
         """
         Segment Music
         """
-        self.segmentation_viewpoints = {
-            'parts': {'fermata': 1, 'basic.rest': 1},
-            'vertical': None}
-        # TODO: Decide from the ones incoming
+        self.segmentation_viewpoints = {'vertical': None}
+        if 'parts' in weight_dict:
+            self.segmentation_viewpoints['parts'] = {}
+            for key in LINE_WEIGHTS:
+                if key in weight_dict and weight_dict['parts'][key] != 0:
+                    self.segmentation_viewpoints['parts'][key] = weight_dict['parts'][key]
 
         max_weight = max(list(weight_dict['parts'].values()))
         res_weights = {
@@ -306,6 +315,7 @@ class Application(QtCore.QObject):
             'phrase.length': max_weight
         }
         self.process_and_segment_parts(res_weights)
+        self.model_viewpoints['parts'] = {**self.model_viewpoints['parts'], **res_weights}
 
     def prepare_parts(self, fixed_dict, key_part):
         """
@@ -329,13 +339,13 @@ class Application(QtCore.QObject):
             information['normed_weights'] = rep_utils.normalize_weights(
                 weights)
 
-            file_path = r'data\myexamples\viewpoints' + '_' + str(key_part)
-            with open(file_path + '.json', 'w') as handle:
-                json.dump(
-                    information['selected_features_names'], handle, indent=2)
-                json.dump(information['fixed_weights'], handle, indent=2)
-                json.dump(information['normed_weights'], handle, indent=2)
-                handle.close()
+            # file_path = r'data\myexamples\viewpoints' + '_' + str(key_part)
+            # with open(file_path + '.json', 'w') as handle:
+            #     json.dump(
+            #         information['selected_features_names'], handle, indent=2)
+            #     json.dump(information['fixed_weights'], handle, indent=2)
+            #     json.dump(information['normed_weights'], handle, indent=2)
+            #     handle.close()
 
     def apply_viewpoint_weights(self, weight_dict, fixed_dict):
         """

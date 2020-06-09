@@ -1,4 +1,5 @@
 """
+Multiple part Oracle and Sequence Generator
 """
 import collections
 import os
@@ -99,10 +100,10 @@ def construct_multi_oracles(application):
             weights=weights, fixed_weights=fixed_weights,
             dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
 
-    oracles.move_to_end('vertical', last=True)
-    image = gen_plot.start_draw(oracles, ev_offsets)
-    name = r'data\myexamples\oracle' + '.PNG'
-    image.save(name)
+    # oracles.move_to_end('vertical', last=True)
+    # image = gen_plot.start_draw(oracles, ev_offsets)
+    # name = r'data\myexamples\oracle' + '.PNG'
+    # image.save(name)
 
     application.oracles_information['multiple_oracles'] = {
         'oracles': oracles,
@@ -173,29 +174,30 @@ def generate_from_multiple(application, num_seq):
     """
     information = application.oracles_information['multiple_oracles']
 
-    # Save original Score
-    multi_sequence_score_generator(
-        information['original_features'], information['features_names'],
-        application=application, name='original', actual_index=0)
-
     localtime = time.asctime(time.localtime(time.time()))
     localtime = '_'.join(localtime.split(' '))
     localtime = '-'.join(localtime.split(':'))
 
+    # Save original Score
+    multi_sequence_score_generator(
+        information['original_features'], information['features_names'],
+        application=application, name='original',
+        time='generations_' + localtime, actual_index=0)
+
     ordered_sequences = generate_sequences_multiple(
         information, num_seq)
     for i, (sequence, dist_1, dist_2) in enumerate(ordered_sequences):
-        name = 'gen_' + localtime + '_' + \
-            str(i) + '_distF_' + str(round(dist_1)) + \
+        name = 'gen_' + str(i) + '_distF_' + str(round(dist_1)) + \
             '_distC_' + str(round(dist_2, 2))
         multi_sequence_score_generator(
             sequence,
             information['features_names'],
             application=application,
-            name=name)
+            name=name,
+            time='generations_' + localtime)
 
 
-def multi_sequence_score_generator(sequences, feature_names, application, name='', actual_index=-1):
+def multi_sequence_score_generator(sequences, feature_names, application, name='', time='', actual_index=-1):
     """
     Generate Score
     """
@@ -216,10 +218,29 @@ def multi_sequence_score_generator(sequences, feature_names, application, name='
                 last_pitch_index = get_last_x_events_that_are_notes_before_index(
                     application.principal_music[0].get_part_events()[key],
                     number=1, actual_index=actual_index)
-                last_pitch = application.principal_music[0].get_part_events()[
-                    key][last_pitch_index].get_viewpoint('pitch')
-                start_pitches[key] = last_pitch
+                start_pitches[key] = 0
+                if last_pitch_index is not None:
+                    last_pitch = application.principal_music[0].get_part_events()[
+                        key][last_pitch_index].get_viewpoint('pitch')
+                    start_pitches[key] = last_pitch
 
     score = parse_multiple(sequenced_events, start_pitches)
-    path = os.sep.join([os.getcwd(), 'data', 'generations', name + '.xml'])
-    fp = score.write(fp=path)
+
+    splitted_db = application.database_path.split(os.sep)
+    if len(splitted_db) == 1:
+        splitted_db = application.database_path.split('/')
+
+    db_path = os.sep.join(splitted_db[:-1])
+    gen_folder = os.sep.join([db_path, 'generations', time])
+    if not os.path.exists(gen_folder):
+        try:
+            os.mkdir(gen_folder)
+        except OSError:
+            print("Creation of the directory %s failed" % gen_folder)
+        else:
+            print("Successfully created the directory %s " % gen_folder)
+            path = os.sep.join([gen_folder, name + '.xml'])
+            fp = score.write(fp=path)
+    else:
+        print(os.sep.join([gen_folder, name + '.xml']))
+        fp = score.write(fp=os.sep.join([gen_folder, name + '.xml']))

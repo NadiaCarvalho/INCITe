@@ -7,8 +7,8 @@ import math
 
 import numpy as np
 
-import  application.representation.parsers.utils as basic_utils
-import  application.representation.utils.features as utils
+import application.representation.parsers.utils as basic_utils
+import application.representation.utils.features as utils
 
 VERTICAL_WEIGHTS = {  # candidates for phrasing discovery (harmonic)
     'basic.root': 1,
@@ -27,10 +27,16 @@ VERTICAL_WEIGHTS = {  # candidates for phrasing discovery (harmonic)
 
 LINE_WEIGHTS = {  # candidates for phrasing discovery (melodic)
     'pitch.cpitch': 1,
-    'rest': 1,
-    'fermata': 1,
-    'breath_mark': 1,
-    'closure': 1,
+    'basic.rest': 1,
+    'expressions.fermata': 1,
+    'expressions.fermata': 1,
+    'derived.closure': 1,
+    'key.signatures.scale_degree': 1,
+    'key.measure.scale_degree': 1,
+    'time.barlines.double': 1,
+    'time.barlines.repeat.exists_before': 1,
+    'time.barlines.repeat.direction': 1,
+    'time.barlines.repeat.is_end': 1,
 }
 
 
@@ -130,7 +136,7 @@ def process_weights(events, i_weights, line=True):
     """
     Process Segmentation Weights for Line Viewpoints
     """
-    if i_weights is None:
+    if i_weights is None or i_weights == {}:
         if line:
             i_weights = LINE_WEIGHTS
         else:
@@ -181,6 +187,7 @@ def segmentation(events, weights_line=None, vertical_events=None, weights_vert=N
     """
     features, weights = process_incoming_weights(
         events, weights_line, vertical_events, weights_vert, indexes)
+
     normalized_bss, normalized_weights = calculate_boundary_strengths(
         events, features, weights)
     apply_phrasing(events, normalized_bss, normalized_weights)

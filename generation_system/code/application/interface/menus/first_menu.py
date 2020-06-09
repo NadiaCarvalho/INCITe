@@ -92,11 +92,11 @@ class FirstMenu(MyMenu):
         button.clicked.connect(self.database_path)
         layout.addWidget(button, 0, 0, 1, 1)
 
-        label = QtWidgets.QLabel(
+        self.label = QtWidgets.QLabel(
             wrap_text(parent.application.database_path, int(self.width()*30/420)))
-        label.setStyleSheet(
+        self.label.setStyleSheet(
             "margin-left: 10px; border-radius: 25px; color: blue;")
-        layout.addWidget(label, 0, 1, 1, 2)
+        layout.addWidget(self.label, 0, 1, 1, 2)
 
         database_group.setLayout(layout)
         return database_group
@@ -113,7 +113,7 @@ class FirstMenu(MyMenu):
         if directory:
             application = self.parentWidget().parentWidget().application
             application.database_path = directory
-            self.children()[2].children()[2].setText(
+            self.label.setText(
                 wrap_text(directory, int(self.width()*30/420)))
 
             self.create_toggables_database(
@@ -150,6 +150,7 @@ class FirstMenu(MyMenu):
         Toggables Database for specified path
         """
         selectables = []
+
         if same:
             selectables = [container.widget().layout().itemAt(i).widget()
                            for i in range(container.widget().layout().count())]
@@ -157,6 +158,9 @@ class FirstMenu(MyMenu):
             for i in range(container.widget().layout().count()):
                 container.widget().layout().itemAt(i).widget().close()
         folders = [widget.text() for widget in selectables]
+
+        if not os.path.exists(database_path):
+            return selectables
 
         for folder in [f.path for f in os.scandir(database_path) if f.is_dir() and any('.pbz2' in _file for _file in os.listdir(f.path))]:
             name = os.path.normpath(folder).split(os.path.sep)[-1]
