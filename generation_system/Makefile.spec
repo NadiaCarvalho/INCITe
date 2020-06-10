@@ -4,19 +4,21 @@ block_cipher = None
 
 import os
 spec_root = os.path.realpath(SPECPATH)
+icon_path = os.sep.join(['', 'data', 'images', 'logo.ico'])
+file_path = os.sep.join(['code', 'cli.py'])
 
 options = []
 # options = [('v', None, 'OPTION')]
 
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
-tf_hidden_imports = collect_submodules('music21')
-tf_datas = collect_data_files('music21', subdir=None, include_py_files=True)
+music21_hidden_imports = collect_submodules('music21')
+music21_datas = collect_data_files('music21', subdir=None, include_py_files=True)
 
-a = Analysis(['code\\cli.py'],
-             pathex=['D:\\FEUP_1920\\DISS\\Dissertation\\generation_system'],
+a = Analysis([file_path],
+             pathex=[spec_root],
              binaries=[],
-             datas= tf_datas,
-             hiddenimports= tf_hidden_imports + ['sklearn', 'sklearn.neighbors._typedefs', 'sklearn.utils._cython_blas', 'sklearn.neighbors._quad_tree', 'sklearn.tree', 'sklearn.tree._utils'],
+             datas= music21_datas,
+             hiddenimports= music21_hidden_imports + ['sklearn', 'sklearn.neighbors._typedefs', 'sklearn.utils._cython_blas', 'sklearn.neighbors._quad_tree', 'sklearn.tree', 'sklearn.tree._utils', 'pyqtspinner'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -25,7 +27,7 @@ a = Analysis(['code\\cli.py'],
              cipher=block_cipher,
              noarchive=False)
 
-a.datas += [('logo.ico','D:\\FEUP_1920\\DISS\\Dissertation\\generation_system\\data\\images\\logo.ico','DATA')]
+a.datas += [('logo.ico', spec_root + icon_path,'DATA')]
 
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
@@ -40,7 +42,7 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          icon='D:\\FEUP_1920\\DISS\\Dissertation\\generation_system\\data\\images\\logo.ico',
+          icon= spec_root + icon_path,
           bootloader_ignore_signals=False,
           runtime_tmpdir=None,
           console=False)

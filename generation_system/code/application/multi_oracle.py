@@ -234,6 +234,7 @@ def multi_sequence_score_generator(sequences, feature_names, application, name='
     gen_folder = os.sep.join([db_path, 'generations', time])
     if not os.path.exists(gen_folder):
         try:
+            os.mkdir(os.sep.join([db_path, 'generations']))
             os.mkdir(gen_folder)
         except OSError:
             print("Creation of the directory %s failed" % gen_folder)
