@@ -287,7 +287,7 @@ class FirstMenu(MyMenu):
         application = self.parentWidget().parentWidget().application
         worker = Worker(
             application.parse_files, self.files_to_parse, self)
-        worker.signals.finished.connect(self.stop_waiting_final)
+        worker.signals.finished.connect(self.stop_waiting)
         self.threadpool.start(worker)
         self.start_waiting()
 
@@ -299,7 +299,6 @@ class FirstMenu(MyMenu):
         application = self.parentWidget().parentWidget().application
         self.create_toggables_database(
             application.database_path, self.left_group_box.children()[2], same=True)
-        self.stop_waiting()
 
     def increase_progress_bar(self, value):
         """
