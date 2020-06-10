@@ -36,7 +36,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.application = Application(music)
 
-        self.resize(500, 800)
+        self.resize(500, 700)
 
         # Central Widget
         self.central_wid = QtWidgets.QWidget()

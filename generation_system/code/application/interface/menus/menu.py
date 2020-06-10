@@ -18,6 +18,7 @@ class MyMenu(QtWidgets.QWidget):
 
     def __init__(self, width, height, parent, *args, **kwargs):
         super(MyMenu, self).__init__(*args, **kwargs)
+        self.setStyleSheet("""background: #b4b4b4; color: black;""")
 
         self.parent = parent
 

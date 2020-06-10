@@ -180,7 +180,6 @@ class SecondMenu(MyMenu):
     def __init__(self, width, height, parent, *args, **kwargs):
         super(SecondMenu, self).__init__(
             width, height, parent, *args, **kwargs)
-        self.setStyleSheet("""background: #b4b4b4;""")
 
         self.top_group = self.create_settings(parent, width)
         self.top_group.layout().setContentsMargins(5, 5, 10, 0)

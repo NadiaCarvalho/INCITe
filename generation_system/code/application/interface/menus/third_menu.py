@@ -19,7 +19,6 @@ class ThirdMenu(MyMenu):
 
     def __init__(self, width, height, parent, *args, **kwargs):
         super(ThirdMenu, self).__init__(width, height, parent, *args, **kwargs)
-        self.setStyleSheet("""background: #b4b4b4;""")
 
         self.number_sequences = 15
         self.line = True

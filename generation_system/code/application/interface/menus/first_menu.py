@@ -52,7 +52,6 @@ class FirstMenu(MyMenu):
 
     def __init__(self, width, height, parent, *args, **kwargs):
         super(FirstMenu, self).__init__(width, height, parent, *args, **kwargs)
-        self.setStyleSheet("""background: #b4b4b4;""")
 
         self.top_group = self.create_settings(parent, width)
         self.left_group_box = self.create_database_group(parent)
