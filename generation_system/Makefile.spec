@@ -11,14 +11,14 @@ options = []
 # options = [('v', None, 'OPTION')]
 
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
-music21_hidden_imports = collect_submodules('music21')
+music21_hidden_imports = (collect_submodules('music21') + collect_submodules('music21.converter'))
 music21_datas = collect_data_files('music21', subdir=None, include_py_files=True)
 
 a = Analysis([file_path],
              pathex=[spec_root],
              binaries=[],
              datas= music21_datas,
-             hiddenimports= music21_hidden_imports + ['sklearn', 'sklearn.neighbors._typedefs', 'sklearn.utils._cython_blas', 'sklearn.neighbors._quad_tree', 'sklearn.tree', 'sklearn.tree._utils', 'pyqtspinner'],
+             hiddenimports= music21_hidden_imports + ['sklearn', 'sklearn.neighbors._typedefs', 'sklearn.utils._cython_blas', 'sklearn.neighbors._quad_tree', 'sklearn.tree', 'sklearn.tree._utils'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],

@@ -170,8 +170,7 @@ def linear_score_generator(application, sequence, o_information,
         gen_folder = os.sep.join([db_path, 'generations', time])
         if not os.path.exists(gen_folder):
             try:
-                os.mkdir(os.sep.join([db_path, 'generations']))
-                os.mkdir(gen_folder)
+                os.makedirs(gen_folder, exist_ok=True)
             except OSError:
                 print("Creation of the directory %s failed" % gen_folder)
             else:
