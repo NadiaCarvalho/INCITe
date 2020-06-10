@@ -33,6 +33,7 @@ class Application(QtCore.QObject):
     """
     signal_parsed = QtCore.pyqtSignal(int)
     signal_viewpoints = QtCore.pyqtSignal(dict)
+    signal_oracle = QtCore.pyqtSignal(int)
 
     def __init__(self, music):
         QtCore.QObject.__init__(self)
@@ -369,9 +370,9 @@ class Application(QtCore.QObject):
             multi_oracle.construct_multi_oracles(self)
 
         if interface is not None:
-            self.signal_parsed.connect(
+            self.signal_oracle.connect(
                 interface.handler_create_sequence)
-            self.signal_parsed.emit(1)
+            self.signal_oracle.emit(1)
 
     def generate_sequences(self, line_oracle, num_seq):
         """
