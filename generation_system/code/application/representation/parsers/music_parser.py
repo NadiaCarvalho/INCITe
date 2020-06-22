@@ -82,6 +82,7 @@ class MusicParser:
             self.music_parts = self.music.parts
             if number_parts is None or number_parts > len(self.music_parts):
                 number_parts = len(self.music_parts)
+
             for i in range(number_parts):
                 part = self.music_parts[i]
 

@@ -30,7 +30,7 @@ class FactorOracle:
         latent: (For kind 'a' and 'v'): a list of lists with each sub-list
             containing the indexes for each symbol.
         kind:
-            'a': Variab_le Markov oracle
+            'a': Variable Markov oracle
             'f': repeat oracle
             'v': Centroid-based oracle (under test)
         n_states: number of total states, also is length of the input

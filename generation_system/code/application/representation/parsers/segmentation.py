@@ -26,6 +26,7 @@ VERTICAL_WEIGHTS = {  # candidates for phrasing discovery (harmonic)
 }
 
 LINE_WEIGHTS = {  # candidates for phrasing discovery (melodic)
+    'basic.bioi': 1,
     'pitch.cpitch': 1,
     'basic.rest': 1,
     'expressions.fermata': 1,
@@ -42,8 +43,8 @@ LINE_WEIGHTS = {  # candidates for phrasing discovery (melodic)
 
 def change_degree(event_1, event_2):
     """
-    Returns degree of change between two events for each feature
-    of event
+    Returns degree of change between
+    two events for each feature of event
     """
     return [abs(a - b)/(a + b) if a != b else 0 for a, b in zip(event_1, event_2)]
 
@@ -53,7 +54,7 @@ def strength(nf_im1, nf_i, nf_ip1):
     Gets Strength for each feature of an event from the its
     normalized feature list representation,
     and the normalized feature list
-    representations of the previous and posterious events
+    representations of the previous and posteriors events
     """
     degree_1 = change_degree(nf_im1, nf_i)
     degree_2 = change_degree(nf_i, nf_ip1)

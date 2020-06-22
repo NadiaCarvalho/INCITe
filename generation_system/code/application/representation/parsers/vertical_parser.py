@@ -20,6 +20,11 @@ class VerticalParser:
         self.music_to_parse = music_to_parse.chordify(toSoundingPitch=True)
         self.events = []
 
+        self.metadata = {
+            'composer': music_to_parse.metadata.composer,
+            'piece_title': music_to_parse.metadata.title
+        }
+
         self.keys = defaultdict(list)
         for k, val in list((key.offset, key) for key in music_to_parse.flat.getElementsByClass(
                 music21.key.KeySignature)):
@@ -41,6 +46,10 @@ class VerticalParser:
         chords = self.music_to_parse.flat.getElementsByClass(['Chord', 'Rest'])
         for i, chord in enumerate(chords):
             self.events.append(VerticalEvent(chord.offset))
+
+            # Metadata
+            for key, value in self.metadata.items():
+                self.events[i].add_viewpoint(key, value)
 
             self.extract_duration(i, chord)
             if not isinstance(chord, music21.note.Rest):
@@ -75,9 +84,9 @@ class VerticalParser:
                 'dots', 0)
 
         if chord.tie is not None:
-            self.events[index].add_viewpoint('tie_type', chord.tie.type)
+            self.events[index].add_viewpoint('type', chord.tie.type, 'tie')
             self.events[index].add_viewpoint(
-                'tie_style', chord.tie.style)
+                'style', chord.tie.style, 'tie')
 
     def extract_chord_table_info(self, index, chord):
         """

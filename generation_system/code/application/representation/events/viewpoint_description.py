@@ -20,6 +20,8 @@ DESCRIPTION = {
         "duration.type": "Type of Event (Quarter Note, Half Note, etc...).",
         "duration.dots": "Number of Dots applied to the duration type of the Event.",
         "duration.slash": "Number of slashes (only applies when Event is a grace note.",
+        "duration.tie.type": "Type of tie (if existent) in Event.",
+        "duration.tie.style": "style of tie (if existent) in Event. Can be normal, dotted, etc.",
 
         "pitch.cpitch": "Midi Pitch of Event; if it has decimals, the Event is microtonal.",
         "pitch.dnote": "Note in C, D, E, F, G, A, B notation.",
@@ -33,15 +35,13 @@ DESCRIPTION = {
         "expressions.breath_mark": "Event has a breath mark.",
         "expressions.dynamic": "Dynamics of Event.",
         "expressions.fermata": "Event has a fermata.",
-        "expressions.expression": "Expressions of Event.",
+        "expressions.expression": "Usually Text Expressions of an Event.",
         "expressions.ornamentation": "Ornamentations of Event.",
         "expressions.rehearsal": "Event has a rehearsal mark.",
         "expressions.volume": "Volume of the Event (according to expressions present.",
         "expressions.notehead.type": "Type of notehead.",
         "expressions.notehead.fill": "Fill of notehead.",
         "expressions.notehead.parenthesis": "Notehead has surrounding parenthesis.",
-        "expressions.tie.type": "Type of tie (if existent) in Event.",
-        "expressions.tie.style": "style of tie (if existent) in Event. Can be normal, dotted, etc.",
         "expressions.slur.begin": "Is at the beginning of a slur.",
         "expressions.slur.end": "Is at the end of a slur.",
         "expressions.slur.between": "Is in a slur.",
@@ -95,6 +95,9 @@ DESCRIPTION = {
     },
 
     "vertical": {
+
+        "metadata.composer": "Composer of the Piece",
+        "metadata.piece_title": "Title of the Piece",
 
         "duration.length": "Length of the Event.",
         "duration.type": "Type of Event (Quarter Note, Half Note, etc...).",

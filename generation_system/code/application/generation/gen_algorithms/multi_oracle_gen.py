@@ -174,7 +174,7 @@ def fill_gaps(key, ks_dict_1, k_2, sequences, ktraces, start_offset, offsets, ma
 
 def choose_from_sfxs_k(k, sfxs, ks_at_k, offsets, principal_key):
     """
-    Choose a random k from sfxs
+    Choose a random state from sfxs at k
     """
     sfxs_k = dict([(key, sfxs[key][ks_at_k[key]])
                    for key in ks_at_k.keys()])

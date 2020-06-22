@@ -44,6 +44,10 @@ class LinearEvent(Event):
                 'type': 'quarter',
                 'dots': 0,
                 'slash': False,
+                'tie': {
+                    'type': 'no tie',
+                    'style': 'normal',
+                },
             },
             'expressions': {
                 'articulation': [],
@@ -58,10 +62,6 @@ class LinearEvent(Event):
                     'type': 'normal',
                     'fill': True,
                     'parenthesis': False,
-                },
-                'tie': {
-                    'type': 'no tie',
-                    'style': 'normal',
                 },
                 'slur': {
                     'begin': False,

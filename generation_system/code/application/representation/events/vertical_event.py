@@ -20,14 +20,18 @@ class VerticalEvent(Event):
         super().__init__(offset, from_dict, from_list, features)
 
         default = {
+            'metadata': {
+                'composer': '',
+                'piece_title': '',
+            },
             'duration': {
                 'length': 1,
                 'type': 'quarter',
                 'dots': 0,
-            },
-            'tie': {
-                'type': 'no tie',
-                'style': 'normal',
+                'tie': {
+                    'type': 'no tie',
+                    'style': 'normal',
+                },
             },
             'basic': {
                 'root': '',

@@ -33,11 +33,11 @@ def parse_multiple(event_dict, start_pitches=None):
 
     to_shift = {}
     potential_anacrusis = dict([(key, events[0].get_viewpoint(
-        'anacrusis')) for key, events in event_dict.items()])
+        'anacrusis')) for key, events in event_dict.items() if not isinstance(events[0], str)])
 
     if any(value for value in potential_anacrusis.values()):
         posinbar = dict([(key, events[0].get_viewpoint('posinbar'))
-                         for key, events in event_dict.items()])
+                         for key, events in event_dict.items() if not isinstance(events[0], str)])
         to_shift = posinbar
 
     stream = music21.stream.Stream()
@@ -109,16 +109,16 @@ def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4', single=
                              music21.dynamics.Dynamic(dyn))
         last_dynamics = event.get_viewpoint('dynamic')
 
-        last_pitch = start_pitch
-        if len(voice.notes) > 0:
-            if isinstance(voice.notes[-1], music21.note.Note):
-                last_pitch = voice.notes[-1].nameWithOctave
-
+        duration = duration_conversion(event)
         note = None
         if event.is_rest():
-            note = music21.note.Rest(duration=duration_conversion(event))
+            note = music21.note.Rest(duration=duration)
         else:
-            note = convert_note_event(event, last_pitch)
+            last_pitch = start_pitch
+            if len(voice.notes) > 0:
+                if isinstance(voice.notes[-1], music21.note.Note):
+                    last_pitch = voice.notes[-1].nameWithOctave
+            note = convert_note_event(event, last_pitch, duration)
 
         note = articulation_conversion(event, note)
         note = expressions_conversion(event, note)
@@ -259,19 +259,18 @@ def metro_selection(event, stream, last_metro_value, offset):
     return last_metro_value
 
 
-def convert_note_event(event, start_pitch):
+def convert_note_event(event, start_pitch, duration):
     """
     Convert Note Event
     """
     if event.is_chord() and event.get_viewpoint('chordPitches') != []:
         note = music21.chord.Chord([music21.pitch.Pitch(p) for p in event.get_viewpoint(
-            'chordPitches')], duration=duration_conversion(event))
+            'chordPitches')], duration=duration)
     else:
         note = music21.note.Note(
-            pitch_conversion(event, start_pitch), duration=duration_conversion(event))
+            pitch_conversion(event, start_pitch), duration=duration)
 
     note.volume = event.get_viewpoint('volume')
-
     note.notehead = event.get_viewpoint('notehead.type')
 
     if str(note.duration.type) not in ['half', 'whole']:
@@ -318,10 +317,12 @@ def duration_conversion(event):
     """
     Return Pitch of Event
     """
-    duration = music21.duration.Duration(quarterLength=event.get_viewpoint('duration.length'),
-                                         type=event.get_viewpoint(
-        'duration.type'),
-        dots=event.get_viewpoint('duration.dots'))
+    try:
+        duration = music21.duration.Duration(quarterLength=event.get_viewpoint('duration.length'),
+                                            type=event.get_viewpoint('duration.type'),
+                                            dots=event.get_viewpoint('duration.dots'))
+    except Exception:
+        duration = music21.duration.Duration(quarterLength=event.get_viewpoint('duration.length'))
 
     duration_1 = event.get_viewpoint('duration.length') % 1
     try:
