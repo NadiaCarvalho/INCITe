@@ -44,7 +44,7 @@ def contour_hd(midi_viewpoint_1, midi_viewpoint_2):
         for count, ele in enumerate(values):
             if result < ele:
                 return sign(result)*count
-        return int(0)
+        return sign(result)*4
     return None
 
 def is_intervalic_difference(seq_int_1, sign_1, seq_int_2, sign_2):

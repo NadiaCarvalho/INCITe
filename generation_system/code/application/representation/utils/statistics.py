@@ -65,6 +65,7 @@ def get_percentage_from_statistics(statistic_dict, len_events):
             'media_percentages': sum(unique_percentages)/len(unique_percentages),
             'median_percentages': np.median(unique_percentages),
             'variance': round(np.var(unique_percentages), 2),
+            'standard_deviation': round(np.std(unique_percentages), 2),
         }
     return new_stats_dict
 
@@ -74,18 +75,12 @@ def calculate_part_weights(statistic_dict, key_stats='parts'):
     To Reuse code
     """
     if key_stats in statistic_dict:
-        variances_parts = dict([(key, stats['variance'])
+        std_parts = dict([(key, stats['standard_deviation'])
                                 for key, stats in statistic_dict[key_stats].items()])
-        variances_parts_normed = utils.normalize_dictionary(
-            variances_parts, x_min=0, x_max=100)
-
+        std_parts_normed = utils.normalize_dictionary(
+            std_parts, x_min=0, x_max=100)
         for key, stats in statistic_dict[key_stats].items():
-
-            stats['weight'] = variances_parts_normed[key]
-
-            if variances_parts[key] > 10:
-                stats['weight'] = variances_parts_normed[key] * 5
-
+            stats['weight'] = std_parts_normed[key]
             stats['fixed'] = False
             if 'posinbar' in key:
                 stats['fixed'] = True
