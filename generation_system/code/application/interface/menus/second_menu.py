@@ -183,6 +183,7 @@ class SecondMenu(MyMenu):
 
         self.top_group = self.create_settings(parent, width)
         self.top_group.layout().setContentsMargins(5, 5, 10, 0)
+
         self.container = QtWidgets.QWidget()
         self.container.setLayout(QtWidgets.QVBoxLayout(self.container))
         self.container.layout().setContentsMargins(5, 5, 5, 5)
@@ -315,9 +316,10 @@ class SecondMenu(MyMenu):
             if 'vertical' in statistics:
                 self.tab_vertical = self.create_statistics_folder('vertical',
                                                                   statistics['vertical'], tabs)
-                tabs.addTab(self.tab_vertical, "Vertical Events")
+                tabs.addTab(self.tab_vertical, "Inter-Part Events")
 
             # Add tabs to widget
+            tabs.resize(self.width(), self.container.height())
             self.container.layout().addWidget(tabs)
 
     def create_statistics_folder(self, _type, statistics, tabs):
@@ -340,6 +342,10 @@ class SecondMenu(MyMenu):
                     key, statistics[key], description))
 
         information_view.setCurrentIndex(0)
+
+        list_wid.setMaximumHeight((5/8)*self.height())
+        information_view.setMaximumHeight((5/8)*self.height())
+
         main_widget.layout().addWidget(list_wid, 0, 0, 1, 1)
         main_widget.layout().addWidget(information_view, 0, 1, 1, 1)
         return main_widget
