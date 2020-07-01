@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.7
 """
-This script presents the class LineParser that processes the vertical relations of various lines
+This script presents the class LineParser that processes the interpart relations of various lines
 """
 from collections import defaultdict
 
@@ -10,9 +10,9 @@ import application.representation.parsers.utils as utils
 from application.representation.events.interpart_event import InterPartEvent
 
 
-class VerticalParser:
+class InterPartParser:
     """
-    Class VerticalParser
+    Class InterPartParser
     """
 
     def __init__(self, music_to_parse):
@@ -40,7 +40,7 @@ class VerticalParser:
 
     def parse_music(self):
         """
-        Returns the events from vertical relations between parts
+        Returns the events from interpart relations between parts
         """
         print('Parsing chords')
         chords = self.music_to_parse.flat.getElementsByClass(['Chord', 'Rest'])

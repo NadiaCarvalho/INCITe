@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.7
 """
 This script presents the class InterPartEvent
-that represents a vertical (harmonic) event in a piece of music
+that represents a interpart (harmonic) event in a piece of music
 """
 from fractions import Fraction
 

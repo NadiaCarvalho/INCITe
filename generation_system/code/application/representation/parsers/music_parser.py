@@ -16,7 +16,7 @@ import application.representation.utils.voice as voice_utils
 from application.representation.events.linear_event import PartEvent
 from application.representation.events.interpart_event import InterPartEvent
 from application.representation.parsers.line_parser import LineParser
-from application.representation.parsers.vertical_parser import VerticalParser
+from application.representation.parsers.interpart_parser import InterPartParser
 
 FOLDER_DEFAULT = ['data', 'myexamples']
 LINEAR_INSTRUMENTS = ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']
@@ -69,7 +69,7 @@ class MusicParser:
 
             self.clean_hidden_music()
 
-    def parse(self, parts=True, vertical=True, number_parts=None):
+    def parse(self, parts=True, interpart=True, number_parts=None):
         """
         Parse music
         """
@@ -102,11 +102,11 @@ class MusicParser:
                     self.music_events['part_events'][name] = self.parse_sequence_part(
                         part, name=name, first=(False, True)[i == 0])
 
-        if vertical and (len(self.music.parts) > 1 or
+        if interpart and (len(self.music.parts) > 1 or
                          len(self.music.getOverlaps()) > 0 or
                          len(self.music.recurse(classFilter='Chord')) > 0):
             print('Processing Vertical Events')
-            self.music_events['interpart_events'] = VerticalParser(
+            self.music_events['interpart_events'] = InterPartParser(
                 self.music).parse_music()
             print('End of Processing {} Vertical Events'.format(
                 len(self.music_events['interpart_events'])))
@@ -293,7 +293,7 @@ class MusicParser:
 
     def get_interpart_events(self):
         """
-        Returns the vertical events
+        Returns the interpart events
         """
         if 'interpart_events' in self.music_events:
             return self.music_events['interpart_events']

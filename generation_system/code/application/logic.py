@@ -21,7 +21,7 @@ from application.representation.parsers.music_parser import MusicParser
 from application.representation.parsers.segmentation import (apply_segmentation_info,
                                                              get_phrases_from_events,
                                                              segmentation,
-                                                             VERTICAL_WEIGHTS,
+                                                             INTERPART_WEIGHTS,
                                                              LINE_WEIGHTS)
 
 
@@ -150,7 +150,7 @@ class Application(QtCore.QObject):
         self.indexes_first = {}
 
         parts_features = []
-        vertical_features = []
+        interpart_features = []
 
         for music, _tuple in self.music.items():
             parser = _tuple[0]
@@ -165,14 +165,14 @@ class Application(QtCore.QObject):
                         parts_features))
                     parts_features.extend(part)
 
-            # For each music, process vertical part, if exists
-            vertical_part = parser.get_interpart_events()
-            if vertical_part is not None or vertical_part is not []:
+            # For each music, process interpart part, if exists
+            interpart_part = parser.get_interpart_events()
+            if interpart_part is not None or interpart_part is not []:
                 self.indexes_first[music]['inter-parts'] = len(
-                    vertical_features)
-                vertical_features.extend(vertical_part)
+                    interpart_features)
+                interpart_features.extend(interpart_part)
 
-        return parts_features, vertical_features
+        return parts_features, interpart_features
 
     def return_statistics_part(self, key_part, features, statistic_dict):
         """
@@ -189,14 +189,14 @@ class Application(QtCore.QObject):
             information['original_features_names'] = feat_names
             statistic_dict[key_part] = stats
 
-    def get_statistics(self, part_features, vertical_features):
+    def get_statistics(self, part_features, interpart_features):
         """
         Calculate Statistics From Processed Music
         """
         statistic_dict = {}
         self.return_statistics_part('parts', part_features, statistic_dict)
         self.return_statistics_part(
-            'inter-parts', vertical_features, statistic_dict)
+            'inter-parts', interpart_features, statistic_dict)
         return statistic_dict
 
     def calculate_statistics(self, interface, calc_weights=False):
@@ -205,14 +205,14 @@ class Application(QtCore.QObject):
         """
         self.indexes_first = {}
 
-        part_features, vertical_features = self.process_music()
-        if part_features == -1 and vertical_features == -1 and interface is not None:
+        part_features, interpart_features = self.process_music()
+        if part_features == -1 and interpart_features == -1 and interface is not None:
             self.signal_parsed.connect(
                 interface.error_no_music)
             self.signal_parsed.emit('ERROR')
             return
 
-        statistic_dict = self.get_statistics(part_features, vertical_features)
+        statistic_dict = self.get_statistics(part_features, interpart_features)
 
         if calc_weights:
             statistics.calculate_automatic_viewpoints(statistic_dict)
@@ -247,18 +247,18 @@ class Application(QtCore.QObject):
         self.model_viewpoints = weight_dict
         return fixed_dict
 
-    def part_segmentation(self, events, vertical_offsets, interpart_events):
+    def part_segmentation(self, events, interpart_offsets, interpart_events):
         """
         Segmentation for a Part
         """
-        if vertical_offsets is not None and self.segmentation_viewpoints['inter-parts'] is not None:
+        if interpart_offsets is not None and self.segmentation_viewpoints['inter-parts'] is not None:
             ev_offsets = [ev.get_offset() for ev in events]
-            vertical_start_indexes = [
-                vertical_offsets.index(off) for off in ev_offsets]
+            interpart_start_indexes = [
+                interpart_offsets.index(off) for off in ev_offsets]
             segmentation(events, weights_line=self.segmentation_viewpoints['parts'],
                          weights_vert=self.segmentation_viewpoints['inter-parts'],
                          interpart_events=interpart_events,
-                         indexes=vertical_start_indexes)
+                         indexes=interpart_start_indexes)
         else:
             segmentation(
                 events, weights_line=self.segmentation_viewpoints['parts'])
@@ -278,11 +278,11 @@ class Application(QtCore.QObject):
 
         for music, _tuple in self.music.items():
             parser = _tuple[0]
-            vertical_offsets = None
+            interpart_offsets = None
 
-            # If vertical Elements exist, use them to calculate Segmentation
+            # If interpart Elements exist, use them to calculate Segmentation
             if parser.get_interpart_events() is not None:
-                vertical_offsets = [ev.get_offset()
+                interpart_offsets = [ev.get_offset()
                                     for ev in parser.get_interpart_events()]
 
             number_part = 0
@@ -290,7 +290,7 @@ class Application(QtCore.QObject):
                 if len(events) > 0:
                     # Segment Part
                     self.part_segmentation(
-                        events, vertical_offsets, parser.get_interpart_events())
+                        events, interpart_offsets, parser.get_interpart_events())
 
                     # Get Features For Weights
                     features, _ = rep_utils.create_feat_array(

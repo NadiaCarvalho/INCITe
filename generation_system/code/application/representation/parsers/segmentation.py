@@ -10,7 +10,7 @@ import numpy as np
 import application.representation.parsers.utils as basic_utils
 import application.representation.utils.features as utils
 
-VERTICAL_WEIGHTS = {  # candidates for phrasing discovery (harmonic)
+INTERPART_WEIGHTS = {  # candidates for phrasing discovery (harmonic)
     'basic.root': 1,
     'pitches': 1,
     'cardinality': 1,
@@ -141,7 +141,7 @@ def process_weights(events, i_weights, line=True):
         if line:
             i_weights = LINE_WEIGHTS
         else:
-            i_weights = VERTICAL_WEIGHTS
+            i_weights = INTERPART_WEIGHTS
 
     # Get all events as a set of normalized features
     features, _, _, weights = utils.events_to_features(

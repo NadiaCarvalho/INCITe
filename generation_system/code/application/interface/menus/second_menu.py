@@ -188,7 +188,7 @@ class SecondMenu(MyMenu):
         self.container.setLayout(QtWidgets.QVBoxLayout(self.container))
         self.container.layout().setContentsMargins(5, 5, 5, 5)
         self.tab_parts = None
-        self.tab_vertical = None
+        self.tab_interpart = None
 
         self.main_layout.setContentsMargins(5, 5, 5, 5)
         self.main_layout.setSpacing(35)
@@ -278,10 +278,10 @@ class SecondMenu(MyMenu):
                     widget.weight_box.setValue(value)
                     widget.fixed_box.setChecked(False)
 
-        if self.tab_vertical is not None:
-            vertical_widget = self.tab_vertical.children()[2]
-            for i in range(vertical_widget.count()):
-                widget = vertical_widget.widget(i)
+        if self.tab_interpart is not None:
+            interpart_widget = self.tab_interpart.children()[2]
+            for i in range(interpart_widget.count()):
+                widget = interpart_widget.widget(i)
                 if isinstance(widget, ShowStatsWidget):
                     widget.weight_box.setValue(value)
                     widget.fixed_box.setChecked(False)
@@ -298,15 +298,15 @@ class SecondMenu(MyMenu):
                     widget.change_stats(
                         statistics['parts'][widget.name])
 
-        if self.tab_vertical is not None:
-            vertical_widget = self.tab_vertical.children()[2]
-            for i in range(vertical_widget.count()):
-                widget = vertical_widget.widget(i)
+        if self.tab_interpart is not None:
+            interpart_widget = self.tab_interpart.children()[2]
+            for i in range(interpart_widget.count()):
+                widget = interpart_widget.widget(i)
                 if isinstance(widget, ShowStatsWidget) and widget.name in statistics['inter-parts']:
                     widget.change_stats(
                         statistics['inter-parts'][widget.name])
 
-        if self.tab_parts is None and self.tab_vertical is None:
+        if self.tab_parts is None and self.tab_interpart is None:
             # Initialize tab screen
             tabs = QtWidgets.QTabWidget()
             self.tab_parts = self.create_statistics_folder('parts',
@@ -314,9 +314,9 @@ class SecondMenu(MyMenu):
             tabs.addTab(self.tab_parts, "Part Events")
 
             if 'inter-parts' in statistics:
-                self.tab_vertical = self.create_statistics_folder('inter-parts',
+                self.tab_interpart = self.create_statistics_folder('inter-parts',
                                                                   statistics['inter-parts'], tabs)
-                tabs.addTab(self.tab_vertical, "Inter-Part Events")
+                tabs.addTab(self.tab_interpart, "Inter-Part Events")
 
             # Add tabs to widget
             tabs.resize(self.width(), self.container.height())
@@ -382,7 +382,7 @@ class SecondMenu(MyMenu):
             weights_dict['parts'] = wdp
             fixed_dict['parts'] = fdp
 
-        wdv, fdv, zwv = self.tabs_process(self.tab_vertical)
+        wdv, fdv, zwv = self.tabs_process(self.tab_interpart)
         if wdv != {}:
             weights_dict['inter-parts'] = wdv
             fixed_dict['inter-parts'] = fdv
