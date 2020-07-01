@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.7
 """
-This script presents the class VerticalEvent
+This script presents the class InterPartEvent
 that represents a vertical (harmonic) event in a piece of music
 """
 from fractions import Fraction
@@ -11,9 +11,9 @@ from application.representation.events.event import Event
 ARRAY_VALUES = ['pitches', 'pitchClass', 'primeForm', 'pcOrdered']
 
 
-class VerticalEvent(Event):
+class InterPartEvent(Event):
     """
-    Class VerticalEvent
+    Class InterPartEvent
     """
 
     def __init__(self, offset=None, from_dict=None, from_list=None, features=None):

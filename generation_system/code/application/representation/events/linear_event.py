@@ -1,6 +1,6 @@
 #!/usr/bin/env python3.7
 """
-This script presents the class LinearEvent
+This script presents the class PartEvent
 that represents a linear (melodic) event in a piece of music
 """
 from fractions import Fraction
@@ -17,9 +17,9 @@ BOOL_VALUES = ['rest', 'grace', 'chord',
                'exists_before', 'is_end', 'double', 'fib', 'anacrusis', 'begin', 'end', 'between']
 
 
-class LinearEvent(Event):
+class PartEvent(Event):
     """
-    Class LinearEvent
+    Class PartEvent
     """
 
     def __init__(self, offset=None, from_dict=None, from_list=None, features=None):

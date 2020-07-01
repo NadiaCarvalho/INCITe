@@ -7,7 +7,7 @@ from collections import defaultdict
 import music21
 
 import application.representation.parsers.utils as utils
-from application.representation.events.vertical_event import VerticalEvent
+from application.representation.events.interpart_event import InterPartEvent
 
 
 class VerticalParser:
@@ -45,7 +45,7 @@ class VerticalParser:
         print('Parsing chords')
         chords = self.music_to_parse.flat.getElementsByClass(['Chord', 'Rest'])
         for i, chord in enumerate(chords):
-            self.events.append(VerticalEvent(chord.offset))
+            self.events.append(InterPartEvent(chord.offset))
 
             # Metadata
             for key, value in self.metadata.items():

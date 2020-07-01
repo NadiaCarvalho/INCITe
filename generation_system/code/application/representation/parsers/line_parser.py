@@ -6,7 +6,7 @@ This script presents the class LineParser that processes the events of a single 
 import music21
 
 import application.representation.parsers.utils as utils
-from application.representation.events.linear_event import LinearEvent
+from application.representation.events.linear_event import PartEvent
 
 
 class LineParser:
@@ -83,7 +83,7 @@ class LineParser:
 
         for i, note_or_rest in enumerate(stream_notes_rests.elements):
 
-            self.events.append(LinearEvent(offset=note_or_rest.offset))
+            self.events.append(PartEvent(offset=note_or_rest.offset))
 
             # Metadata
             for key, value in self.metadata.items():

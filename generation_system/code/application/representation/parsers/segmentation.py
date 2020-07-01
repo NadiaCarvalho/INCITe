@@ -151,14 +151,14 @@ def process_weights(events, i_weights, line=True):
 
 
 def process_incoming_weights(events, weights_line=None,
-                             vertical_events=None, weights_vert=None, indexes=None):
+                             interpart_events=None, weights_vert=None, indexes=None):
     """
     Process Incoming Weights
     """
     features, weights = process_weights(events, weights_line)
-    if vertical_events is not None and indexes is not None:
+    if interpart_events is not None and indexes is not None:
         vert_features, vert_weights = process_weights(
-            vertical_events, weights_vert, line=False)
+            interpart_events, weights_vert, line=False)
         for i, ind in enumerate(indexes):
             features[i] = np.concatenate((features[i], vert_features[ind]))
             weights = np.concatenate((weights, vert_weights))
@@ -181,13 +181,13 @@ def apply_phrasing(events, normalized_bss, normalized_weights):
             events[i-1].add_viewpoint('phrase.boundary', -boundary)
 
 
-def segmentation(events, weights_line=None, vertical_events=None, weights_vert=None, indexes=None):
+def segmentation(events, weights_line=None, interpart_events=None, weights_vert=None, indexes=None):
     """
     Segmentation for a set of events, using
     Peak Picking Boundary Location by Witten and Pearce
     """
     features, weights = process_incoming_weights(
-        events, weights_line, vertical_events, weights_vert, indexes)
+        events, weights_line, interpart_events, weights_vert, indexes)
 
     normalized_bss, normalized_weights = calculate_boundary_strengths(
         events, features, weights)

@@ -13,8 +13,8 @@ import music21
 import application.representation.parsers.utils as utils
 import application.representation.utils.printing as printing
 import application.representation.utils.voice as voice_utils
-from application.representation.events.linear_event import LinearEvent
-from application.representation.events.vertical_event import VerticalEvent
+from application.representation.events.linear_event import PartEvent
+from application.representation.events.interpart_event import InterPartEvent
 from application.representation.parsers.line_parser import LineParser
 from application.representation.parsers.vertical_parser import VerticalParser
 
@@ -40,7 +40,7 @@ class MusicParser:
 
         self.music_events = {
             'part_events': {},
-            'vertical_events': []
+            'interpart_events': []
         }
 
         self.first_part = None
@@ -106,10 +106,10 @@ class MusicParser:
                          len(self.music.getOverlaps()) > 0 or
                          len(self.music.recurse(classFilter='Chord')) > 0):
             print('Processing Vertical Events')
-            self.music_events['vertical_events'] = VerticalParser(
+            self.music_events['interpart_events'] = VerticalParser(
                 self.music).parse_music()
             print('End of Processing {} Vertical Events'.format(
-                len(self.music_events['vertical_events'])))
+                len(self.music_events['interpart_events'])))
 
     def parse_sequence_part(self, part, name=None, first=False, verbose=True):
         """
@@ -256,10 +256,10 @@ class MusicParser:
                 _ = [print(str(ev) + '\n') for ev in part_events]
                 print('')
             print('')
-        if events in ('vertical', 'all'):
+        if events in ('inter-parts', 'all'):
             print('Vertical Events ')
             _ = [print(str(ev) + '\n')
-                 for ev in self.music_events['vertical_events']]
+                 for ev in self.music_events['interpart_events']]
 
     def show_single_viewpoints(self, viewpoint, events='all parts',
                                part_number=0, parts=None, offset=False):
@@ -279,9 +279,9 @@ class MusicParser:
         if events in ('all parts', 'all'):
             _ = [printing.show_part_viewpoint(viewpoint, part, offset)
                  for key, part in self.music_events['part_events'].items()]
-        if events in ('vertical', 'all'):
+        if events in ('inter-parts', 'all'):
             printing.show_part_viewpoint(
-                viewpoint, self.music_events['vertical_events'], offset)
+                viewpoint, self.music_events['interpart_events'], offset)
 
     def get_part_events(self):
         """
@@ -291,12 +291,12 @@ class MusicParser:
             return self.music_events['part_events']
         return None
 
-    def get_vertical_events(self):
+    def get_interpart_events(self):
         """
         Returns the vertical events
         """
-        if 'vertical_events' in self.music_events:
-            return self.music_events['vertical_events']
+        if 'interpart_events' in self.music_events:
+            return self.music_events['interpart_events']
         return None
 
     def to_json(self, filename, folders=None, indent=2):
@@ -313,8 +313,8 @@ class MusicParser:
 
         to_dump = {
             'part_events': {},
-            'vertical_events': [
-                event.to_feature_dict() for event in self.music_events['vertical_events']]
+            'interpart_events': [
+                event.to_feature_dict() for event in self.music_events['interpart_events']]
         }
 
         for key, part in self.music_events['part_events'].items():
@@ -340,12 +340,12 @@ class MusicParser:
 
         with open(file_path + '.json', 'rb') as handle:
             to_load = json.load(handle)
-            print(to_load['vertical_events'])
-            self.music_events['vertical_events'] = [
-                VerticalEvent(from_dict=event) for event in to_load['vertical_events']]
+            print(to_load['interpart_events'])
+            self.music_events['interpart_events'] = [
+                InterPartEvent(from_dict=event) for event in to_load['interpart_events']]
             for key, part in to_load['part_events'].items():
                 self.music_events['part_events'][int(key)] = [
-                    LinearEvent(from_dict=event) for event in part]
+                    PartEvent(from_dict=event) for event in part]
             handle.close()
 
     def to_pickle(self, filename, folders=None):

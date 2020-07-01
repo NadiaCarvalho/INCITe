@@ -51,15 +51,15 @@ class Application(QtCore.QObject):
         # Viewpoints To Use
         self.model_viewpoints = {
             'line': {},
-            'vertical': {}
+            'inter-parts': {}
         }
         self.segmentation_viewpoints = {
             'line': {},
-            'vertical': {}
+            'inter-parts': {}
         }
         self.music_information = {
             'parts': {},
-            'vertical': {}
+            'inter-parts': {}
         }
         self.oracles_information = {
             'single_oracle': {},
@@ -166,9 +166,9 @@ class Application(QtCore.QObject):
                     parts_features.extend(part)
 
             # For each music, process vertical part, if exists
-            vertical_part = parser.get_vertical_events()
+            vertical_part = parser.get_interpart_events()
             if vertical_part is not None or vertical_part is not []:
-                self.indexes_first[music]['vertical'] = len(
+                self.indexes_first[music]['inter-parts'] = len(
                     vertical_features)
                 vertical_features.extend(vertical_part)
 
@@ -196,7 +196,7 @@ class Application(QtCore.QObject):
         statistic_dict = {}
         self.return_statistics_part('parts', part_features, statistic_dict)
         self.return_statistics_part(
-            'vertical', vertical_features, statistic_dict)
+            'inter-parts', vertical_features, statistic_dict)
         return statistic_dict
 
     def calculate_statistics(self, interface, calc_weights=False):
@@ -229,35 +229,35 @@ class Application(QtCore.QObject):
         Process Incoming Weights
         """
         # Non incoming weights
-        if 'parts' not in weight_dict and 'vertical' not in 'weight_dict':
+        if 'parts' not in weight_dict and 'inter-parts' not in 'weight_dict':
             statistics_dict = self.calculate_statistics(None, True)
 
             weight_dict['parts'] = {}
             fixed_dict['parts'] = {}
-            weight_dict['vertical'] = {}
-            fixed_dict['vertical'] = {}
+            weight_dict['inter-parts'] = {}
+            fixed_dict['inter-parts'] = {}
 
             for key, stats in statistics_dict['parts'].items():
                 weight_dict['parts'][key] = stats['weight']
                 fixed_dict['parts'][key] = stats['fixed']
-            for key, stats in statistics_dict['vertical'].items():
-                weight_dict['vertical'][key] = stats['weight']
-                fixed_dict['vertical'][key] = stats['fixed']
+            for key, stats in statistics_dict['inter-parts'].items():
+                weight_dict['inter-parts'][key] = stats['weight']
+                fixed_dict['inter-parts'][key] = stats['fixed']
 
         self.model_viewpoints = weight_dict
         return fixed_dict
 
-    def part_segmentation(self, events, vertical_offsets, vertical_events):
+    def part_segmentation(self, events, vertical_offsets, interpart_events):
         """
         Segmentation for a Part
         """
-        if vertical_offsets is not None and self.segmentation_viewpoints['vertical'] is not None:
+        if vertical_offsets is not None and self.segmentation_viewpoints['inter-parts'] is not None:
             ev_offsets = [ev.get_offset() for ev in events]
             vertical_start_indexes = [
                 vertical_offsets.index(off) for off in ev_offsets]
             segmentation(events, weights_line=self.segmentation_viewpoints['parts'],
-                         weights_vert=self.segmentation_viewpoints['vertical'],
-                         vertical_events=vertical_events,
+                         weights_vert=self.segmentation_viewpoints['inter-parts'],
+                         interpart_events=interpart_events,
                          indexes=vertical_start_indexes)
         else:
             segmentation(
@@ -281,16 +281,16 @@ class Application(QtCore.QObject):
             vertical_offsets = None
 
             # If vertical Elements exist, use them to calculate Segmentation
-            if parser.get_vertical_events() is not None:
+            if parser.get_interpart_events() is not None:
                 vertical_offsets = [ev.get_offset()
-                                    for ev in parser.get_vertical_events()]
+                                    for ev in parser.get_interpart_events()]
 
             number_part = 0
             for key, events in parser.get_part_events().items():
                 if len(events) > 0:
                     # Segment Part
                     self.part_segmentation(
-                        events, vertical_offsets, parser.get_vertical_events())
+                        events, vertical_offsets, parser.get_interpart_events())
 
                     # Get Features For Weights
                     features, _ = rep_utils.create_feat_array(
@@ -305,7 +305,7 @@ class Application(QtCore.QObject):
         """
         Segment Music
         """
-        self.segmentation_viewpoints = {'vertical': None}
+        self.segmentation_viewpoints = {'inter-parts': None}
         if 'parts' in weight_dict:
             self.segmentation_viewpoints['parts'] = {}
             for key in LINE_WEIGHTS:
@@ -358,7 +358,7 @@ class Application(QtCore.QObject):
         fixed_dict = self.process_weights(weight_dict, fixed_dict)
         self.segment(weight_dict)
         self.prepare_parts(fixed_dict, 'parts')
-        self.prepare_parts(fixed_dict, 'vertical')
+        self.prepare_parts(fixed_dict, 'inter-parts')
 
     def generate_oracle(self, interface, line_oracle, line=0):
         """

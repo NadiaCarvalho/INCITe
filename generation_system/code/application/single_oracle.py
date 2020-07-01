@@ -11,7 +11,7 @@ import application.generation.plot_fo as gen_plot
 import application.generation.utils as gen_utils
 from application.generation.cdist_fixed import distance_between_windowed_features
 from application.representation.conversor.score_conversor import parse_single_line
-from application.representation.events.linear_event import LinearEvent
+from application.representation.events.linear_event import PartEvent
 from application.representation.parsers.utils import get_last_x_events_that_are_notes_before_index
 
 
@@ -147,7 +147,7 @@ def linear_score_generator(application, sequence, o_information,
     """
     Score Generator for Single Line
     """
-    sequenced_events = [LinearEvent(
+    sequenced_events = [PartEvent(
         from_list=o_information[state+start], features=feature_names) for state in sequence]
 
     start_pitch = application.principal_music[0].get_part_events()[

@@ -302,9 +302,9 @@ class SecondMenu(MyMenu):
             vertical_widget = self.tab_vertical.children()[2]
             for i in range(vertical_widget.count()):
                 widget = vertical_widget.widget(i)
-                if isinstance(widget, ShowStatsWidget) and widget.name in statistics['vertical']:
+                if isinstance(widget, ShowStatsWidget) and widget.name in statistics['inter-parts']:
                     widget.change_stats(
-                        statistics['vertical'][widget.name])
+                        statistics['inter-parts'][widget.name])
 
         if self.tab_parts is None and self.tab_vertical is None:
             # Initialize tab screen
@@ -313,9 +313,9 @@ class SecondMenu(MyMenu):
                                                            statistics['parts'], tabs)
             tabs.addTab(self.tab_parts, "Part Events")
 
-            if 'vertical' in statistics:
-                self.tab_vertical = self.create_statistics_folder('vertical',
-                                                                  statistics['vertical'], tabs)
+            if 'inter-parts' in statistics:
+                self.tab_vertical = self.create_statistics_folder('inter-parts',
+                                                                  statistics['inter-parts'], tabs)
                 tabs.addTab(self.tab_vertical, "Inter-Part Events")
 
             # Add tabs to widget
@@ -384,8 +384,8 @@ class SecondMenu(MyMenu):
 
         wdv, fdv, zwv = self.tabs_process(self.tab_vertical)
         if wdv != {}:
-            weights_dict['vertical'] = wdv
-            fixed_dict['vertical'] = fdv
+            weights_dict['inter-parts'] = wdv
+            fixed_dict['inter-parts'] = fdv
 
         if zwp == 0 and zwv == 0:
             msg = QtWidgets.QMessageBox()

@@ -13,7 +13,7 @@ import application.generation.plot_fo as gen_plot
 import application.generation.utils as gen_utils
 from application.generation.cdist_fixed import distance_between_windowed_features
 from application.representation.conversor.score_conversor import parse_multiple
-from application.representation.events.linear_event import LinearEvent
+from application.representation.events.linear_event import PartEvent
 from application.representation.parsers.utils import get_last_x_events_that_are_notes_before_index
 
 
@@ -54,19 +54,19 @@ def get_multiple_part_features(application, part_info, vert_info):
                         [ev.get_offset() + last_offset for ev in events])
                 i += 1
 
-        vertical_events = parser.get_vertical_events()
-        if len(vertical_events) > 0:
-            start_index = application.indexes_first[music]['vertical']
-            finish_index = start_index + len(vertical_events)
+        interpart_events = parser.get_interpart_events()
+        if len(interpart_events) > 0:
+            start_index = application.indexes_first[music]['inter-parts']
+            finish_index = start_index + len(interpart_events)
 
-            if 'vertical' not in normed_features:
-                normed_features['vertical'] = []
-                ev_offsets['vertical'] = []
+            if 'inter-parts' not in normed_features:
+                normed_features['inter-parts'] = []
+                ev_offsets['inter-parts'] = []
 
-            normed_features['vertical'].extend(
+            normed_features['inter-parts'].extend(
                 vert_info['selected_normed'][start_index:finish_index])
-            ev_offsets['vertical'].extend(
-                [ev.get_offset() + last_offset for ev in vertical_events])
+            ev_offsets['inter-parts'].extend(
+                [ev.get_offset() + last_offset for ev in interpart_events])
 
     return normed_features, original_features, ev_offsets
 
@@ -76,7 +76,7 @@ def construct_multi_oracles(application):
     Construct Multiple Oracles from Information
     """
     part_information = application.music_information['parts']
-    vert_information = application.music_information['vertical']
+    vert_information = application.music_information['inter-parts']
 
     normed_features, original_features, ev_offsets = get_multiple_part_features(
         application, part_information, vert_information)
@@ -87,7 +87,7 @@ def construct_multi_oracles(application):
         features_names = part_information['selected_features_names']
         weights = part_information['normed_weights']
         fixed_weights = part_information['fixed_weights']
-        if key == 'vertical':
+        if key == 'inter-parts':
             features_names = vert_information['selected_features_names']
             weights = vert_information['normed_weights']
             fixed_weights = vert_information['fixed_weights']
@@ -100,7 +100,7 @@ def construct_multi_oracles(application):
             weights=weights, fixed_weights=fixed_weights,
             dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
 
-    # oracles.move_to_end('vertical', last=True)
+    # oracles.move_to_end('inter-parts', last=True)
     # image = gen_plot.start_draw(oracles, ev_offsets)
     # name = r'data\myexamples\oracle' + '.PNG'
     # image.save(name)
@@ -131,7 +131,7 @@ def generate_sequences_multiple(information, num_seq, seq_len=15, start=-1):
             distances_2 = []
             for key, sequence in sequences.items():
                 normed_feats = information['normed_features'][key]
-                if key != 'vertical':
+                if key != 'inter-parts':
                     orig_feats = information['original_features'][key]
 
                 seq = list(
@@ -144,7 +144,7 @@ def generate_sequences_multiple(information, num_seq, seq_len=15, start=-1):
 
                 sequence_in_feat = [normed_feats[k]
                                     for k in filter_strings]
-                if key != 'vertical':
+                if key != 'inter-parts':
                     sequences[key] = [orig_feats[k] if not isinstance(
                         k, str) else k for k in seq]
 
@@ -204,8 +204,8 @@ def multi_sequence_score_generator(sequences, feature_names, application, name='
     start_pitches = {}
     sequenced_events = {}
     for key, sequence in sequences.items():
-        if key != 'vertical':
-            sequenced_events[key] = [LinearEvent(
+        if key != 'inter-parts':
+            sequenced_events[key] = [PartEvent(
                 from_list=state, features=feature_names)
                 if not isinstance(state, str)
                 else state
