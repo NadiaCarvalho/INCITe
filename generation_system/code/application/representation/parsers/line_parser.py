@@ -5,7 +5,7 @@ This script presents the class LineParser that processes the events of a single 
 
 import music21
 
-import  application.representation.parsers.utils as utils
+import application.representation.parsers.utils as utils
 from application.representation.events.linear_event import LinearEvent
 
 
@@ -99,7 +99,14 @@ class LineParser:
                 'chord', is_chord)
 
             if len(self.events) > 1:
-                self.events[i].add_viewpoint('bioi', note_or_rest.offset - self.events[-2].get_offset())
+                bioi = note_or_rest.offset - self.events[-2].get_offset()
+                self.events[i].add_viewpoint('bioi', bioi)
+                last_bioi = self.events[-2].get_viewpoint('bioi')
+                if last_bioi != 0:
+                    self.events[i].add_viewpoint(
+                        'derived.bioi_ratio', bioi / last_bioi)
+                self.events[i].add_viewpoint(
+                    'derived.bioi_contour', utils.contour(bioi, last_bioi))
 
             # Duration Parsing
             self.duration_info_parsing(i, note_or_rest)
@@ -169,7 +176,6 @@ class LineParser:
             self.events[index].add_viewpoint(
                 'style', note_or_rest.tie.style, 'tie')
 
-
     def duration_info_parsing(self, index, note_or_rest):
         """
         Parses the duration info for an event
@@ -186,6 +192,15 @@ class LineParser:
                 'duration.type', note_or_rest.duration.components[0].type)
             self.events[index].add_viewpoint(
                 'duration.slash', note_or_rest.duration.slash)
+
+        if index != 0:
+            last_duration = self.events[index -
+                                        1].get_viewpoint('duration.length')
+            if last_duration != 0:
+                self.events[index].add_viewpoint(
+                    'derived.dur_ratio', note_or_rest.duration.quarterLength / last_duration)
+            self.events[index].add_viewpoint(
+                'derived.dur_contour', utils.contour(note_or_rest.duration.quarterLength, last_duration))
 
     def contours_parsing(self, index):
         """
@@ -506,7 +521,8 @@ class LineParser:
             events_at_clef = utils.get_events_at_offset(
                 self.events, clef.off)
             if len(events_at_clef) > 0:
-                events_at_clef[0].add_viewpoint('clef', str(clef.sign) + str(clef.line))
+                events_at_clef[0].add_viewpoint(
+                    'clef', str(clef.sign) + str(clef.line))
 
     def repeat_barline_parsing(self):
         """

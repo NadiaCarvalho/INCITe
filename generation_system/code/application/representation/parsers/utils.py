@@ -16,30 +16,30 @@ def sign(number):
     return number and (1, -1)[number < 0]
 
 
-def seq_int(midi_viewpoint_1, midi_viewpoint_2):
+def seq_int(viewpoint_1, viewpoint_2):
     """
     Returns the difference between two midi values
     """
-    if midi_viewpoint_1 is not None and midi_viewpoint_2 is not None:
-        return midi_viewpoint_1 - midi_viewpoint_2
+    if viewpoint_1 is not None and viewpoint_2 is not None:
+        return viewpoint_1 - viewpoint_2
     return None
 
 
-def contour(midi_viewpoint_1, midi_viewpoint_2):
+def contour(viewpoint_1, viewpoint_2):
     """
     Returns the signal between two midi values
     """
-    if midi_viewpoint_1 is not None and midi_viewpoint_2 is not None:
-        return sign(midi_viewpoint_1 - midi_viewpoint_2)
+    if viewpoint_1 is not None and viewpoint_2 is not None:
+        return sign(viewpoint_1 - viewpoint_2)
     return None
 
-def contour_hd(midi_viewpoint_1, midi_viewpoint_2):
+def contour_hd(viewpoint_1, viewpoint_2):
     """
     Returns a quantized difference between two midi values
     Defined in (Mullensiefen and Frieler, 2004a)
     """
-    if midi_viewpoint_1 is not None and midi_viewpoint_2 is not None:
-        result = midi_viewpoint_1 - midi_viewpoint_2
+    if viewpoint_1 is not None and viewpoint_2 is not None:
+        result = viewpoint_1 - viewpoint_2
         values = [1, 3, 5, 8]
         for count, ele in enumerate(values):
             if result < ele:
