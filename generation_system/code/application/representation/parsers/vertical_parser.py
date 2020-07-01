@@ -6,7 +6,7 @@ from collections import defaultdict
 
 import music21
 
-import  application.representation.parsers.utils as utils
+import application.representation.parsers.utils as utils
 from application.representation.events.vertical_event import VerticalEvent
 
 

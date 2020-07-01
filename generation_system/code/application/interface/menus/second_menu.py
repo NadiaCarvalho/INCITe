@@ -293,17 +293,17 @@ class SecondMenu(MyMenu):
             part_widget = self.tab_parts.children()[2]
             for i in range(part_widget.count()):
                 widget = part_widget.widget(i)
-                if isinstance(widget, ShowStatsWidget):
+                if isinstance(widget, ShowStatsWidget) and widget.name in statistics['parts']:
                     widget.change_stats(
-                        list(statistics['parts'].items())[i][1])
+                        statistics['parts'][widget.name])
 
         if self.tab_vertical is not None:
             vertical_widget = self.tab_vertical.children()[2]
             for i in range(vertical_widget.count()):
                 widget = vertical_widget.widget(i)
-                if isinstance(widget, ShowStatsWidget):
+                if isinstance(widget, ShowStatsWidget) and widget.name in statistics['vertical']:
                     widget.change_stats(
-                        list(statistics['vertical'].items())[i][1])
+                        statistics['vertical'][widget.name])
 
         if self.tab_parts is None and self.tab_vertical is None:
             # Initialize tab screen

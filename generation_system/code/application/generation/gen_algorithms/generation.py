@@ -7,6 +7,8 @@ import random
 
 import numpy as np
 
+import logging
+
 from application.generation.oracles.factor_oracle import FactorOracle
 
 
@@ -31,6 +33,11 @@ def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
             ktrace:
     """
 
+    logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    logging.warning(str(oracle))
+    logging.warning('PERC: ' + str(p))
+    logging.warning('LRS: ' + str(LRS))
+
     trn = oracle.basic_attributes['trn'][:]
     sfx = oracle.basic_attributes['sfx'][:]
     lrs = oracle.basic_attributes['lrs'][:]
@@ -40,6 +47,9 @@ def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
     ktrace = [1]
 
     for _i in range(seq_len):
+        logging.warning('i: ' + str(_i))
+        logging.warning('i: ' + str(k))
+
         # generate each state
         if sfx[k] != 0 and sfx[k] is not None:
             if (random.random() < p):
@@ -60,8 +70,11 @@ def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
                 _k = k
                 k_vec = []
                 k_vec = _find_links(k_vec, sfx, rsfx, _k)
+                logging.warning('kvec: ' + str(k_vec))
                 k_vec = [_i for _i in k_vec if lrs[_i] >= LRS]
+                logging.warning('kvec > LRS: ' + str(k_vec))
                 lrs_vec = [lrs[_i] for _i in k_vec]
+                logging.warning('lrs_vec: ' + str(lrs_vec))
                 if len(k_vec) > 0:  # if a possibility found, len(I)
                     if weight == 'weight':
                         max_lrs = np.amax(lrs_vec)
@@ -109,6 +122,9 @@ def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
                 ktrace.append(k)
         if k >= len(sfx) - 1:
             k = 0
+
+    logging.warning('ktrace: ' + str(ktrace))
+    logging.warning('seq: ' + str(s))
     kend = k
     return s, kend, ktrace
 

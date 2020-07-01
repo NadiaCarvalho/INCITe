@@ -67,9 +67,9 @@ def construct_single_oracle(application, line):
         weights=weights, fixed_weights=fixed_weights,
         dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
 
-    # image = gen_plot.start_draw(oracle)
-    # name = r'data\myexamples\oracle' + '.PNG'
-    # image.save(name)
+    image = gen_plot.start_draw(oracle)
+    name = r'data\oracles\oracle' + '.PNG'
+    image.save(name)
 
     application.oracles_information['single_oracle'] = {
         'key': line,

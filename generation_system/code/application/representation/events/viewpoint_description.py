@@ -89,8 +89,8 @@ DESCRIPTION = {
         "derived.posinbar": "Position of the Event in a bar.",
         "derived.beat_strength": "Strength of the Event in relation to bar.",
         "derived.tactus": "Is in a tactus.",
-        "derived.intfib": "Sequential Interval from last first note in a bar.",
-        "derived.thrbar": " .",
+        "derived.intfib": "Sequential Interval from note to fib of respective bar.",
+        "derived.thrbar": "Sequential Interval from note (if fib) to last fib.",
         # "derived.intphrase": ""
     },
 
