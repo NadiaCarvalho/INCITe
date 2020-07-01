@@ -51,15 +51,15 @@ class Application(QtCore.QObject):
         # Viewpoints To Use
         self.model_viewpoints = {
             'line': {},
-            'inter-parts': {}
+            'inter-part': {}
         }
         self.segmentation_viewpoints = {
             'line': {},
-            'inter-parts': {}
+            'inter-part': {}
         }
         self.music_information = {
             'parts': {},
-            'inter-parts': {}
+            'inter-part': {}
         }
         self.oracles_information = {
             'single_oracle': {},
@@ -168,7 +168,7 @@ class Application(QtCore.QObject):
             # For each music, process interpart part, if exists
             interpart_part = parser.get_interpart_events()
             if interpart_part is not None or interpart_part is not []:
-                self.indexes_first[music]['inter-parts'] = len(
+                self.indexes_first[music]['inter-part'] = len(
                     interpart_features)
                 interpart_features.extend(interpart_part)
 
@@ -196,7 +196,7 @@ class Application(QtCore.QObject):
         statistic_dict = {}
         self.return_statistics_part('parts', part_features, statistic_dict)
         self.return_statistics_part(
-            'inter-parts', interpart_features, statistic_dict)
+            'inter-part', interpart_features, statistic_dict)
         return statistic_dict
 
     def calculate_statistics(self, interface, calc_weights=False):
@@ -229,20 +229,20 @@ class Application(QtCore.QObject):
         Process Incoming Weights
         """
         # Non incoming weights
-        if 'parts' not in weight_dict and 'inter-parts' not in 'weight_dict':
+        if 'parts' not in weight_dict and 'inter-part' not in 'weight_dict':
             statistics_dict = self.calculate_statistics(None, True)
 
             weight_dict['parts'] = {}
             fixed_dict['parts'] = {}
-            weight_dict['inter-parts'] = {}
-            fixed_dict['inter-parts'] = {}
+            weight_dict['inter-part'] = {}
+            fixed_dict['inter-part'] = {}
 
             for key, stats in statistics_dict['parts'].items():
                 weight_dict['parts'][key] = stats['weight']
                 fixed_dict['parts'][key] = stats['fixed']
-            for key, stats in statistics_dict['inter-parts'].items():
-                weight_dict['inter-parts'][key] = stats['weight']
-                fixed_dict['inter-parts'][key] = stats['fixed']
+            for key, stats in statistics_dict['inter-part'].items():
+                weight_dict['inter-part'][key] = stats['weight']
+                fixed_dict['inter-part'][key] = stats['fixed']
 
         self.model_viewpoints = weight_dict
         return fixed_dict
@@ -251,12 +251,12 @@ class Application(QtCore.QObject):
         """
         Segmentation for a Part
         """
-        if interpart_offsets is not None and self.segmentation_viewpoints['inter-parts'] is not None:
+        if interpart_offsets is not None and self.segmentation_viewpoints['inter-part'] is not None:
             ev_offsets = [ev.get_offset() for ev in events]
             interpart_start_indexes = [
                 interpart_offsets.index(off) for off in ev_offsets]
             segmentation(events, weights_line=self.segmentation_viewpoints['parts'],
-                         weights_vert=self.segmentation_viewpoints['inter-parts'],
+                         weights_vert=self.segmentation_viewpoints['inter-part'],
                          interpart_events=interpart_events,
                          indexes=interpart_start_indexes)
         else:
@@ -305,7 +305,7 @@ class Application(QtCore.QObject):
         """
         Segment Music
         """
-        self.segmentation_viewpoints = {'inter-parts': None}
+        self.segmentation_viewpoints = {'inter-part': None}
         if 'parts' in weight_dict:
             self.segmentation_viewpoints['parts'] = {}
             for key in LINE_WEIGHTS:
@@ -358,7 +358,7 @@ class Application(QtCore.QObject):
         fixed_dict = self.process_weights(weight_dict, fixed_dict)
         self.segment(weight_dict)
         self.prepare_parts(fixed_dict, 'parts')
-        self.prepare_parts(fixed_dict, 'inter-parts')
+        self.prepare_parts(fixed_dict, 'inter-part')
 
     def generate_oracle(self, interface, line_oracle, line=0):
         """

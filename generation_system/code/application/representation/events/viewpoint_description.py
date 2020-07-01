@@ -98,7 +98,7 @@ DESCRIPTION = {
         # "derived.intphrase": ""
     },
 
-    "inter-parts": {
+    "inter-part": {
 
         "metadata.composer": "Composer of the Piece",
         "metadata.piece_title": "Title of the Piece",

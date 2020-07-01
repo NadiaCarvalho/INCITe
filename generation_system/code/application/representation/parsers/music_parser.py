@@ -105,10 +105,10 @@ class MusicParser:
         if interpart and (len(self.music.parts) > 1 or
                          len(self.music.getOverlaps()) > 0 or
                          len(self.music.recurse(classFilter='Chord')) > 0):
-            print('Processing Vertical Events')
+            print('Processing InterPart Events')
             self.music_events['interpart_events'] = InterPartParser(
                 self.music).parse_music()
-            print('End of Processing {} Vertical Events'.format(
+            print('End of Processing {} InterPart Events'.format(
                 len(self.music_events['interpart_events'])))
 
     def parse_sequence_part(self, part, name=None, first=False, verbose=True):
@@ -256,8 +256,8 @@ class MusicParser:
                 _ = [print(str(ev) + '\n') for ev in part_events]
                 print('')
             print('')
-        if events in ('inter-parts', 'all'):
-            print('Vertical Events ')
+        if events in ('inter-part', 'all'):
+            print('InterPart Events ')
             _ = [print(str(ev) + '\n')
                  for ev in self.music_events['interpart_events']]
 
@@ -279,7 +279,7 @@ class MusicParser:
         if events in ('all parts', 'all'):
             _ = [printing.show_part_viewpoint(viewpoint, part, offset)
                  for key, part in self.music_events['part_events'].items()]
-        if events in ('inter-parts', 'all'):
+        if events in ('inter-part', 'all'):
             printing.show_part_viewpoint(
                 viewpoint, self.music_events['interpart_events'], offset)
 

@@ -91,4 +91,4 @@ def calculate_automatic_viewpoints(statistic_dict):
     Calculate Automatic Weights from Statistics
     """
     calculate_part_weights(statistic_dict)
-    calculate_part_weights(statistic_dict, 'inter-parts')
+    calculate_part_weights(statistic_dict, 'inter-part')
