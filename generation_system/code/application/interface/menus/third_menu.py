@@ -49,12 +49,12 @@ class ThirdMenu(MyMenu):
         layout.setContentsMargins(5, 45, 5, 5)
         layout.setSpacing(50)
 
-        radio_button_1 = QtWidgets.QRadioButton("One Line Oracle")
+        radio_button_1 = QtWidgets.QRadioButton("One Part Oracle")
         radio_button_1.setChecked(True)
         radio_button_1.setStyleSheet("""color: black; font: bold 16px;""")
         radio_button_1.toggled.connect(self.radio_clicked)
 
-        radio_button_2 = QtWidgets.QRadioButton("Multiple Line Oracle")
+        radio_button_2 = QtWidgets.QRadioButton("Multiple Part Oracle")
         radio_button_2.setChecked(False)
         radio_button_2.setStyleSheet("""color: black; font: bold 16px;""")
         radio_button_2.toggled.connect(self.radio_clicked)
@@ -179,7 +179,7 @@ class ThirdMenu(MyMenu):
         Sequence Handling
         """
         new_container = self.sequencer_container()
-        self.main_layout.addWidget(new_container, 6, 0, 10, 2)
+        self.main_layout.addWidget(new_container, 7, 0, 10, 2)
 
         bottom_spacer = QtWidgets.QWidget()
         bottom_spacer.setSizePolicy(

@@ -343,8 +343,8 @@ class SecondMenu(MyMenu):
 
         information_view.setCurrentIndex(0)
 
-        list_wid.setMaximumHeight((5/8)*self.height())
-        information_view.setMaximumHeight((5/8)*self.height())
+        list_wid.setMaximumHeight((2/3)*self.height())
+        information_view.setMaximumHeight((2/3)*self.height())
 
         main_widget.layout().addWidget(list_wid, 0, 0, 1, 1)
         main_widget.layout().addWidget(information_view, 0, 1, 1, 1)
