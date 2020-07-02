@@ -81,7 +81,7 @@ def draw_offsets(oracle, offsets, minor_offset, major_offset, current_state, ima
                     0.5 * (1.0 / sum_offset) * width
                 current_x=x_pos + (0.25 / sum_offset * width)
                 drawer.line((current_x, height/2, next_x, height/2),
-                            width=2, fill=COLOR_TRNS)
+                            width=2, fill=COLOR_TRANS)
             else:
                 if lrs[tran] >= LRS_THRESH:
                     # forward transition to another state
@@ -92,7 +92,7 @@ def draw_offsets(oracle, offsets, minor_offset, major_offset, current_state, ima
                         (make_offsets[tran] - make_offsets[i]) * 0.125
                     drawer.arc((int(current_x) + diameter/2, int(height/2 - arc_height/2) - diameter/2.5,
                                 int(next_x) + diameter/2, int(height/2 + arc_height / 2) - diameter/2.5), 180, 0,
-                               fill=COLOR_TRNS, width=10)
+                               fill=COLOR_TRANS, width=10)
         if sfx[i] is not None and sfx[i] != 0 and lrs[sfx[i]] >= LRS_THRESH:
             current_x=x_pos
             next_x=(float(make_offsets[sfx[i]] - minor_offset) / sum_offset * width) + \
