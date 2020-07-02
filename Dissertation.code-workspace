@@ -7,10 +7,13 @@
 		{
 			"name": "Plugin",
 			"path": "./plugin"
+		},
+		{
+			"path": "website"
 		}
 	],
 	"extensions": {
-		
+
 	},
 	"settings": {
 		"python.testing.unittestEnabled": true,
