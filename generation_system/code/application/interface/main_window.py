@@ -30,7 +30,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def __init__(self, music, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
-        self.setWindowTitle("My Musical Suggestor")
+        self.setWindowTitle("My Musical Suggester")
 
         self.setWindowIcon(QtGui.QIcon(resource_path("logo.ico")))
 

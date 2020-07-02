@@ -36,8 +36,11 @@ class ShowStatsWidget(QtWidgets.QWidget):
             elif key == 'fixed':
                 self.is_fixed = stat
             else:
-                self.vbox.addWidget(self.handle_stat(
-                    key, stat, QtWidgets.QLabel('')))
+                widget = self.handle_stat(key, stat, QtWidgets.QLabel(''))
+                if ((key == 'unique_values' and statistics['number_of_unique_values'] > 3)
+                        or (key == 'number_of_unique_values' and statistics['number_of_unique_values'] < 4)):
+                    widget.setHidden(True)
+                self.vbox.addWidget(widget)
 
         self.vbox.addWidget(QHLine())
         self.set_weight_box()
@@ -130,22 +133,21 @@ class ShowStatsWidget(QtWidgets.QWidget):
         """
         if isinstance(stat, list):
             plus_text = ''
-            if key == 'unique_values' and len(stat) < 5:
+            if key == 'unique_values' and len(stat) < 4:
                 new_tuples = stat
                 values = [x[0] for x in stat]
                 if len(values) <= 2 and all(val in [0, 1] for val in values):
                     new_tuples = [(bool(_tuple[0]), _tuple[1])
                                   for _tuple in stat]
-                for _tuple in new_tuples:
+                for i, _tuple in enumerate(new_tuples):
                     if _tuple[0] == 10000:
                         plus_text += 'No value' + ' : ' + \
-                            str(_tuple[1]) + ' times\n'
+                            str(_tuple[1]) + ' times'
                     else:
                         plus_text += str(_tuple[0]) + ' : ' + \
-                            str(_tuple[1]) + ' times\n'
-            elif key == 'unique_percentages' and len(stat) < 5:
-                for perc in stat:
-                    plus_text += str(perc) + ' %\n'
+                            str(_tuple[1]) + ' times'
+                    if i < len(new_tuples) - 1:
+                        plus_text += '\n'
 
             if plus_text != '':
                 label.setText(' '.join(key.split('_')) +
@@ -168,6 +170,10 @@ class ShowStatsWidget(QtWidgets.QWidget):
                 if ' : ' in widget.text():
                     key = '_'.join(widget.text().split(' : ')[0].split(' '))
                     widget = self.handle_stat(key, stats[key], widget)
+                    if stats['number_of_unique_values'] > 3 and (key == 'unique_values'):
+                        widget.setHidden(True)
+                    elif stats['number_of_unique_values'] < 4 and key == 'number_of_unique_values':
+                        widget.setHidden(True)
 
 
 class SecondMenu(MyMenu):
@@ -221,13 +227,13 @@ class SecondMenu(MyMenu):
         layout.setColumnStretch(0, 2)
         layout.setColumnStretch(1, 2)
 
-        button = QtWidgets.QPushButton('View Statistics')
-        button.clicked.connect(self.calculate_statistics)
-        layout.addWidget(button, 0, 0, 1, 1)
+        #button = QtWidgets.QPushButton('View Statistics')
+        # button.clicked.connect(self.calculate_statistics)
+        #layout.addWidget(button, 0, 0, 1, 1)
 
         button = QtWidgets.QPushButton('View Automatic Weights')
         button.clicked.connect(self.calculate_automatic_weights)
-        layout.addWidget(button, 0, 1, 1, 1)
+        layout.addWidget(button, 0, 0, 1, 2)
 
         button = QtWidgets.QPushButton('All Weights Equal')
         button.clicked.connect(self.clean_weights)
@@ -315,7 +321,7 @@ class SecondMenu(MyMenu):
 
             if 'inter-part' in statistics:
                 self.tab_interpart = self.create_statistics_folder('inter-part',
-                                                                  statistics['inter-part'], tabs)
+                                                                   statistics['inter-part'], tabs)
                 tabs.addTab(self.tab_interpart, "Inter-Part Events")
 
             # Add tabs to widget

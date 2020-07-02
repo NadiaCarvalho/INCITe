@@ -49,7 +49,7 @@ class ThirdMenu(MyMenu):
         layout.setContentsMargins(5, 45, 5, 5)
         layout.setSpacing(50)
 
-        radio_button_1 = QtWidgets.QRadioButton("One Part Oracle")
+        radio_button_1 = QtWidgets.QRadioButton("Single Part Oracle")
         radio_button_1.setChecked(True)
         radio_button_1.setStyleSheet("""color: black; font: bold 16px;""")
         radio_button_1.toggled.connect(self.radio_clicked)
