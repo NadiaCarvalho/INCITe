@@ -100,10 +100,10 @@ def construct_multi_oracles(application):
             weights=weights, fixed_weights=fixed_weights,
             dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
 
-    # oracles.move_to_end('inter-part', last=True)
-    # image = gen_plot.start_draw(oracles, ev_offsets)
-    # name = r'data\myexamples\oracle' + '.PNG'
-    # image.save(name)
+    oracles.move_to_end('inter-part', last=True)
+    image = gen_plot.start_draw(oracles, ev_offsets)
+    name = r'data\oracles\oracle' + '.PNG'
+    image.save(name)
 
     application.oracles_information['multiple_oracles'] = {
         'oracles': oracles,
@@ -224,7 +224,11 @@ def multi_sequence_score_generator(sequences, feature_names, application, name='
                         key][last_pitch_index].get_viewpoint('pitch')
                     start_pitches[key] = last_pitch
 
-    score = parse_multiple(sequenced_events, start_pitches)
+    duration = False
+    if any('duration' in feat for feat in feature_names):
+        duration = True
+
+    score = parse_multiple(sequenced_events, start_pitches, duration)
 
     splitted_db = application.database_path.split(os.sep)
     if len(splitted_db) == 1:

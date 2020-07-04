@@ -11,7 +11,7 @@ from application.representation.parsers.utils import \
     get_last_x_events_that_are_notes_before_index
 
 
-def parse_multiple(event_dict, start_pitches=None):
+def parse_multiple(event_dict, start_pitches=None, durations=True):
     """
     Create Score from Multiple Events
     """
@@ -26,10 +26,10 @@ def parse_multiple(event_dict, start_pitches=None):
         if '.' in key and instrument_key in parts:  # Voice and not part
             parts[instrument_key] = parse_single_line(
                 events, stream=parts[instrument_key],
-                voice_id=int(key.split('.')[1]), start_pitch=start_pitch, single=False)
+                voice_id=int(key.split('.')[1]), start_pitch=start_pitch, single=False, durations=durations)
         else:
             parts[instrument_key] = parse_single_line(
-                events, start_pitch=start_pitch, single=False)
+                events, start_pitch=start_pitch, single=False, durations=durations)
 
     to_shift = {}
     potential_anacrusis = dict([(key, events[0].get_viewpoint(
@@ -54,7 +54,7 @@ def parse_multiple(event_dict, start_pitches=None):
     return stream
 
 
-def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4', single=True):
+def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4', single=True, durations=True):
     """
     Convert Single Line of events to stream
     """
@@ -89,7 +89,9 @@ def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4', single=
     for i, event in enumerate(events):
 
         if isinstance(event, str):
-            duration = event.split('_')[1]
+            duration = 1
+            if durations:
+                duration = event.split('_')[1]
             voice.append(music21.note.Rest(quarterLength=abs(float(duration))))
             last_offset = voice.highestTime
             continue

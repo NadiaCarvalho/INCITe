@@ -58,7 +58,8 @@ def construct_single_oracle(application, line):
                                                                   part_information, line)
 
     thresh = gen_utils.find_threshold(
-        normed_features, weights=weights,
+        _r=(0, 1, 0.1),
+        input_data=normed_features, weights=weights,
         fixed_weights=fixed_weights,
         dim=len(features_names), entropy=True)
 
@@ -175,8 +176,8 @@ def linear_score_generator(application, sequence, o_information,
                 print("Creation of the directory %s failed" % gen_folder)
             else:
                 print("Successfully created the directory %s " % gen_folder)
-                path=os.sep.join([gen_folder, name + '.xml'])
-                fp=score.write(fp=path)
+                path = os.sep.join([gen_folder, name + '.xml'])
+                fp = score.write(fp=path)
         else:
-            path=os.sep.join([gen_folder, name + '.xml'])
-            fp=score.write(fp=path)
+            path = os.sep.join([gen_folder, name + '.xml'])
+            fp = score.write(fp=path)

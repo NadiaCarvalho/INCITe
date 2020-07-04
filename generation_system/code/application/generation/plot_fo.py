@@ -18,9 +18,10 @@ HEIGHT = 400 * 4
 LRS_THRESH = 0
 
 
-COLOR_SFX = (230, 0, 0, 255)
-COLOR_BACKGROUND = (255, 255, 255, 255)
-COLOR_TRANS = (0, 0, 153, 255)
+COLOR_SFX = (255, 0, 0, 0)
+COLOR_BACKGROUND = (255, 255, 255, 0)
+COLOR_TRANS = (0, 0, 153, 0)
+
 
 def start_draw(_oracle, _offsets=None, size=(900*4, 600*4)):
     """
@@ -41,8 +42,10 @@ def start_draw(_oracle, _offsets=None, size=(900*4, 600*4)):
 
 def draw_offsets(oracle, offsets, minor_offset, major_offset, current_state, image, width=WIDTH, height=HEIGHT):
     """
-
     :param oracle: input vmo object
+    :param offsets: input offsets of states of vmo
+    :param minor_offset: minimum of the offsets of all oracles
+    :param minor_offset: maximum of the offsets of all oracles
     :param current_state:
     :param image: an PIL image object
     :param width: width of the image
@@ -56,7 +59,7 @@ def draw_offsets(oracle, offsets, minor_offset, major_offset, current_state, ima
 
     # handle to Draw object - PIL
     n_states = len(sfx)
-    drawer = ImageDraw.Draw(image, mode='RGBA')
+    drawer = ImageDraw.Draw(image, mode='RGB')
 
     sum_offset = (major_offset + 2) - minor_offset
     make_offsets = [minor_offset - 0.2] + \
@@ -66,8 +69,8 @@ def draw_offsets(oracle, offsets, minor_offset, major_offset, current_state, ima
         # draw circle for each state
         x_pos = (((make_offsets[i] - minor_offset) / sum_offset) *
                  width) + 0.5 * (1.0 / sum_offset) * width
-        x_ball=x_pos + (0.25 / sum_offset * width)
-        diameter=x_ball - x_pos
+        x_ball = x_pos + (0.25 / sum_offset * width)
+        diameter = x_ball - x_pos
 
         drawer.ellipse([x_pos, height/2 - diameter/2, x_ball,
                         height/2 + diameter/2], outline='green', width=2)
@@ -77,28 +80,28 @@ def draw_offsets(oracle, offsets, minor_offset, major_offset, current_state, ima
             # if forward transition to next state
             if tran == i + 1:
                 # draw forward transitions
-                next_x=(((make_offsets[i+1] - minor_offset) / sum_offset) * width) + \
+                next_x = (((make_offsets[i+1] - minor_offset) / sum_offset) * width) + \
                     0.5 * (1.0 / sum_offset) * width
-                current_x=x_pos + (0.25 / sum_offset * width)
+                current_x = x_pos + (0.25 / sum_offset * width)
                 drawer.line((current_x, height/2, next_x, height/2),
-                            width=2, fill=COLOR_TRANS)
+                            fill=COLOR_TRANS, width=3)
             else:
                 if lrs[tran] >= LRS_THRESH:
                     # forward transition to another state
-                    current_x=x_pos
-                    next_x=((float(make_offsets[tran] - minor_offset) / sum_offset)
+                    current_x = x_pos
+                    next_x = ((float(make_offsets[tran] - minor_offset) / sum_offset)
                               * width) + (0.5 / sum_offset * width)
-                    arc_height=(height / 2) + \
+                    arc_height = (height / 2) + \
                         (make_offsets[tran] - make_offsets[i]) * 0.125
                     drawer.arc((int(current_x) + diameter/2, int(height/2 - arc_height/2) - diameter/2.5,
                                 int(next_x) + diameter/2, int(height/2 + arc_height / 2) - diameter/2.5), 180, 0,
-                               fill=COLOR_TRANS, width=10)
+                               fill=COLOR_TRANS, width=5)
         if sfx[i] is not None and sfx[i] != 0 and lrs[sfx[i]] >= LRS_THRESH:
-            current_x=x_pos
-            next_x=(float(make_offsets[sfx[i]] - minor_offset) / sum_offset * width) + \
+            current_x = x_pos
+            next_x = (float(make_offsets[sfx[i]] - minor_offset) / sum_offset * width) + \
                 (0.5 / sum_offset * width)
             # draw arc
-            arc_height=(height / 2) - (make_offsets[sfx[i]] - i) * 0.125
+            arc_height = (height / 2) - (make_offsets[sfx[i]] - i) * 0.125
             drawer.arc((int(next_x) + diameter/2,
                         int(height/2 - arc_height/2) + diameter/2.5,
                         int(current_x) + diameter/2,
@@ -106,7 +109,7 @@ def draw_offsets(oracle, offsets, minor_offset, major_offset, current_state, ima
                        0,
                        180,
                        fill=COLOR_SFX,
-                       width=10)
+                       width=5)
 
     image.resize((900, 600), (Image.BILINEAR))
     return image
@@ -116,16 +119,17 @@ def draw_oracles(oracles, offsets, current_state, image, width=WIDTH, height=HEI
     """
     draw various oracles
     """
-    images=[]
-    max_off=max([offs[-1] for key, offs in offsets.items()])
-    min_off=min([offs[0] for key, offs in offsets.items()])
+    images = []
+    max_off = max([offs[-1] for key, offs in offsets.items()])
+    min_off = min([offs[0] for key, offs in offsets.items()])
     for key, oracle in oracles.items():
-        new_image=Image.new('RGB', (width, int(height/len(oracles))), color=COLOR_BACKGROUND)
+        new_image = Image.new(
+            'RGB', (width, int(height/len(oracles))), color=COLOR_BACKGROUND)
         if key in offsets:
-            al=draw_offsets(oracle, offsets[key], min_off, max_off, current_state, new_image, width, height=int(
+            al = draw_offsets(oracle, offsets[key], min_off, max_off, current_state, new_image, width, height=int(
                 height/len(oracles)))
         else:
-            al=draw(oracle, current_state, new_image,
+            al = draw(oracle, current_state, new_image,
                       width, height=int(height/len(oracles)))
         images.append(al)
 
@@ -148,11 +152,11 @@ def get_pattern_mat(oracle, pattern):
     :return: a numpy matrix that could be used to visualize the pattern extracted.
     """
 
-    pattern_mat=np.zeros((len(pattern), oracle.statistics['n_states']-1))
+    pattern_mat = np.zeros((len(pattern), oracle.statistics['n_states']-1))
     for i, pat in enumerate(pattern):
-        length=pat[1]
+        length = pat[1]
         for _s in pat[0]:
-            pattern_mat[i][_s-length:_s-1]=1
+            pattern_mat[i][_s-length:_s-1] = 1
 
     return pattern_mat
 
@@ -168,19 +172,19 @@ def draw(oracle, current_state, image, width=WIDTH, height=HEIGHT):
     :return: the updated PIL image object
     """
 
-    trn=oracle.basic_attributes['trn']
-    sfx=oracle.basic_attributes['sfx']
-    lrs=oracle.basic_attributes['lrs']
+    trn = oracle.basic_attributes['trn']
+    sfx = oracle.basic_attributes['sfx']
+    lrs = oracle.basic_attributes['lrs']
 
     # handle to Draw object - PIL
-    n_states=len(sfx)
-    drawer=ImageDraw.Draw(image)
+    n_states = len(sfx)
+    drawer = ImageDraw.Draw(image, mode='RGB')
 
     for i in range(n_states):
         # draw circle for each state
-        x_pos=(float(i) / n_states * width) + 0.5 * 1.0 / n_states * width
-        x_ball=x_pos + (0.25 / n_states * width)
-        diameter=x_ball - x_pos
+        x_pos = (float(i) / n_states * width) + 0.5 * 1.0 / n_states * width
+        x_ball = x_pos + (0.25 / n_states * width)
+        diameter = x_ball - x_pos
 
         drawer.ellipse([x_pos, height/2 - diameter/2, x_ball,
                         height/2 + diameter/2], outline='green', width=2)
@@ -190,27 +194,27 @@ def draw(oracle, current_state, image, width=WIDTH, height=HEIGHT):
             # if forward transition to next state
             if tran == i + 1:
                 # draw forward transitions
-                next_x=(float(i + 1) / n_states * width) + \
+                next_x = (float(i + 1) / n_states * width) + \
                     0.5 * 1.0 / n_states * width
-                current_x=x_pos + (0.25 / n_states * width)
+                current_x = x_pos + (0.25 / n_states * width)
                 drawer.line((current_x, height/2, next_x, height/2),
                             width=3, fill=COLOR_TRANS)
             else:
                 if lrs[tran] >= LRS_THRESH:
                     # forward transition to another state
-                    current_x=x_pos
-                    next_x=(float(tran) / n_states * width) + \
+                    current_x = x_pos
+                    next_x = (float(tran) / n_states * width) + \
                         (0.5 / n_states * width)
-                    arc_height=(height / 2) + (tran - i) * 0.125
+                    arc_height = (height / 2) + (tran - i) * 0.125
                     drawer.arc((int(current_x) + diameter/2, int(height/2 - arc_height/2) - diameter/2.5,
                                 int(next_x) + diameter/2, int(height/2 + arc_height / 2) - diameter/2.5), 180, 0,
                                fill=COLOR_TRANS)
         if sfx[i] is not None and sfx[i] != 0 and lrs[sfx[i]] >= LRS_THRESH:
-            current_x=x_pos
-            next_x=(float(sfx[i]) / n_states * width) + \
+            current_x = x_pos
+            next_x = (float(sfx[i]) / n_states * width) + \
                 (0.5 / n_states * width)
             # draw arc
-            arc_height=(height / 2) - (sfx[i] - i) * 0.125
+            arc_height = (height / 2) - (sfx[i] - i) * 0.125
             drawer.arc((int(next_x) + diameter/2,
                         int(height/2 - arc_height/2) + diameter/2.5,
                         int(current_x) + diameter/2,
@@ -219,5 +223,5 @@ def draw(oracle, current_state, image, width=WIDTH, height=HEIGHT):
                        180,
                        fill=COLOR_SFX)
 
-    image.resize((900, 400), (Image.BILINEAR))
+    image.resize((450, 200), (Image.BILINEAR))
     return image
