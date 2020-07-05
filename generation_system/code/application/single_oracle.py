@@ -56,13 +56,13 @@ def construct_single_oracle(application, line):
     # Get Normed and Original Features
     normed_features, original_features = get_single_part_features(application,
                                                                   part_information, line)
-
     thresh = gen_utils.find_threshold(
         _r=(0, 1, 0.1),
         input_data=normed_features, weights=weights,
         fixed_weights=fixed_weights,
         dim=len(features_names), entropy=True)
 
+    print(thresh)
     oracle = gen_utils.build_oracle(
         normed_features, flag='a', features=features_names,
         weights=weights, fixed_weights=fixed_weights,

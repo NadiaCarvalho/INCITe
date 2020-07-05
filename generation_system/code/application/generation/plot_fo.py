@@ -187,7 +187,7 @@ def draw(oracle, current_state, image, width=WIDTH, height=HEIGHT):
         diameter = x_ball - x_pos
 
         drawer.ellipse([x_pos, height/2 - diameter/2, x_ball,
-                        height/2 + diameter/2], outline='green', width=2)
+                        height/2 + diameter/2], outline='green', width=3)
 
         # iterate over forward transitions
         for tran in trn[i]:
@@ -208,7 +208,7 @@ def draw(oracle, current_state, image, width=WIDTH, height=HEIGHT):
                     arc_height = (height / 2) + (tran - i) * 0.125
                     drawer.arc((int(current_x) + diameter/2, int(height/2 - arc_height/2) - diameter/2.5,
                                 int(next_x) + diameter/2, int(height/2 + arc_height / 2) - diameter/2.5), 180, 0,
-                               fill=COLOR_TRANS)
+                               fill=COLOR_TRANS, width=5)
         if sfx[i] is not None and sfx[i] != 0 and lrs[sfx[i]] >= LRS_THRESH:
             current_x = x_pos
             next_x = (float(sfx[i]) / n_states * width) + \
@@ -221,7 +221,7 @@ def draw(oracle, current_state, image, width=WIDTH, height=HEIGHT):
                         int(height/2 + arc_height/2) + diameter/2.5),
                        0,
                        180,
-                       fill=COLOR_SFX)
+                       fill=COLOR_SFX, width=5)
 
     image.resize((450, 200), (Image.BILINEAR))
     return image

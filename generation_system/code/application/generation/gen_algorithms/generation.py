@@ -12,7 +12,7 @@ import logging
 from application.generation.oracles.factor_oracle import FactorOracle
 
 
-def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
+def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight='max'):
     """
     Generate a sequence based on traversing an oracle.
     :param oracle: a indexed vmo object
@@ -44,11 +44,11 @@ def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
     rsfx = oracle.basic_attributes['rsfx'][:]
 
     s = []
-    ktrace = [1]
+    ktrace = [k]
 
     for _i in range(seq_len):
         logging.warning('i: ' + str(_i))
-        logging.warning('i: ' + str(k))
+        logging.warning('k: ' + str(k))
 
         # generate each state
         if sfx[k] != 0 and sfx[k] is not None:
@@ -71,9 +71,9 @@ def generate(oracle, seq_len, p=0.5, k=1, LRS=0, weight=None):
                 k_vec = []
                 k_vec = _find_links(k_vec, sfx, rsfx, _k)
                 logging.warning('kvec: ' + str(k_vec))
-                k_vec = [_i for _i in k_vec if lrs[_i] >= LRS]
+                k_vec = [_j for _j in k_vec if lrs[_j] >= LRS]
                 logging.warning('kvec > LRS: ' + str(k_vec))
-                lrs_vec = [lrs[_i] for _i in k_vec]
+                lrs_vec = [lrs[_j] for _j in k_vec]
                 logging.warning('lrs_vec: ' + str(lrs_vec))
                 if len(k_vec) > 0:  # if a possibility found, len(I)
                     if weight == 'weight':
