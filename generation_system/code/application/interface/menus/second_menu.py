@@ -45,6 +45,10 @@ class ShowStatsWidget(QtWidgets.QWidget):
         self.vbox.addWidget(QHLine())
         self.set_weight_box()
         self.set_fixed_box()
+
+        if self.is_fixed:
+            self.weight_box.setDisabled(self.is_fixed)
+
         self.setLayout(self.vbox)
 
     def set_name_and_description(self):
@@ -105,7 +109,8 @@ class ShowStatsWidget(QtWidgets.QWidget):
         f_label.setStyleSheet(
             """color: blue; font: bold 16px;""")
 
-        self.fixed_box = QtWidgets.QCheckBox(self)
+        self.fixed_box = QtWidgets.QCheckBox(self)       
+        self.fixed_box.setChecked(self.is_fixed) 
         self.fixed_box.stateChanged.connect(self.change_fixed_status)
 
         f_label.setBuddy(self.fixed_box)
