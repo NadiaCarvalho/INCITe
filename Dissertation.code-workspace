@@ -7,9 +7,6 @@
 		{
 			"name": "Plugin",
 			"path": "./plugin"
-		},
-		{
-			"path": "website"
 		}
 	],
 	"extensions": {
