@@ -100,10 +100,10 @@ def construct_multi_oracles(application):
             weights=weights, fixed_weights=fixed_weights,
             dim=len(features_names), dfunc='cosine', threshold=thresh[0][1])
 
-    oracles.move_to_end('inter-part', last=True)
-    image = gen_plot.start_draw(oracles, ev_offsets)
-    name = r'data\oracles\oracle' + '.PNG'
-    image.save(name)
+    # oracles.move_to_end('inter-part', last=True)
+    # image = gen_plot.start_draw(oracles, ev_offsets)
+    # name = r'data\oracles\oracle' + '.PNG'
+    # image.save(name)
 
     application.oracles_information['multiple_oracles'] = {
         'oracles': oracles,
