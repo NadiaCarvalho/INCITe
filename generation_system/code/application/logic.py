@@ -5,6 +5,7 @@ To comunicate with interface
 """
 
 import math
+import music21
 import os
 import json
 
@@ -31,6 +32,7 @@ class Application(QtCore.QObject):
     Communicates with interface to deal with the
     main part of the logistics of the app
     """
+    signal_error = QtCore.pyqtSignal(str, str)
     signal_parsed = QtCore.pyqtSignal(int)
     signal_viewpoints = QtCore.pyqtSignal(dict)
     signal_oracle = QtCore.pyqtSignal(int)
@@ -71,29 +73,33 @@ class Application(QtCore.QObject):
         Parses Music
         """
         self.signal_parsed.connect(interface.increase_progress_bar)
+        self.signal_error.connect(interface.handler_error_parsing)
 
         reversed_filenames = reversed(filenames)
 
         n_processed = 0
         for filename in reversed_filenames:
             if '.mxl' in filename or '.xml' in filename:
-                self.music[filename] = (MusicParser(filename), filename, False)
-                self.music[filename][0].parse()
+                parser = MusicParser(filename)
+                if parser.exception == False:
+                    self.music[filename] = (parser, filename, False)
+                    self.music[filename][0].parse()
+                    folder_name = ['Other']
+                    if self.music[filename][0].music.metadata.composer is not None:
+                        folder_name = [
+                            self.music[filename][0].music.metadata.composer.split(' ')[-1]]
+                        folder_name[-1].capitalize()
+                    name = os.path.normpath(filename).split(os.path.sep)[-1]
+                    name = '.'.join(name.split('.')[:-1])
+                    folders = self.database_path.split(os.path.sep) + folder_name
+                    self.music[filename][0].to_pickle(name, folders)
 
-                folder_name = ['Other']
-                if self.music[filename][0].music.metadata.composer is not None:
-                    folder_name = [
-                        self.music[filename][0].music.metadata.composer.split(' ')[-1]]
-                    folder_name[-1].capitalize()
-                name = os.path.normpath(filename).split(os.path.sep)[-1]
-                name = '.'.join(name.split('.')[:-1])
-                folders = self.database_path.split(os.path.sep) + folder_name
-                self.music[filename][0].to_pickle(name, folders)
-
-                n_processed += 1
-
-                perc = int((n_processed/len(filenames))*100)
-                self.signal_parsed.emit(perc)
+                    n_processed += 1
+                    perc = int((n_processed/len(filenames))*100)
+                    self.signal_parsed.emit(perc)
+                
+                else:   
+                    self.signal_error.emit(filename, str(parser.exception))
 
         if interface is not None:
             self.signal_parsed.connect(

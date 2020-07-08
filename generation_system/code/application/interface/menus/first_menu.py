@@ -290,6 +290,17 @@ class FirstMenu(MyMenu):
         self.threadpool.start(worker)
         self.start_waiting()
 
+    def handler_error_parsing(self, filename, exception):
+        """
+        Handle Error Parsing
+        """
+        msg = QtWidgets.QMessageBox()
+        msg.setStyleSheet("""background: #b4b4b4;""")
+        msg.setContentsMargins(5, 5, 5, 5)
+        msg.setIcon(QtWidgets.QMessageBox.Warning)
+        msg.setText("MusicXML file " + filename + " can't be parsed.\n\nError: \n" + str(exception))
+        msg.setWindowTitle("MusicXML file can't be parsed!")
+        msg.exec_()
 
     def handler_finish_parsing(self, value):
         """
@@ -301,6 +312,7 @@ class FirstMenu(MyMenu):
 
     def increase_progress_bar(self, value):
         """
+        Increase Progress Bar
         """
         self.right_group_box.children()[3].setVisible(True)
         self.right_group_box.children()[3].setValue(value)

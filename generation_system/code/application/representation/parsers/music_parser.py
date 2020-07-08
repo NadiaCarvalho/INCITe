@@ -37,13 +37,14 @@ class MusicParser:
 
         self.music = None
         self.music_parts = []
+        self.first_part = None
 
         self.music_events = {
             'part_events': {},
             'interpart_events': []
         }
-
-        self.first_part = None
+        
+        self.exception = False
 
         if filename is not None:
             if not os.path.exists(filename):
@@ -54,7 +55,6 @@ class MusicParser:
             else:
                 file_path = filename
 
-            self.music = music21.converter.parse(file_path)
             if filename.endswith('.mid'):
                 try:
                     self.music = music21.converter.parse(
@@ -66,13 +66,22 @@ class MusicParser:
                         part.makeNotation(inPlace=True)
                 except music21.exceptions21.StreamException:
                     self.music.show()
+            else:
+                try:
+                    self.music = music21.converter.parse(file_path)
+                except music21.musicxml.xmlToM21.MusicXMLImportException as exception:
+                    self.exception = exception
 
-            self.clean_hidden_music()
+            if not self.exception:
+                self.clean_hidden_music()
 
     def parse(self, parts=True, interpart=True, number_parts=None):
         """
         Parse music
         """
+        if self.exception:
+            return
+            
         if parts:
             self.music.makeVoices(inPlace=True)
             self.music.flattenUnnecessaryVoices(inPlace=True)
