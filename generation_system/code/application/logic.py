@@ -98,7 +98,7 @@ class Application(QtCore.QObject):
         if interface is not None:
             self.signal_parsed.connect(
                 interface.handler_finish_parsing)
-            self.signal_parsed.emit(1)
+            self.signal_parsed.emit(100)
 
     def retrieve_database(self, folders):
         """
