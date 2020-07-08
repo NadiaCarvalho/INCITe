@@ -9,9 +9,9 @@ import math
 import numpy as np
 import scipy.spatial.distance as dist
 
-from application.generation.oracles.factor_oracle import FactorOracle
-from application.generation.feature_array import FeatureArray
-from application.generation.cdist_fixed import fixed_cdist
+from application.logic.generation.oracles.factor_oracle import FactorOracle
+from application.logic.generation.feature_array import FeatureArray
+from application.logic.generation.cdist_fixed import fixed_cdist
 
 
 class VMO(FactorOracle):

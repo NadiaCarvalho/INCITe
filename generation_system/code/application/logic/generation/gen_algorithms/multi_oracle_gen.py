@@ -7,7 +7,7 @@ import random
 
 import numpy as np
 
-from application.generation.oracles.factor_oracle import FactorOracle
+from application.logic.generation.oracles.factor_oracle import FactorOracle
 
 
 def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):

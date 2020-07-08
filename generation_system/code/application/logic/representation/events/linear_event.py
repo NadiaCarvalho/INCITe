@@ -7,8 +7,8 @@ from fractions import Fraction
 
 import music21
 
-import  application.representation.events.utils as utils
-from application.representation.events.event import Event
+import  application.logic.representation.events.utils as utils
+from application.logic.representation.events.event import Event
 
 ARRAY_VALUES = ['articulation', 'expression',
                 'ornamentation', 'dynamic', 'chordPitches']

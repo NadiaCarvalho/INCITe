@@ -3,7 +3,7 @@ Statistics
 """
 import numpy as np
 
-import  application.representation.utils.features as utils
+import  application.logic.representation.utils.features as utils
 
 
 ARRAY_VALUES = ['expressions.articulation', 'expressions.expression',

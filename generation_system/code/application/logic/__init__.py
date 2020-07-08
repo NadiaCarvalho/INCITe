@@ -12,14 +12,14 @@ import json
 import numpy as np
 from PyQt5 import QtCore
 
-import application.single_oracle as single_oracle
-import application.multi_oracle as multi_oracle
+import application.logic.single_oracle as single_oracle
+import application.logic.multi_oracle as multi_oracle
 
-import application.representation.utils.features as rep_utils
-import application.representation.utils.statistics as statistics
+import application.logic.representation.utils.features as rep_utils
+import application.logic.representation.utils.statistics as statistics
 
-from application.representation.parsers.music_parser import MusicParser
-from application.representation.parsers.segmentation import (apply_segmentation_info,
+from application.logic.representation.parsers.music_parser import MusicParser
+from application.logic.representation.parsers.segmentation import (apply_segmentation_info,
                                                              get_phrases_from_events,
                                                              segmentation,
                                                              INTERPART_WEIGHTS,

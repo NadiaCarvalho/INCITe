@@ -10,13 +10,13 @@ import pickle
 
 import music21
 
-import application.representation.parsers.utils as utils
-import application.representation.utils.printing as printing
-import application.representation.utils.voice as voice_utils
-from application.representation.events.linear_event import PartEvent
-from application.representation.events.interpart_event import InterPartEvent
-from application.representation.parsers.line_parser import LineParser
-from application.representation.parsers.interpart_parser import InterPartParser
+import application.logic.representation.parsers.utils as utils
+import application.logic.representation.utils.printing as printing
+import application.logic.representation.utils.voice as voice_utils
+from application.logic.representation.events.linear_event import PartEvent
+from application.logic.representation.events.interpart_event import InterPartEvent
+from application.logic.representation.parsers.line_parser import LineParser
+from application.logic.representation.parsers.interpart_parser import InterPartParser
 
 FOLDER_DEFAULT = ['data', 'myexamples']
 LINEAR_INSTRUMENTS = ['WoodwindInstrument', 'BrassInstrument', 'Vocalist']

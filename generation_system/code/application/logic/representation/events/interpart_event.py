@@ -5,8 +5,8 @@ that represents a interpart (harmonic) event in a piece of music
 """
 from fractions import Fraction
 
-import  application.representation.events.utils as utils
-from application.representation.events.event import Event
+import  application.logic.representation.events.utils as utils
+from application.logic.representation.events.event import Event
 
 ARRAY_VALUES = ['pitches', 'pitchClass', 'primeForm', 'pcOrdered']
 

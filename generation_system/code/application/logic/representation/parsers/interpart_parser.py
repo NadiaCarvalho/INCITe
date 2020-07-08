@@ -6,8 +6,8 @@ from collections import defaultdict
 
 import music21
 
-import application.representation.parsers.utils as utils
-from application.representation.events.interpart_event import InterPartEvent
+import application.logic.representation.parsers.utils as utils
+from application.logic.representation.events.interpart_event import InterPartEvent
 
 
 class InterPartParser:

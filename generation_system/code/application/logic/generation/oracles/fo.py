@@ -7,7 +7,7 @@ based on the code in https://github.com/wangsix/vmo/blob/master/vmo/VMO/oracle.p
 import numpy as np
 import vmo.VMO.utility.misc as utl
 
-from application.generation.oracles.factor_oracle import FactorOracle
+from application.logic.generation.oracles.factor_oracle import FactorOracle
 
 
 class FO(FactorOracle):

@@ -6,13 +6,13 @@ import time
 import random
 import numpy as np
 
-import application.generation.gen_algorithms.generation as gen
-import application.generation.plot_fo as gen_plot
-import application.generation.utils as gen_utils
-from application.generation.cdist_fixed import distance_between_windowed_features
-from application.representation.conversor.score_conversor import parse_single_line
-from application.representation.events.linear_event import PartEvent
-from application.representation.parsers.utils import get_last_x_events_that_are_notes_before_index
+import application.logic.generation.gen_algorithms.generation as gen
+import application.logic.generation.plot_fo as gen_plot
+import application.logic.generation.utils as gen_utils
+from application.logic.generation.cdist_fixed import distance_between_windowed_features
+from application.logic.representation.conversor.score_conversor import parse_single_line
+from application.logic.representation.events.linear_event import PartEvent
+from application.logic.representation.parsers.utils import get_last_x_events_that_are_notes_before_index
 
 
 def get_single_part_features(application, information, line):

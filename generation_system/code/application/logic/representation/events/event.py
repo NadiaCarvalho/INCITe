@@ -4,7 +4,7 @@ This script presents the class Event that represents an event in a piece of musi
 """
 
 import fractions
-import  application.representation.events.utils as utils
+import  application.logic.representation.events.utils as utils
 
 
 class Event:

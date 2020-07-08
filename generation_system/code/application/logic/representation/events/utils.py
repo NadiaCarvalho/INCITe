@@ -7,7 +7,7 @@ import collections
 
 import music21
 
-import  application.representation.utils.features as utils
+import  application.logic.representation.utils.features as utils
 
 
 def convert_note_name(dnote):

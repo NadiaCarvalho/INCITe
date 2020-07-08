@@ -5,8 +5,8 @@ This script presents the class LineParser that processes the events of a single 
 
 import music21
 
-import application.representation.parsers.utils as utils
-from application.representation.events.linear_event import PartEvent
+import application.logic.representation.parsers.utils as utils
+from application.logic.representation.events.linear_event import PartEvent
 
 
 class LineParser:

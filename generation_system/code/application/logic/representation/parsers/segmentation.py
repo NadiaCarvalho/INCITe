@@ -7,8 +7,8 @@ import math
 
 import numpy as np
 
-import application.representation.parsers.utils as basic_utils
-import application.representation.utils.features as utils
+import application.logic.representation.parsers.utils as basic_utils
+import application.logic.representation.utils.features as utils
 
 INTERPART_WEIGHTS = {  # candidates for phrasing discovery (harmonic)
     'basic.root': 1,

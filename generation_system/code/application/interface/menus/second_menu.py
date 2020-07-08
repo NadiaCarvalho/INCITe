@@ -10,7 +10,7 @@ from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 from application.interface.components.qline import QHLine
 from application.interface.components.qworker import Worker
 from application.interface.menus.menu import MyMenu
-from application.representation.events.viewpoint_description import DESCRIPTION
+from application.logic.representation.events.viewpoint_description import DESCRIPTION
 
 
 class ShowStatsWidget(QtWidgets.QWidget):
