@@ -27,13 +27,14 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
     ktraces = {}
 
     if k == -1:
-        reversed_offsets = list(reversed(offsets[principal_key]))
-        for _j, off in enumerate(reversed_offsets):
-            new_k = len(reversed_offsets) - _j - 1
-            ks_at_off = _find_ks(offsets, principal_key, new_k)
-            if len(ks_at_off.keys()) == len(offsets.keys()):
-                k = ks_at_off[principal_key] - 1
-                break
+        if not all(offsets[key][-1] == offsets[principal_key][-1] for key in offsets.keys()):
+            reversed_offsets = list(reversed(offsets[principal_key]))
+            for _j, off in enumerate(reversed_offsets):
+                new_k = len(reversed_offsets) - _j - 1
+                ks_at_off = _find_ks(offsets, principal_key, new_k)
+                if len(ks_at_off.keys()) == len(offsets.keys()):
+                    k = ks_at_off[principal_key] - 1
+                    break
 
     offsets_at_k = _find_ks(offsets, principal_key, k)
     for key, oracle in oracles.items():
@@ -57,7 +58,7 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
                        for key in ks_at_k.keys()])
 
         # generate each state
-        if _i == 0 and all(ks < len(sfxs[key]) - 1 for key, ks in ks_at_k.items()):
+        if _i == 0 and k != -1 and all(ks < len(sfxs[key]) - 1 for key, ks in ks_at_k.items()):
             print('INITIAL STRAIGHT FORWARD')
             key = principal_key
             sym = k + 1
@@ -130,6 +131,9 @@ def sync_generate(oracles, offsets, seq_len=10, p=0.5, k=1):
         k = ktraces[principal_key][-1]
         if any(ktr[-1] >= len(sfxs[key]) - 1 for key, ktr in ktraces.items()):
             k = 0
+
+        print(ktraces)
+        print(sequences)
 
     print('____________________________________________________________________')
 
@@ -292,6 +296,8 @@ def get_max_lrs_position(k_vecs, lrs_vecs, length):
                 key_lrss[k] = key
 
     max_lrs = max_lrss.index(max(max_lrss))
+    print((key_lrss[max_lrs], max_lrs))
+
     return key_lrss[max_lrs], max_lrs
 
 
