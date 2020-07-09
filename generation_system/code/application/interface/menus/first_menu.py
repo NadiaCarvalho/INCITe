@@ -112,6 +112,9 @@ class FirstMenu(MyMenu):
         if directory:
             application = self.parentWidget().parentWidget().application
             application.database_path = directory
+            with open(os.sep.join([os.getcwd(), 'database.txt']), "w") as f:
+                f.write(directory)
+
             self.label.setText(
                 wrap_text(directory, int(self.width()*30/420)))
 
