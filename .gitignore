@@ -12,6 +12,7 @@ generation_system/data/database_2
 generation_system/data/generations
 generation_system/data/oracles
 generation_system/data/myexamples/to.mxl
+generation_system/database.txt
 
 # Ignore builds
 generation_system/dist
