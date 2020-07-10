@@ -27,7 +27,7 @@ a = Analysis([file_path],
              cipher=block_cipher,
              noarchive=False)
 
-a.datas += [('logo.ico', spec_root + icon_path,'DATA')]
+a.datas += [('logo.ico', spec_root + icon_path, 'DATA')]
 
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
