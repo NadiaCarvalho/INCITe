@@ -7,21 +7,21 @@ import QtQuick.Dialogs 1.1
 import FileIO 3.0
 
 MuseScore {
-  menuPath: "Plugins.Suggestor"
+  menuPath: "Plugins.Suggester"
   description: "Learn from selection and suggest new sequences to follow.\n\n"+
-               "Requires to install Suggestor (Free and OpenSource).\nMoreover at TODO"
+               "Requires to install Suggester (Free and OpenSource).\nMoreover at TODO"
   version: "1.0"
   requiresScore: true
 
 
   //for Linux and MacOS users
-  property string nixSuggestorCommand : "MyMusicalSuggestor "; //add -r, or more, for debug infos
+  property string nixSuggesterCommand : "MyMusicalSuggester "; //add -r, or more, for debug infos
 
   //for  Windows users
-  property string winSuggestorCommand :  "MyMusicalSuggestor.exe "; //add -r, or more, for debug infos
+  property string winSuggesterCommand :  "MyMusicalSuggester.exe "; //add -r, or more, for debug infos
 
   property string xmlPath : "";
-  property string suggestorCommand : Qt.platform.os == "windows" ?  winSuggestorCommand:nixSuggestorCommand;
+  property string SuggesterCommand : Qt.platform.os == "windows" ?  winSuggesterCommand:nixSuggesterCommand;
   // values for Qt.platform.os are at https://doc.qt.io/qt-5/qml-qtqml-qt.html#platform-prop
 
    QProcess {
@@ -32,7 +32,7 @@ MuseScore {
     id: xmlFile
   }
 
-  function runSuggestor(){
+  function runSuggester(){
       var path =  Qt.resolvedUrl(".");
       // remove prefixed "file:///"
       var path = path.replace(/^(file:\/{3})/,"");
@@ -40,8 +40,8 @@ MuseScore {
       var cleanPath = decodeURIComponent(path);
       console.log(cleanPath);
 
-      var cmd =  cleanPath + suggestorCommand + "" +  xmlPath + '.mxl' +  " /K";
-      console.log("Running Suggestor with cmd: " + cmd);
+      var cmd =  cleanPath + SuggesterCommand + "" +  xmlPath + '.mxl' +  " /K";
+      console.log("Running Suggester with cmd: " + cmd);
       proc.start(cmd);
   }
 
@@ -55,11 +55,11 @@ MuseScore {
 
       console.log(xmlPath);
 
-      // Call Suggestor
+      // Call Suggester
       console.log("Starting Process for " + curScore.title + " from file " + curScore.scoreName + " in file " + xmlFile.source)
       var res = writeScore(curScore,  xmlFile.source,  'mxl')
       if (res) {
-            runSuggestor()
+            runSuggester()
        }
 
        xmlFile.remove();
