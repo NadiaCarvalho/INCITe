@@ -18,7 +18,7 @@ a = Analysis([file_path],
              pathex=[spec_root],
              binaries=[],
              datas= music21_datas,
-             hiddenimports= music21_hidden_imports + ['sklearn', 'sklearn.neighbors._typedefs', 'sklearn.utils._cython_blas', 'sklearn.neighbors._quad_tree', 'sklearn.tree', 'sklearn.tree._utils'],
+             hiddenimports= music21_hidden_imports + ['sklearn', 'sklearn.neighbors._typedefs', 'sklearn.utils._cython_blas', 'sklearn.neighbors._quad_tree', 'sklearn.tree', 'sklearn.tree._utils', 'pkg_resources.py2_warn', 'scipy.special.cython_special'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -27,7 +27,7 @@ a = Analysis([file_path],
              cipher=block_cipher,
              noarchive=False)
 
-a.datas += [('logo.ico', spec_root + icon_path,'DATA')]
+a.datas += [('logo.ico', spec_root + icon_path, 'DATA')]
 
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
@@ -38,12 +38,17 @@ exe = EXE(pyz,
           a.datas,
           options,
           # exclude_binaries=True,
-          name='MyMusicalSuggestor',
+          name='MyMusicalSuggester',
           debug=False,
           strip=False,
           upx=True,
-          icon= spec_root + icon_path,
+          icon=spec_root + icon_path,
           bootloader_ignore_signals=False,
           runtime_tmpdir=None,
           console=False)
 
+if os.name == 'posix':
+    app = BUNDLE(exe,
+         name='MyMusicalSuggester.app',
+         icon='logo',
+         bundle_identifier=None)
