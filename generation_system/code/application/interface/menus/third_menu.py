@@ -115,7 +115,7 @@ class ThirdMenu(MyMenu):
         One/Multiple Button
         """
         radio_button = self.sender()
-        if radio_button.isChecked() and 'One' in radio_button.text():
+        if radio_button.isChecked() and 'Single' in radio_button.text():
             self.line = True
             self.children()[2].children()[5].setEnabled(True)
         else:

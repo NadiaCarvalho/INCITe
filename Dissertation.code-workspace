@@ -22,6 +22,6 @@
 			"--enable=all"
 		],
 		"python.linting.pylintPath": "C:\\Python\\Python37\\Scripts\\pylint.exe",
-		"python.pythonPath": "/Library/Frameworks/Python.framework/Versions/3.7/bin/python3"
+		"python.pythonPath": "C:\\Python\\Python37\\python.exe"
 	}
 }
