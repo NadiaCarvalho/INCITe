@@ -1,6 +1,6 @@
 # My Musical Suggester
 
-Version 1.0
+Version 1.3-alpha
 
 ![Python application](https://github.com/NadiaCarvalho/Dissertation/workflows/Python%20application/badge.svg?branch=master)
 
