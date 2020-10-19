@@ -114,7 +114,7 @@ def construct_multi_oracles(application):
     }
 
 
-def generate_sequences_multiple(information, num_seq, seq_len=15, start=-1):
+def generate_sequences_multiple(information, num_seq, seq_len=10, start=-1):
     """
     Generate Sequences
     """
@@ -123,7 +123,7 @@ def generate_sequences_multiple(information, num_seq, seq_len=15, start=-1):
     i = 0
     while i < num_seq:
         sequences, ktraces = multi_gen.sync_generate(
-            information['oracles'], information['offsets'], seq_len=seq_len, p=random.uniform(0, 1), k=-1)
+            information['oracles'], information['offsets'], seq_len=seq_len, p=random.uniform(0.3, 0.5), k=-1)
 
         flag = all(len(sequence) > 0 for sequence in sequences.values())
         if flag:
@@ -137,9 +137,11 @@ def generate_sequences_multiple(information, num_seq, seq_len=15, start=-1):
                 seq = list(
                     map(lambda x: x + start if not isinstance(x, str) else x, sequence))
                 filter_strings = [s for s in seq if not isinstance(s, str)]
+
                 if (any(s >= len(normed_feats) for s in filter_strings) or
-                        len(seq) - len(filter_strings) > (seq_len / 10)):
+                          (len(seq) - len(filter_strings)) > (seq_len / 5.0)):
                     flag = False
+                    print('FALSE')
                     break
 
                 sequence_in_feat = [normed_feats[k]
@@ -148,14 +150,15 @@ def generate_sequences_multiple(information, num_seq, seq_len=15, start=-1):
                     sequences[key] = [orig_feats[k] if not isinstance(
                         k, str) else k for k in seq]
 
-                distances.append(distance_between_windowed_features(
-                    sequence_in_feat,
-                    normed_feats))
+                    distances.append(distance_between_windowed_features(
+                        sequence_in_feat,
+                        normed_feats))
 
-                # calculate ktrace distance as
-                # (#non-consecutive / #total-recuperaded-states)
-                distances_2.append(
-                    sum(np.diff(ktraces[key]) != 1)/len(ktraces[key]))
+                    # calculate ktrace distance as
+                    # (#non-consecutive / #total-recuperaded-states)
+                    print(filter_strings)
+                    distances_2.append(
+                        (sum(np.diff(filter_strings) != 1) +  (len(seq) - len(filter_strings)))/len(seq))
 
             if flag:
                 ordered_sequences.append(

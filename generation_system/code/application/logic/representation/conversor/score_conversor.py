@@ -54,9 +54,81 @@ def parse_multiple(event_dict, start_pitches=None, durations=True):
     return stream
 
 
+def parse_single_interpart(events, stream=None, start_pitch='C4', single=True, durations=True):
+    """
+    Convert Single Line of InterPart events to stream
+    """
+    part = music21.stream.Part()
+    bar_duration = music21.duration.Duration(quarterLength=4)
+    last_key_signature = 0
+    last_time_signature = ''
+    last_metro_value = ''
+    last_instrument = music21.instrument.Instrument()
+    last_dynamics = []
+    slurs = []
+
+    if stream is not None:
+        part = stream
+        if len(stream.getElementsByClass('Measure')) > 0:
+            bar_duration = stream.getElementsByClass('Measure')[0].barDuration
+        if len(stream.getElementsByClass('KeySignature')) > 0:
+            last_key_signature = stream.getElementsByClass('KeySignature')[
+                0].sharps
+        if len(stream.getElementsByClass('TimeSignature')) > 0:
+            last_time_signature = str(
+                stream.getElementsByClass('TimeSignature')[0])
+        if len(stream.getElementsByClass('MetronomeMark')) > 0:
+            last_metro_value = str(
+                stream.getElementsByClass('MetronomeMark')[0])
+
+        last_instrument = stream.getInstrument()
+
+    last_offset = 0
+
+    for i, event in enumerate(events):
+
+        if isinstance(event, str):
+            duration = 1
+            if durations:
+                duration = event.split('_')[1]
+            part.append(music21.note.Rest(quarterLength=abs(float(duration))))
+            last_offset = part.highestTime
+            continue
+
+        last_key_signature = keysig_selection(
+            event, part, last_key_signature, last_offset)
+        last_time_signature, bar_duration = timesig_selection(
+            event, part, last_time_signature, bar_duration, last_offset)
+        # last_metro_value = metro_selection(
+        #     event, part, last_metro_value, last_offset)
+
+        # for dyn in event.get_viewpoint('dynamic'):
+        #     if dyn not in last_dynamics:
+        #         part.insert(last_offset,
+        #                     music21.dynamics.Dynamic(dyn))
+        #     last_dynamics = event.get_viewpoint('dynamic')
+
+        duration = duration_conversion(event)
+        note = None
+        if event.is_rest():
+            note = music21.note.Rest(duration=duration)
+        else:
+            chord_pitches = [music21.pitch.Pitch(float(pch)) for pch in event.get_viewpoint(
+                'basic.pitches')]
+            note = music21.chord.Chord(chord_pitches, duration=duration)
+
+            part.append(note)
+            last_offset = part.highestTime
+
+    if single:
+        part.makeNotation(inPlace=True)
+
+    return part
+
+
 def parse_single_line(events, stream=None, voice_id=0, start_pitch='C4', single=True, durations=True):
     """
-    Convert Single Line of events to stream
+    Convert Single Line of Part events to stream
     """
     part = music21.stream.Part()
     bar_duration = music21.duration.Duration(quarterLength=4)
@@ -156,7 +228,7 @@ def slur_conversor(voice, events):
         for j, note in enumerate(note_or_rests.elements[i+1:]):
             if note not in slurs[-1].getSpannedElements():
                 slurs[-1].addSpannedElements(note)
-            if events[i+1+j].get_viewpoint('slur.end'):
+            if isinstance(events[i+1+j], str) or events[i+1+j].get_viewpoint('slur.end'):
                 break
 
     for slur in slurs:
@@ -179,7 +251,7 @@ def diminuendo_conversor(voice, events):
         for j, note in enumerate(note_or_rests.elements[i+1:]):
             if note not in diminuendos[-1].getSpannedElements():
                 diminuendos[-1].addSpannedElements(note)
-            if events[i+1+j].get_viewpoint('diminuendo.end'):
+            if isinstance(events[i+1+j], str) or events[i+1+j].get_viewpoint('diminuendo.end'):
                 break
 
     for diminuendo in diminuendos:
@@ -202,7 +274,7 @@ def crescendo_conversor(voice, events):
         for j, note in enumerate(note_or_rests.elements[i+1:]):
             if note not in crescendos[-1].getSpannedElements():
                 crescendos[-1].addSpannedElements(note)
-            if events[i+1+j].get_viewpoint('crescendo.end'):
+            if isinstance(events[i+1+j], str) or events[i+1+j].get_viewpoint('crescendo.end'):
                 break
 
     for crescendo in crescendos:
@@ -321,10 +393,12 @@ def duration_conversion(event):
     """
     try:
         duration = music21.duration.Duration(quarterLength=event.get_viewpoint('duration.length'),
-                                            type=event.get_viewpoint('duration.type'),
-                                            dots=event.get_viewpoint('duration.dots'))
+                                             type=event.get_viewpoint(
+                                                 'duration.type'),
+                                             dots=event.get_viewpoint('duration.dots'))
     except Exception:
-        duration = music21.duration.Duration(quarterLength=event.get_viewpoint('duration.length'))
+        duration = music21.duration.Duration(
+            quarterLength=event.get_viewpoint('duration.length'))
 
     duration_1 = event.get_viewpoint('duration.length') % 1
     try:

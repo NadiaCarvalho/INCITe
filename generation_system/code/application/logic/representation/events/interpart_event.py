@@ -5,10 +5,24 @@ that represents a interpart (harmonic) event in a piece of music
 """
 from fractions import Fraction
 
-import  application.logic.representation.events.utils as utils
+import application.logic.representation.events.utils as utils
 from application.logic.representation.events.event import Event
 
-ARRAY_VALUES = ['pitches', 'pitchClass', 'primeForm', 'pcOrdered']
+ARRAY_VALUES = ['pitches',
+                'pitchClass', 'primeForm', 'pcOrdered']
+BOOL_VALUES = ['is_consonant', 'is_major_triad',
+               'is_incomplete_major_triad',
+               'is_minor_triad',
+               'is_incomplete_minor_triad',
+               'is_augmented_sixth',
+               'is_french_augmented_sixth',
+               'is_german_augmented_sixth',
+               'is_italian_augmented_sixth',
+               'is_swiss_augmented_sixth',
+               'is_augmented_triad',
+               'is_half_diminished_seventh',
+               'is_diminished_seventh',
+               'is_dominant_seventh']
 
 
 class InterPartEvent(Event):
@@ -82,6 +96,35 @@ class InterPartEvent(Event):
         self.viewpoints = dict(list(default.items()) +
                                list(self.viewpoints.items()))
         self._init_from_list_or_dict(offset, from_dict, from_list, features)
+
+    def from_feature_list(self, from_list, features, nan_value=10000):
+        """
+        Transforms list of features in an event
+        """
+        for i, feat in enumerate(features):
+            category = None
+            if '.' in feat:
+                if feat.split('.')[-1].isdigit():
+                    category = ".".join(feat.split('.')[0:-2])
+                    feat = ".".join(feat.split('.')[-2:])
+                else:
+                    category = ".".join(feat.split('.')[0:-1])
+                    feat = feat.split('.')[-1]
+
+            if feat == 'offset':
+                self.offset_time = from_list[i]
+            elif from_list[i] == nan_value:
+                self.add_viewpoint(feat, None, category)
+            elif feat in BOOL_VALUES:
+                self.add_viewpoint(feat, bool(from_list[i]), category)
+            elif any(val in feat for val in ARRAY_VALUES) and from_list[i] == 1.0:
+                self.add_viewpoint(feat.split(
+                    '_')[0], feat.split('_')[1:], category)
+            elif '=' in feat and from_list[i] == 1.0:
+                info = feat.split('=')
+                self.add_viewpoint(info[0], info[1], category)
+            else:
+                self.add_viewpoint(feat, from_list[i], category)
 
     def to_feature_dict(self, features=None, offset=True):
         """

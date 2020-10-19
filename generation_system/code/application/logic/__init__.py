@@ -102,8 +102,8 @@ class Application(QtCore.QObject):
                     n_processed += 1
                     perc = int((n_processed/len(filenames))*100)
                     self.signal_parsed.emit(perc)
-                
-                else:   
+
+                else:
                     self.signal_error.emit(filename, str(parser.exception))
 
         if interface is not None:
