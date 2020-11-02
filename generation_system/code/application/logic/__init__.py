@@ -39,12 +39,12 @@ class Application(QtCore.QObject):
     def __init__(self, music):
         QtCore.QObject.__init__(self)
 
+        self.database_path = os.sep.join([os.getcwd(), 'database'])
         if os.path.exists(os.sep.join([os.getcwd(), 'database.txt'])):
             with open(os.sep.join([os.getcwd(), 'database.txt']), "r") as f:
                 path = f.read()
-                self.database_path = path
-        else:
-            self.database_path = os.sep.join([os.getcwd(), 'database'])
+                if os.path.exists(path):
+                    self.database_path = path            
 
         if not os.path.exists(self.database_path):
             self.database_path = os.getcwd()

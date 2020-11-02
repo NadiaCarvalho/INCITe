@@ -50,5 +50,5 @@ exe = EXE(pyz,
 if os.name == 'posix':
     app = BUNDLE(exe,
          name='MyMusicalSuggester.app',
-         icon='logo',
+         icon=spec_root + icon_path[:-1] + 'ns',
          bundle_identifier=None)
