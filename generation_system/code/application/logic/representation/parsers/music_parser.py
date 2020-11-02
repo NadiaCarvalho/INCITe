@@ -43,7 +43,7 @@ class MusicParser:
             'part_events': {},
             'interpart_events': []
         }
-        
+
         self.exception = False
 
         if filename is not None:
@@ -81,7 +81,7 @@ class MusicParser:
         """
         if self.exception:
             return
-            
+
         if parts:
             self.music.makeVoices(inPlace=True)
             self.music.flattenUnnecessaryVoices(inPlace=True)
@@ -387,9 +387,9 @@ class MusicParser:
             folders = FOLDER_DEFAULT
 
         file_path = os.sep.join(folders + [filename])
-        if os.path.realpath('.').find('code') != -1:
-            file_path.replace('code', '')
-            file_path = os.sep.join(['..', file_path])
+        # if os.path.realpath('.').find('code') != -1:
+        #     file_path.replace('code', '')
+        #     file_path = os.sep.join(['..', file_path])
 
         with bz2.BZ2File(file_path + '.pbz2', 'rb') as handle:
             self.music_events = pickle.load(handle)

@@ -295,8 +295,11 @@ def get_max_lrs_position(k_vecs, lrs_vecs, length):
                 max_lrss[k] = lrs_vecs[key][i]
                 key_lrss[k] = key
 
-    max_lrs = max_lrss.index(max(max_lrss))
-    print((key_lrss[max_lrs], max_lrs))
+    max_lrs_value = max(max_lrss)
+    indexes_list = [i for i in range(len(max_lrss)) if max_lrss[i] == max_lrs_value]
+    print(indexes_list)
+    max_lrs = indexes_list[int(
+            np.floor(random.random() * len(indexes_list)))]
 
     return key_lrss[max_lrs], max_lrs
 

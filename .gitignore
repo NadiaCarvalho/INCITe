@@ -24,3 +24,4 @@ generation_system/*/__pycache__
 .pytest_cache
 generation_system/code/test.py
 generation_system/*.log
+generation_system/database/*

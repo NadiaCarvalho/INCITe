@@ -77,8 +77,9 @@ class Application(QtCore.QObject):
         """
         Parses Music
         """
-        self.signal_parsed.connect(interface.increase_progress_bar)
-        self.signal_error.connect(interface.handler_error_parsing)
+        if interface is not None:
+            self.signal_parsed.connect(interface.increase_progress_bar)
+            self.signal_error.connect(interface.handler_error_parsing)
 
         reversed_filenames = reversed(filenames)
 
@@ -101,9 +102,11 @@ class Application(QtCore.QObject):
 
                     n_processed += 1
                     perc = int((n_processed/len(filenames))*100)
-                    self.signal_parsed.emit(perc)
-                
-                else:   
+
+                    if interface is not None:
+                        self.signal_parsed.emit(perc)
+
+                else:
                     self.signal_error.emit(filename, str(parser.exception))
 
         if interface is not None:
@@ -235,7 +238,7 @@ class Application(QtCore.QObject):
         else:
             return statistic_dict
 
-    def process_weights(self, weight_dict, fixed_dict):
+    def process_weights(self, weight_dict, fixed_dict, return_dicts=False):
         """
         Process Incoming Weights
         """
@@ -256,6 +259,9 @@ class Application(QtCore.QObject):
                 fixed_dict['inter-part'][key] = stats['fixed']
 
         self.model_viewpoints = weight_dict
+
+        if return_dicts:
+            return weight_dict, fixed_dict
         return fixed_dict
 
     def part_segmentation(self, events, interpart_offsets, interpart_events):

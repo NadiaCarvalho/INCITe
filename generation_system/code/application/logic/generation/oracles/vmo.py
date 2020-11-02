@@ -13,6 +13,7 @@ from application.logic.generation.oracles.factor_oracle import FactorOracle
 from application.logic.generation.feature_array import FeatureArray
 from application.logic.generation.cdist_fixed import fixed_cdist
 
+import application.logic.generation.plot_fo as gen_plot
 
 class VMO(FactorOracle):
     """
@@ -171,4 +172,9 @@ class VMO(FactorOracle):
             self._non_complete_method(k, i, pi_1, suffix_candidate)
 
         # Temporary adjustment
-            self._temporary_adjustment(i)
+        self._temporary_adjustment(i)
+
+        #image = gen_plot.start_draw(self)
+        #name = r'data\oracles\oracle_at_' + str(i) + '.PNG'
+        #image.save(name)
+

@@ -115,7 +115,7 @@ class ThirdMenu(MyMenu):
         One/Multiple Button
         """
         radio_button = self.sender()
-        if radio_button.isChecked() and 'One' in radio_button.text():
+        if radio_button.isChecked() and 'Single' in radio_button.text():
             self.line = True
             self.children()[2].children()[5].setEnabled(True)
         else:
@@ -129,6 +129,7 @@ class ThirdMenu(MyMenu):
         if self.parentWidget().parentWidget().application.principal_music is not None:
             self.possible_parts = list(self.parentWidget().parentWidget().application.principal_music[0].get_part_events().keys())
             self.possible_parts = [str(pp) for pp in self.possible_parts]
+            self.possible_parts.append('inter-part')
 
             if len(self.possible_parts) == 1:
                 self.children()[2].children()[5].setEnabled(False)
