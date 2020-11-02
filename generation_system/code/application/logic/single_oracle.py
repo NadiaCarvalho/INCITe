@@ -68,11 +68,7 @@ def get_inter_part_features(application, information):
     return normed_features, original_features
 
 
-def construct_single_oracle(application, line):
-    """
-    Construct Oracle from Information
-    """
-
+def line_extraction(application, line):
     if 'inter-part' not in line:
         part_information = application.music_information['parts']
         features_names = part_information['selected_features_names']
@@ -91,6 +87,16 @@ def construct_single_oracle(application, line):
         # Get Normed and Original Features
         normed_features, original_features = get_inter_part_features(application,
                                                                      part_information)
+
+    return normed_features, original_features, weights, fixed_weights, features_names
+
+
+def construct_single_oracle(application, line):
+    """
+    Construct Oracle from Information
+    """
+    normed_features, original_features, weights, fixed_weights, features_names = line_extraction(
+        application, line)
 
     thresh = gen_utils.find_threshold(
         _r=(0, 1, 0.1),
@@ -112,7 +118,10 @@ def construct_single_oracle(application, line):
         'oracle': oracle,
         'normed_features': normed_features,
         'original_features': original_features,
-        'features_names': features_names
+        'features_names': features_names,
+        'weights': weights,
+        'fixed_weights': fixed_weights,
+        'threshold': thresh[0][1]
     }
 
 
@@ -187,14 +196,17 @@ def linear_score_generator(application, sequence, o_information,
         sequenced_events = [PartEvent(
             from_list=o_information[state+start], features=feature_names) for state in sequence]
 
-        start_pitch = application.principal_music[0].get_part_events()[
-            line][0].get_viewpoint('pitch')
-        if start == -1:
-            last_pitch_index = get_last_x_events_that_are_notes_before_index(
-                application.principal_music[0].get_part_events()[line],
-                number=1, actual_index=start)
+        if application.principal_music is not None:
             start_pitch = application.principal_music[0].get_part_events()[
-                line][last_pitch_index].get_viewpoint('pitch')
+                line][0].get_viewpoint('pitch')
+            if start == -1:
+                last_pitch_index = get_last_x_events_that_are_notes_before_index(
+                    application.principal_music[0].get_part_events()[line],
+                    number=1, actual_index=start)
+                start_pitch = application.principal_music[0].get_part_events()[
+                    line][last_pitch_index].get_viewpoint('pitch')
+        else:
+            start_pitch = o_information[start][feature_names.index('pitch.cpitch')]
     else:
         sequenced_events = [InterPartEvent(
             from_list=o_information[state+start], features=feature_names) for state in sequence]
